@@ -23,7 +23,7 @@ from nahual.gesture_collector import CollectorConfig, GestureCollector
 def main() -> None:
     """Run the interactive gesture data collector."""
     config = CollectorConfig(
-        model_asset_path="hand_landmarker.task",
+        model_asset_path="models/hand_landmarker.task",
         show_landmark_debug=False,
     )
     collector = GestureCollector(config)

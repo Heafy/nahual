@@ -22,14 +22,10 @@ from mediapipe.tasks.python import vision
 
 from nahual.gesture_heuristics import GestureHeuristics
 from nahual.gesture_trainer import GestureTrainer, TrainingConfig
-from nahual.visualization import (
-    draw_hand_connections,
-    draw_landmark_debug,
-    draw_prediction_overlay,
-)
+from nahual.visualization import (draw_hand_connections, draw_landmark_debug,
+                                  draw_prediction_overlay)
 
-
-MODEL_ASSET_PATH = "hand_landmarker.task"
+MODEL_ASSET_PATH = "models/hand_landmarker.task"
 TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
 
 
@@ -53,7 +49,9 @@ def main() -> None:
     heuristics = GestureHeuristics()
 
     # Load the trained classifier if one exists; otherwise run in landmark mode.
-    trainer = GestureTrainer(TrainingConfig(model_output_directory=TRAINED_MODEL_PATH.parent))
+    trainer = GestureTrainer(
+        TrainingConfig(model_output_directory=TRAINED_MODEL_PATH.parent)
+    )
     model_available = TRAINED_MODEL_PATH.exists()
     if model_available:
         try:
@@ -88,7 +86,9 @@ def main() -> None:
                 draw_landmark_debug(frame, result)
 
                 if model_available:
-                    landmark_frame = heuristics.extract_landmark_frame(result, timestamp_ms)
+                    landmark_frame = heuristics.extract_landmark_frame(
+                        result, timestamp_ms
+                    )
                     if landmark_frame is not None:
                         features = heuristics.extract_features_static(landmark_frame)
                         try:

@@ -40,17 +40,10 @@ import numpy as np
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-from nahual.gesture_heuristics import (
-    MAX_DYNAMIC_FRAMES,
-    GestureHeuristics,
-    GestureType,
-    LandmarkFrame,
-)
-from nahual.visualization import (
-    draw_hand_connections,
-    draw_landmark_debug,
-    draw_status_bar,
-)
+from nahual.gesture_heuristics import (MAX_DYNAMIC_FRAMES, GestureHeuristics,
+                                       GestureType, LandmarkFrame)
+from nahual.visualization import (draw_hand_connections, draw_landmark_debug,
+                                  draw_status_bar)
 
 # ---------------------------------------------------------------------------
 # Configuration and session dataclasses
@@ -74,7 +67,7 @@ class CollectorConfig:
         show_landmark_debug: Whether to render coordinate text overlay.
     """
 
-    model_asset_path: str = "hand_landmarker.task"
+    model_asset_path: str = "models/hand_landmarker.task"
     data_root_directory: Path = Path("data")
     camera_device_index: int = 0
     target_fps: int = 30
