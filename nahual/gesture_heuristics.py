@@ -21,7 +21,6 @@ from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -57,11 +56,11 @@ FINGER_JOINT_TRIPLETS: List[Tuple[int, int, int]] = [
 # Includes thumb-to-fingertip distances (useful for pinch/spread detection)
 # and fingertip-to-wrist distances (useful for finger extension).
 DEFAULT_LANDMARK_PAIRS: List[Tuple[int, int]] = [
-    (4, 8),   # thumb tip  → index tip
+    (4, 8),  # thumb tip  → index tip
     (4, 12),  # thumb tip  → middle tip
     (4, 16),  # thumb tip  → ring tip
     (4, 20),  # thumb tip  → pinky tip
-    (0, 8),   # wrist      → index tip
+    (0, 8),  # wrist      → index tip
     (0, 12),  # wrist      → middle tip
     (0, 16),  # wrist      → ring tip
     (0, 20),  # wrist      → pinky tip
@@ -239,8 +238,14 @@ class GestureHeuristics:
         """
         angles = []
         for parent_index, pivot_index, child_index in FINGER_JOINT_TRIPLETS:
-            vector_to_parent = normalized_coordinates[parent_index] - normalized_coordinates[pivot_index]
-            vector_to_child = normalized_coordinates[child_index] - normalized_coordinates[pivot_index]
+            vector_to_parent = (
+                normalized_coordinates[parent_index]
+                - normalized_coordinates[pivot_index]
+            )
+            vector_to_child = (
+                normalized_coordinates[child_index]
+                - normalized_coordinates[pivot_index]
+            )
 
             norm_parent = np.linalg.norm(vector_to_parent)
             norm_child = np.linalg.norm(vector_to_child)
@@ -278,12 +283,18 @@ class GestureHeuristics:
         """
         pairs = landmark_pairs if landmark_pairs is not None else DEFAULT_LANDMARK_PAIRS
         distances = [
-            float(np.linalg.norm(normalized_coordinates[index_a] - normalized_coordinates[index_b]))
+            float(
+                np.linalg.norm(
+                    normalized_coordinates[index_a] - normalized_coordinates[index_b]
+                )
+            )
             for index_a, index_b in pairs
         ]
         return np.array(distances, dtype=np.float32)
 
-    def extract_features_static(self, landmark_frame: LandmarkFrame) -> ExtractedFeatures:
+    def extract_features_static(
+        self, landmark_frame: LandmarkFrame
+    ) -> ExtractedFeatures:
         """Build an ExtractedFeatures object from a single static frame.
 
         Normalizes coordinates, computes finger angles and inter-landmark
@@ -352,7 +363,9 @@ class GestureHeuristics:
             frame_sequence=normalized_sequence,
         )
 
-    def classify_gesture_type(self, landmark_frames: List[LandmarkFrame]) -> GestureType:
+    def classify_gesture_type(
+        self, landmark_frames: List[LandmarkFrame]
+    ) -> GestureType:
         """Heuristically determine whether a gesture is static or dynamic.
 
         Computes the mean velocity of the wrist landmark across all frames.
@@ -375,7 +388,9 @@ class GestureHeuristics:
         total_displacement = 0.0
         total_time_ms = 0
 
-        for previous_frame, current_frame in zip(landmark_frames[:-1], landmark_frames[1:]):
+        for previous_frame, current_frame in zip(
+            landmark_frames[:-1], landmark_frames[1:]
+        ):
             delta_time_ms = current_frame.timestamp_ms - previous_frame.timestamp_ms
             if delta_time_ms <= 0:
                 continue
@@ -392,4 +407,8 @@ class GestureHeuristics:
             return GestureType.STATIC
 
         mean_velocity = total_displacement / total_time_ms
-        return GestureType.DYNAMIC if mean_velocity > MOTION_VELOCITY_THRESHOLD else GestureType.STATIC
+        return (
+            GestureType.DYNAMIC
+            if mean_velocity > MOTION_VELOCITY_THRESHOLD
+            else GestureType.STATIC
+        )

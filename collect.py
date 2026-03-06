@@ -17,7 +17,7 @@ Keyboard controls (also shown in the window):
     q  -- Quit
 """
 
-from nahual.gesture_collector import GestureCollector, CollectorConfig
+from nahual.gesture_collector import CollectorConfig, GestureCollector
 
 
 def main() -> None:

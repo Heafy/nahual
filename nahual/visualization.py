@@ -10,7 +10,6 @@ import cv2
 from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
 from mediapipe.tasks.python.vision import hand_landmarker as mp_hand_landmarker
 
-
 # Each entry is (landmark_name, bgr_color).
 # Colors are BGR-converted versions of finger-part color conventions.
 LANDMARK_NAMES = (
@@ -64,7 +63,10 @@ def draw_landmark_debug(frame, hand_landmarker_result, hand_indices=None):
         lines.append((f"--- {handedness} Hand ---", (0, 0, 0)))
         for (name, color), landmark in zip(LANDMARK_NAMES, hand_landmarks):
             lines.append(
-                (f"{name} - ({landmark.x:.4f}, {landmark.y:.4f}, {landmark.z:.4f})", color)
+                (
+                    f"{name} - ({landmark.x:.4f}, {landmark.y:.4f}, {landmark.z:.4f})",
+                    color,
+                )
             )
 
     y = h - padding

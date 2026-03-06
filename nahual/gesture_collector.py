@@ -41,17 +41,16 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 from nahual.gesture_heuristics import (
+    MAX_DYNAMIC_FRAMES,
     GestureHeuristics,
     GestureType,
     LandmarkFrame,
-    MAX_DYNAMIC_FRAMES,
 )
 from nahual.visualization import (
     draw_hand_connections,
     draw_landmark_debug,
     draw_status_bar,
 )
-
 
 # ---------------------------------------------------------------------------
 # Configuration and session dataclasses
@@ -160,7 +159,9 @@ class GestureCollector:
         self._print_instructions()
         start_time = time.time()
 
-        with vision.HandLandmarker.create_from_options(landmarker_options) as landmarker:
+        with vision.HandLandmarker.create_from_options(
+            landmarker_options
+        ) as landmarker:
             while True:
                 success, frame = capture.read()
                 if not success:
@@ -199,7 +200,9 @@ class GestureCollector:
                         saved_path = self.capture_static_sample(current_landmark_frame)
                         print(f"[collector] Static sample saved: {saved_path}")
                     else:
-                        print("[collector] No hand detected — static sample not captured.")
+                        print(
+                            "[collector] No hand detected — static sample not captured."
+                        )
                 elif key == ord("d"):
                     if not self._is_capturing_dynamic:
                         self.start_dynamic_capture()
@@ -208,7 +211,9 @@ class GestureCollector:
 
         capture.release()
         cv2.destroyAllWindows()
-        print(f"[collector] Session ended.  Total samples: {self.session.samples_captured}")
+        print(
+            f"[collector] Session ended.  Total samples: {self.session.samples_captured}"
+        )
 
     def set_label(self, label: str) -> None:
         """Set the active gesture label and create its output directory.
@@ -409,7 +414,9 @@ class GestureCollector:
             RuntimeError: If self.session.label is None.
         """
         if self.session.label is None:
-            raise RuntimeError("No label set.  Press 'l' and enter a label before capturing.")
+            raise RuntimeError(
+                "No label set.  Press 'l' and enter a label before capturing."
+            )
 
     def _prompt_label_via_terminal(self) -> None:
         """Block on terminal input to get the next label from the user.
