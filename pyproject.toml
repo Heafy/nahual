@@ -8,5 +8,7 @@ dependencies = [
     "black>=25.11.0",
     "isort>=6.1.0",
     "mediapipe>=0.10.32",
+    "numpy>=2.0",
     "opencv-python>=4.13.0.92",
+    "scikit-learn>=1.5",
 ]
