@@ -8,8 +8,15 @@ from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
 from mediapipe.tasks.python.vision import hand_landmarker as mp_hand_landmarker
 
 
-def draw_landmark_debug(frame, hand_landmarker_result):
-    """Put landmark coordinates text in the cv2 video."""
+def draw_landmark_debug(frame, hand_landmarker_result, hand_indices=None):
+    """Put landmark coordinates text in the cv2 video.
+
+    Args:
+        frame: OpenCV BGR frame to draw on.
+        hand_landmarker_result: Result from HandLandmarker.detect_for_video.
+        hand_indices: Optional list of indices into hand_world_landmarks to draw;
+            if None, all detected hands are drawn.
+    """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.4
     thickness = 1
@@ -17,39 +24,41 @@ def draw_landmark_debug(frame, hand_landmarker_result):
     line_height = 14
     h, w = frame.shape[:2]
 
+    # Each entry is (landmark_name, bgr_color) — colors converted from RGB to BGR.
     LANDMARK_NAMES = (
-        "WRIST",
-        "THUMB_CMC",
-        "THUMB_MCP",
-        "THUMB_IP",
-        "THUMB_TIP",
-        "INDEX_FINGER_MCP",
-        "INDEX_FINGER_PIP",
-        "INDEX_FINGER_DIP",
-        "INDEX_FINGER_TIP",
-        "MIDDLE_FINGER_MCP",
-        "MIDDLE_FINGER_PIP",
-        "MIDDLE_FINGER_DIP",
-        "MIDDLE_FINGER_TIP",
-        "RING_FINGER_MCP",
-        "RING_FINGER_PIP",
-        "RING_FINGER_DIP",
-        "RING_FINGER_TIP",
-        "PINKY_MCP",
-        "PINKY_PIP",
-        "PINKY_DIP",
-        "PINKY_TIP",
+        ("WRIST", (128, 128, 128)),
+        ("THUMB_CMC", (128, 128, 128)),
+        ("THUMB_MCP", (182, 230, 251)),
+        ("THUMB_IP", (182, 230, 251)),
+        ("THUMB_TIP", (182, 230, 251)),
+        ("INDEX_FINGER_MCP", (128, 128, 128)),
+        ("INDEX_FINGER_PIP", (127, 68, 122)),
+        ("INDEX_FINGER_DIP", (127, 68, 122)),
+        ("INDEX_FINGER_TIP", (127, 68, 122)),
+        ("MIDDLE_FINGER_MCP", (128, 128, 128)),
+        ("MIDDLE_FINGER_PIP", (39, 206, 248)),
+        ("MIDDLE_FINGER_DIP", (39, 206, 248)),
+        ("MIDDLE_FINGER_TIP", (39, 206, 248)),
+        ("RING_FINGER_MCP", (128, 128, 128)),
+        ("RING_FINGER_PIP", (59, 250, 112)),
+        ("RING_FINGER_DIP", (59, 250, 112)),
+        ("RING_FINGER_TIP", (59, 250, 112)),
+        ("PINKY_MCP", (128, 128, 128)),
+        ("PINKY_PIP", (190, 100, 45)),
+        ("PINKY_DIP", (190, 100, 45)),
+        ("PINKY_TIP", (190, 100, 45)),
     )
 
+    # Each entry is (text, bgr_color).
     lines = []
-    for i, hand_landmarks in enumerate(hand_landmarker_result.hand_landmarks):
+    for i, hand_landmarks in enumerate(hand_landmarker_result.hand_world_landmarks):
         handedness = hand_landmarker_result.handedness[i][0].display_name
-        lines.append(f"--- {handedness} Hand ---")
-        for name, lm in zip(LANDMARK_NAMES, hand_landmarks):
-            lines.append(f"{name} - ({lm.x:.4f}, {lm.y:.4f}, {lm.z:.4f})")
+        lines.append((f"--- {handedness} Hand ---", (0, 0, 0)))
+        for (name, color), lm in zip(LANDMARK_NAMES, hand_landmarks):
+            lines.append((f"{name} - ({lm.x:.4f}, {lm.y:.4f}, {lm.z:.4f})", color))
 
     y = h - padding
-    for line in reversed(lines):
+    for line, color in reversed(lines):
         (text_w, text_h), _ = cv2.getTextSize(line, font, font_scale, thickness)
         y_top = y - text_h - padding
         cv2.rectangle(
@@ -65,7 +74,7 @@ def draw_landmark_debug(frame, hand_landmarker_result):
             (padding, y),
             font,
             font_scale,
-            (0, 0, 0),
+            color,
             thickness,
             cv2.LINE_AA,
         )
@@ -77,7 +86,7 @@ def main():
     base_options = python.BaseOptions(model_asset_path="hand_landmarker.task")
     options = vision.HandLandmarkerOptions(
         base_options=base_options,
-        num_hands=2,
+        num_hands=1,
         running_mode=vision.RunningMode.VIDEO,
     )
 
