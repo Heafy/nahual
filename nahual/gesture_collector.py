@@ -142,6 +142,9 @@ class GestureCollector:
             base_options=base_options,
             num_hands=1,
             running_mode=vision.RunningMode.VIDEO,
+            min_hand_detection_confidence=0.7,
+            min_hand_presence_confidence=0.6,
+            min_tracking_confidence=0.7,
         )
 
         capture = cv2.VideoCapture(self.config.camera_device_index)
