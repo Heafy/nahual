@@ -95,6 +95,8 @@ def main() -> None:
                     if landmark_frame is not None:
                         features = heuristics.extract_features_static(landmark_frame)
                         try:
+                            # TODO: This currently only train based in the normalized coordinates
+                            # It needs to be updated using all the heuristics and the concatenated vector
                             prediction = trainer.predict(
                                 features.normalized_coordinates.flatten()
                             )

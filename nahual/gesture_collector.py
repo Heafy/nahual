@@ -11,7 +11,10 @@ in a structured directory tree under a configurable data root.
 Directory layout produced::
 
     data/
-      static/<label>/<uuid>.npy     # shape (21, 3), dtype float32
+      static/<label>/<uuid>.npy     # shape (81,), dtype float32
+                                    #   [0:63]  normalized_coordinates (21×3 flattened)
+                                    #   [63:73] finger_angles (10 joint angles)
+                                    #   [73:81] inter_landmark_distances (8 pairs)
       dynamic/<label>/<uuid>.npy    # shape (N_frames, 21, 3), dtype float32
 
 Each label directory also contains a manifest.json that records capture
@@ -240,16 +243,38 @@ class GestureCollector:
         """
         self._require_label()
         features = self.heuristics.extract_features_static(landmark_frame)
+
+        # Concatenate all heuristic outputs into a single flat feature vector:
+        #   - normalized_coordinates: wrist-centred, palm-scale-invariant positions
+        #     (21 landmarks × 3 axes = 63 values)
+        #   - finger_angles: per-joint flexion angles derived from FINGER_JOINT_TRIPLETS
+        #     (10 values, one per joint pair)
+        #   - inter_landmark_distances: Euclidean distances between DEFAULT_LANDMARK_PAIRS
+        #     (8 values)
+        # Total: 81 float32 features saved as a 1-D array of shape (81,).
+        feature_vector = np.concatenate(
+            [
+                features.normalized_coordinates.flatten(),
+                features.finger_angles,
+                features.inter_landmark_distances,
+            ]
+        )
+
         output_path = self._build_output_path(GestureType.STATIC)
+        # TODO: Identify  why this is hardcoded
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "gesture_type": "static",
+            "feature_layout": {
+                "normalized_coordinates": [0, 63],
+                "finger_angles": [63, 73],
+                "inter_landmark_distances": [73, 81],
+                "total_features": 81,
+            },
         }
-        # TODO: Improve this, actually it only consider the normalized coordinates
-        # and not the complete heuristics
-        self._write_sample(features.normalized_coordinates, output_path, metadata)
+        self._write_sample(feature_vector, output_path, metadata)
         self.session.samples_captured += 1
         return output_path
 
@@ -290,6 +315,7 @@ class GestureCollector:
         self._require_label()
         features = self.heuristics.extract_features_dynamic(self._dynamic_frame_buffer)
         output_path = self._build_output_path(GestureType.DYNAMIC)
+        # TODO: Identify  why this is hardcoded
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
