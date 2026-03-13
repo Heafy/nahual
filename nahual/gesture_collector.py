@@ -247,6 +247,8 @@ class GestureCollector:
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "gesture_type": "static",
         }
+        # TODO: Improve this, actually it only consider the normalized coordinates
+        # and not the complete heuristics
         self._write_sample(features.normalized_coordinates, output_path, metadata)
         self.session.samples_captured += 1
         return output_path

@@ -32,24 +32,6 @@ MIDDLE_FINGER_MCP_INDEX = 9  # Used as palm-size reference for normalization.
 # Fingertip landmark indices in MediaPipe order.
 FINGERTIP_INDICES: List[int] = [4, 8, 12, 16, 20]
 
-# Key landmark indices used for per-landmark confidence filtering.
-# Only these joints must pass the visibility threshold; mid-joint occlusion
-# is tolerated because normalization and angle math degrade gracefully when
-# neighbouring joints are still reliable.
-# Index 0  = wrist   (anchor for normalization and distance features)
-# Index 4  = thumb tip
-# Index 8  = index fingertip
-# Index 12 = middle fingertip
-# Index 16 = ring fingertip
-# Index 20 = pinky fingertip
-KEY_LANDMARK_INDICES: List[int] = [0, 4, 8, 12, 16, 20]
-
-# Minimum visibility score [0.0, 1.0] that a key landmark must reach before
-# its frame is accepted.  Frames where any key landmark falls below this
-# threshold are discarded by extract_landmark_frame so that noisy coordinates
-# never enter the feature pipeline.
-MIN_LANDMARK_VISIBILITY: float = 0.5
-
 # Per-finger joint triplets (proximal, middle, distal) used for angle computation.
 # Each triplet is (parent_joint, pivot_joint, child_joint).
 FINGER_JOINT_TRIPLETS: List[Tuple[int, int, int]] = [
@@ -198,26 +180,6 @@ class GestureHeuristics:
             return None
 
         hand = world_landmarks[hand_index]
-
-        # --- Per-landmark confidence filtering (Option B) ---
-        # hand_world_landmarks inherits visibility/presence scores from the
-        # underlying 2-D image detection, so the scores are available even
-        # though we are working with metric 3-D coordinates.
-        #
-        # We only check the KEY_LANDMARK_INDICES (wrist + all 5 fingertips)
-        # because those joints drive normalization, angle computation, and
-        # distance features.  Mid-joint occlusion is acceptable; key-joint
-        # occlusion produces unreliable features that would corrupt training
-        # data or inference.
-        #
-        # If any key landmark's visibility falls below MIN_LANDMARK_VISIBILITY
-        # the entire frame is discarded (returns None) so bad coordinates
-        # never reach normalize_coordinates / compute_finger_angles /
-        # compute_inter_landmark_distances.
-        for key_index in KEY_LANDMARK_INDICES:
-            if hand[key_index].visibility < MIN_LANDMARK_VISIBILITY:
-                return None
-
         coordinates = np.array(
             [[landmark.x, landmark.y, landmark.z] for landmark in hand],
             dtype=np.float32,
@@ -401,6 +363,7 @@ class GestureHeuristics:
             frame_sequence=normalized_sequence,
         )
 
+    # TODO: It seems like its not used, because the gesture type is set by the user
     def classify_gesture_type(
         self, landmark_frames: List[LandmarkFrame]
     ) -> GestureType:
