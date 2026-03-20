@@ -17,6 +17,7 @@ from pathlib import Path
 
 import cv2
 import mediapipe as mp
+import numpy as np
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
@@ -95,11 +96,19 @@ def main() -> None:
                     if landmark_frame is not None:
                         features = heuristics.extract_features_static(landmark_frame)
                         try:
-                            # TODO: This currently only train based in the normalized coordinates
-                            # It needs to be updated using all the heuristics and the concatenated vector
-                            prediction = trainer.predict(
-                                features.normalized_coordinates.flatten()
+                            # Concatenate all heuristic outputs into the same 81-feature
+                            # vector layout used by the collector:
+                            #   [0:63]  normalized_coordinates (21 landmarks × 3 axes)
+                            #   [63:73] finger_angles (10 joint angles)
+                            #   [73:81] inter_landmark_distances (8 pairs)
+                            feature_vector = np.concatenate(
+                                [
+                                    features.normalized_coordinates.flatten(),
+                                    features.finger_angles,
+                                    features.inter_landmark_distances,
+                                ]
                             )
+                            prediction = trainer.predict(feature_vector)
                             draw_prediction_overlay(frame, prediction)
                         except NotImplementedError:
                             pass
