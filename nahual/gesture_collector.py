@@ -252,26 +252,29 @@ class GestureCollector:
         #   - inter_landmark_distances: Euclidean distances between DEFAULT_LANDMARK_PAIRS
         #     (8 values)
         # Total: 81 float32 features saved as a 1-D array of shape (81,).
+        normalized_coordinates = features.normalized_coordinates.flatten()
+        finger_angles = features.finger_angles
+        inter_landmark_distances = features.inter_landmark_distances
+
         feature_vector = np.concatenate(
-            [
-                features.normalized_coordinates.flatten(),
-                features.finger_angles,
-                features.inter_landmark_distances,
-            ]
+            [normalized_coordinates, finger_angles, inter_landmark_distances]
         )
 
+        nc_end = len(normalized_coordinates)
+        fa_end = nc_end + len(finger_angles)
+        ild_end = fa_end + len(inter_landmark_distances)
+
         output_path = self._build_output_path(GestureType.STATIC)
-        # TODO: Identify  why this is hardcoded
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "gesture_type": "static",
+            "gesture_type": GestureType.STATIC.name.lower(),
             "feature_layout": {
-                "normalized_coordinates": [0, 63],
-                "finger_angles": [63, 73],
-                "inter_landmark_distances": [73, 81],
-                "total_features": 81,
+                "normalized_coordinates": [0, nc_end],
+                "finger_angles": [nc_end, fa_end],
+                "inter_landmark_distances": [fa_end, ild_end],
+                "total_features": ild_end,
             },
         }
         self._write_sample(feature_vector, output_path, metadata)
@@ -315,12 +318,11 @@ class GestureCollector:
         self._require_label()
         features = self.heuristics.extract_features_dynamic(self._dynamic_frame_buffer)
         output_path = self._build_output_path(GestureType.DYNAMIC)
-        # TODO: Identify  why this is hardcoded
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "gesture_type": "dynamic",
+            "gesture_type": GestureType.DYNAMIC.name.lower(),
             "frame_count": len(self._dynamic_frame_buffer),
         }
         self._write_sample(features.frame_sequence, output_path, metadata)
