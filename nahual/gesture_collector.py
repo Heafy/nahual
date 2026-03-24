@@ -171,10 +171,13 @@ class GestureCollector:
                 result = self._detect_landmarks(landmarker, frame, timestamp_ms)
 
                 current_landmark_frame: Optional[LandmarkFrame] = None
+                hand_confidence: Optional[float] = None
                 if result and result.hand_landmarks:
                     current_landmark_frame = self.heuristics.extract_landmark_frame(
                         result, timestamp_ms
                     )
+                    if result.handedness:
+                        hand_confidence = result.handedness[0][0].score
                     if self.config.show_landmark_debug:
                         draw_landmark_debug(frame, result)
                     draw_hand_connections(frame, result)
@@ -186,7 +189,7 @@ class GestureCollector:
                     if elapsed >= self.config.dynamic_capture_duration_seconds:
                         self.stop_dynamic_capture_and_save()
 
-                self._draw_overlay(frame, current_landmark_frame)
+                self._draw_overlay(frame, current_landmark_frame, hand_confidence)
                 cv2.imshow(self.config.window_name, frame)
 
                 key = cv2.waitKey(1) & 0xFF
@@ -461,6 +464,7 @@ class GestureCollector:
         self,
         frame: np.ndarray,
         current_landmark_frame: Optional[LandmarkFrame],
+        hand_confidence: Optional[float] = None,
     ) -> None:
         """Draw the status bar and keyboard hints onto the frame.
 
@@ -468,6 +472,8 @@ class GestureCollector:
             frame: BGR frame to annotate in-place.
             current_landmark_frame: The latest landmark frame, or None if
                 no hand is detected (used to show a "no hand" warning).
+            hand_confidence: Detection confidence in [0, 1] from MediaPipe
+                handedness, or None when no hand is detected.
         """
         # Determine recording message.
         recording_message: Optional[str] = None
@@ -488,6 +494,13 @@ class GestureCollector:
         hint = "[l] label  [s] static  [d] dynamic start/stop  [q] quit"
         if current_landmark_frame is None:
             hint = "NO HAND DETECTED  |  " + hint
+        else:
+            confidence_label = (
+                f"HAND: {hand_confidence * 100:.0f}%"
+                if hand_confidence is not None
+                else "HAND DETECTED"
+            )
+            hint = confidence_label + "  |  " + hint
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(
             frame,
