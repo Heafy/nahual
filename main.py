@@ -108,8 +108,10 @@ def main() -> None:
                                     features.inter_landmark_distances,
                                 ]
                             )
-                            prediction = trainer.predict(feature_vector)
-                            draw_prediction_overlay(frame, prediction)
+                            prediction, confidence = trainer.predict_with_confidence(
+                                feature_vector
+                            )
+                            draw_prediction_overlay(frame, prediction, confidence)
                         except NotImplementedError:
                             pass
 

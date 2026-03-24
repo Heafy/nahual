@@ -490,6 +490,7 @@ class GestureTrainer:
     # Inference
     # ------------------------------------------------------------------
 
+    # TODO: Check if this methods is still used
     def predict(self, feature_vector: np.ndarray) -> str:
         """Run inference on a single feature vector and return the label.
 
@@ -514,3 +515,33 @@ class GestureTrainer:
         reshaped_vector = feature_vector.reshape(1, -1)
         prediction = self._model.predict(reshaped_vector)
         return prediction[0]
+
+    def predict_with_confidence(
+        self, feature_vector: np.ndarray
+    ) -> tuple[str, float]:
+        """Run inference and return the predicted label together with its confidence.
+
+        Uses the classifier's class probability estimates (predict_proba) to
+        derive a confidence score: the probability assigned to the winning class.
+
+        Args:
+            feature_vector: numpy array of shape (81,) for static gestures.
+
+        Returns:
+            A tuple of (label, confidence) where label is the predicted class
+            string and confidence is a float in [0, 1].
+
+        Raises:
+            RuntimeError: If no model has been loaded or trained.
+        """
+        if self._model is None:
+            raise RuntimeError(
+                "No model available.  Train a model or load one from disk first."
+            )
+
+        reshaped_vector = feature_vector.reshape(1, -1)
+        probabilities = self._model.predict_proba(reshaped_vector)[0]
+        predicted_index = int(probabilities.argmax())
+        label = self._model.classes_[predicted_index]
+        confidence = float(probabilities[predicted_index])
+        return label, confidence

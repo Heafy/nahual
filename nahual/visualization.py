@@ -117,31 +117,45 @@ def draw_prediction_overlay(frame, label, confidence=None):
     """Draw the predicted gesture label prominently on the frame.
 
     Renders a large text banner at the top of the frame showing the
-    predicted LSM letter (and optional confidence percentage).
+    predicted LSM letter on the main line, with the model confidence
+    percentage displayed as a smaller sub-line below it.
 
     Args:
         frame: OpenCV BGR frame to draw on.
         label: Predicted gesture label string (e.g., "A", "B").
-        confidence: Optional float in [0, 1] to display as a percentage.
+        confidence: Optional float in [0, 1] for the model prediction confidence,
+            displayed as a percentage on a sub-line below the label.
     """
     font = cv2.FONT_HERSHEY_DUPLEX
     font_scale = 2.0
     thickness = 3
     padding = 10
 
-    text = label if confidence is None else f"{label}  {confidence * 100:.0f}%"
-    (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+    sub_font = cv2.FONT_HERSHEY_SIMPLEX
+    sub_font_scale = 0.6
+    sub_thickness = 1
+    sub_gap = 6  # vertical gap between the two text lines
 
-    cv2.rectangle(
-        frame,
-        (0, 0),
-        (text_w + padding * 2, text_h + baseline + padding * 2),
-        (0, 0, 0),
-        -1,
-    )
+    (text_w, text_h), baseline = cv2.getTextSize(label, font, font_scale, thickness)
+
+    # Measure the optional confidence sub-line.
+    sub_text = f"{confidence * 100:.0f}% confidence" if confidence is not None else None
+    sub_h = 0
+    sub_w = 0
+    if sub_text is not None:
+        (sub_w, sub_h), _ = cv2.getTextSize(
+            sub_text, sub_font, sub_font_scale, sub_thickness
+        )
+
+    # Background rectangle covers both lines.
+    box_width = max(text_w, sub_w) + padding * 2
+    box_height = text_h + baseline + padding * 2 + (sub_gap + sub_h if sub_text else 0)
+    cv2.rectangle(frame, (0, 0), (box_width, box_height), (0, 0, 0), -1)
+
+    # Draw the main prediction label.
     cv2.putText(
         frame,
-        text,
+        label,
         (padding, text_h + padding),
         font,
         font_scale,
@@ -149,6 +163,20 @@ def draw_prediction_overlay(frame, label, confidence=None):
         thickness,
         cv2.LINE_AA,
     )
+
+    # Draw the confidence sub-line if available.
+    if sub_text is not None:
+        sub_y = text_h + padding + baseline + sub_gap + sub_h
+        cv2.putText(
+            frame,
+            sub_text,
+            (padding, sub_y),
+            sub_font,
+            sub_font_scale,
+            (180, 180, 180),
+            sub_thickness,
+            cv2.LINE_AA,
+        )
 
 
 def draw_status_bar(frame, label, gesture_type_name, samples_captured, message=None):
