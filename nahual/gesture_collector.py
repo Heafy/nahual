@@ -45,8 +45,8 @@ from mediapipe.tasks.python import vision
 
 from nahual.gesture_heuristics import (MAX_DYNAMIC_FRAMES, GestureHeuristics,
                                        GestureType, LandmarkFrame)
-from nahual.visualization import (draw_hand_connections, draw_landmark_debug,
-                                  draw_status_bar)
+from nahual.visualization import (draw_hand_connections, draw_hint_bar,
+                                  draw_landmark_debug, draw_status_bar)
 
 # ---------------------------------------------------------------------------
 # Configuration and session dataclasses
@@ -460,13 +460,51 @@ class GestureCollector:
         else:
             print("[collector] Empty input — label unchanged.")
 
+    def _build_hint_text(
+        self,
+        current_landmark_frame: Optional[LandmarkFrame],
+        hand_confidence: Optional[float],
+    ) -> str:
+        """Build the keyboard-hint string shown in the hint bar.
+
+        Separates the concern of *what* to display from *how* to render it.
+        The returned string is consumed by draw_hint_bar in visualization.py,
+        which handles all OpenCV drawing.  Keeping the string logic here also
+        makes it independently testable without an OpenCV frame.
+
+        Args:
+            current_landmark_frame: The latest landmark frame, or None when no
+                hand is currently detected.
+            hand_confidence: Detection confidence score in [0, 1] from MediaPipe
+                handedness, or None when no hand is detected.
+
+        Returns:
+            A single-line string combining the hand-detection status prefix and
+            the keyboard shortcut hints, e.g.:
+                "HAND: 96%  |  [l] label  [s] static  [d] dynamic start/stop  [q] quit"
+                "NO HAND DETECTED  |  [l] label  [s] static  [d] dynamic start/stop  [q] quit"
+        """
+        base_hint = "[l] label  [s] static  [d] dynamic start/stop  [q] quit"
+        if current_landmark_frame is None:
+            return "NO HAND DETECTED  |  " + base_hint
+        confidence_label = (
+            f"HAND: {hand_confidence * 100:.0f}%"
+            if hand_confidence is not None
+            else "HAND DETECTED"
+        )
+        return confidence_label + "  |  " + base_hint
+
     def _draw_overlay(
         self,
         frame: np.ndarray,
         current_landmark_frame: Optional[LandmarkFrame],
         hand_confidence: Optional[float] = None,
     ) -> None:
-        """Draw the status bar and keyboard hints onto the frame.
+        """Draw the hint bar and status bar onto the frame.
+
+        Draws two stacked bars at the top of the frame: the hint bar (hand
+        detection state + keyboard shortcuts) followed immediately by the
+        status bar (label, gesture type, sample count).
 
         Args:
             frame: BGR frame to annotate in-place.
@@ -482,35 +520,15 @@ class GestureCollector:
             remaining = max(0.0, self.config.dynamic_capture_duration_seconds - elapsed)
             recording_message = f"REC {remaining:.1f}s"
 
+        hint_text = self._build_hint_text(current_landmark_frame, hand_confidence)
+        hint_bar_height = draw_hint_bar(frame, hint_text)
         draw_status_bar(
             frame,
             label=self.session.label,
             gesture_type_name=("DYNAMIC" if self._is_capturing_dynamic else "STATIC"),
             samples_captured=self.session.samples_captured,
             message=recording_message,
-        )
-
-        # Keyboard hint bar at the bottom.
-        hint = "[l] label  [s] static  [d] dynamic start/stop  [q] quit"
-        if current_landmark_frame is None:
-            hint = "NO HAND DETECTED  |  " + hint
-        else:
-            confidence_label = (
-                f"HAND: {hand_confidence * 100:.0f}%"
-                if hand_confidence is not None
-                else "HAND DETECTED"
-            )
-            hint = confidence_label + "  |  " + hint
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(
-            frame,
-            hint,
-            (6, frame.shape[0] - 8),
-            font,
-            0.45,
-            (200, 200, 200),
-            1,
-            cv2.LINE_AA,
+            y_offset=hint_bar_height,
         )
 
     @staticmethod

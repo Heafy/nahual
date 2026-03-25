@@ -179,11 +179,20 @@ def draw_prediction_overlay(frame, label, confidence=None):
         )
 
 
-def draw_status_bar(frame, label, gesture_type_name, samples_captured, message=None):
-    """Draw a status bar at the top of the collector frame.
+def draw_status_bar(
+    frame,
+    label,
+    gesture_type_name,
+    samples_captured,
+    message=None,
+    y_offset: int = 0,
+) -> int:
+    """Draw a status bar on the collector frame at a given vertical offset.
 
     Shows the current label, gesture type, sample count, and an optional
-    message (e.g., countdown, recording indicator).
+    message (e.g., countdown, recording indicator).  The bar height is
+    returned so callers can stack multiple bars without hard-coding pixel
+    positions.
 
     Args:
         frame: OpenCV BGR frame to draw on.
@@ -191,12 +200,17 @@ def draw_status_bar(frame, label, gesture_type_name, samples_captured, message=N
         gesture_type_name: String name of the gesture type ("STATIC" or "DYNAMIC").
         samples_captured: Integer count of samples captured this session.
         message: Optional string shown in a highlighted box (e.g., "RECORDING").
+        y_offset: Vertical pixel offset from the top of the frame at which the
+            bar should be drawn.  Defaults to 0 (top of frame).
+
+    Returns:
+        The pixel height of the drawn bar so the next bar can use it as its
+        own y_offset.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.6
     thickness = 1
     padding = 6
-    line_height = 22
     background_color = (30, 30, 30)
     text_color = (220, 220, 220)
     highlight_color = (0, 0, 220)
@@ -210,11 +224,17 @@ def draw_status_bar(frame, label, gesture_type_name, samples_captured, message=N
     (text_w, text_h), _ = cv2.getTextSize(status_text, font, font_scale, thickness)
     bar_height = text_h + padding * 2
 
-    cv2.rectangle(frame, (0, 0), (frame.shape[1], bar_height), background_color, -1)
+    cv2.rectangle(
+        frame,
+        (0, y_offset),
+        (frame.shape[1], bar_height + y_offset),
+        background_color,
+        -1,
+    )
     cv2.putText(
         frame,
         status_text,
-        (padding, text_h + padding),
+        (padding, text_h + padding + y_offset),
         font,
         font_scale,
         text_color,
@@ -227,18 +247,69 @@ def draw_status_bar(frame, label, gesture_type_name, samples_captured, message=N
         msg_x = frame.shape[1] - msg_w - padding * 2
         cv2.rectangle(
             frame,
-            (msg_x - padding, 0),
-            (frame.shape[1], bar_height),
+            (msg_x - padding, y_offset),
+            (frame.shape[1], bar_height + y_offset),
             highlight_color,
             -1,
         )
         cv2.putText(
             frame,
             message,
-            (msg_x, text_h + padding),
+            (msg_x, text_h + padding + y_offset),
             font,
             font_scale,
             (255, 255, 255),
             thickness,
             cv2.LINE_AA,
         )
+
+    return bar_height
+
+
+def draw_hint_bar(frame, hint_text: str, y_offset: int = 0) -> int:
+    """Draw a keyboard-hint and hand-detection status bar on the frame.
+
+    Renders a full-width background bar with the hint text using the same
+    visual style as draw_status_bar (font, colors, padding).  The bar is
+    positioned at y_offset from the top, so multiple bars can be stacked by
+    passing the return value of a previous bar call as the next y_offset.
+
+    Args:
+        frame: OpenCV BGR frame to draw on.
+        hint_text: Full hint string to display (e.g., "HAND: 95%  |  [l] label ...").
+        y_offset: Vertical pixel offset from the top of the frame at which the
+            bar should be drawn.  Defaults to 0 (top of frame).
+
+    Returns:
+        The pixel height of the drawn bar so the next bar can use it as its
+        own y_offset.
+    """
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.6
+    thickness = 1
+    padding = 6
+    background_color = (30, 30, 30)
+    text_color = (220, 220, 220)
+
+    (text_w, text_h), _ = cv2.getTextSize(hint_text, font, font_scale, thickness)
+    bar_height = text_h + padding * 2
+
+    cv2.rectangle(
+        frame,
+        (0, y_offset),
+        (frame.shape[1], bar_height + y_offset),
+        background_color,
+        -1,
+    )
+    cv2.putText(
+        frame,
+        hint_text,
+        (padding, text_h + padding + y_offset),
+        font,
+        font_scale,
+        text_color,
+        thickness,
+        cv2.LINE_AA,
+    )
+
+    return bar_height
