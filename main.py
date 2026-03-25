@@ -87,7 +87,7 @@ def main() -> None:
 
             if result.hand_landmarks:
                 draw_hand_connections(frame, result)
-                draw_landmark_debug(frame, result)
+                # draw_landmark_debug(frame, result)
 
                 if model_available:
                     landmark_frame = heuristics.extract_landmark_frame(
@@ -111,7 +111,14 @@ def main() -> None:
                             prediction, confidence = trainer.predict_with_confidence(
                                 feature_vector
                             )
-                            draw_prediction_overlay(frame, prediction, confidence)
+                            detected_handedness = (
+                                result.handedness[0][0].display_name
+                                if result.handedness
+                                else None
+                            )
+                            draw_prediction_overlay(
+                                frame, prediction, confidence, detected_handedness
+                            )
                         except NotImplementedError:
                             pass
 

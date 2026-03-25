@@ -6,6 +6,8 @@ These functions are shared between main.py and gesture_collector.py
 to avoid code duplication.
 """
 
+from typing import Optional
+
 import cv2
 from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
 from mediapipe.tasks.python.vision import hand_landmarker as mp_hand_landmarker
@@ -114,21 +116,26 @@ def draw_hand_connections(frame, hand_landmarker_result):
 
 
 def draw_prediction_overlay(
-    frame, label: str, confidence=None, y_offset: int = 0
+    frame,
+    label: str,
+    confidence=None,
+    handedness: Optional[str] = None,
+    y_offset: int = 0,
 ) -> int:
     """Draw the predicted gesture label as a full-width bar on the frame.
 
-    Renders a dark background bar using the same visual style as
-    draw_status_bar and draw_hint_bar.  The predicted label is shown on
-    the first line; an optional confidence percentage is shown on the
-    second line directly below.  The bar height is returned so callers
-    can stack further bars beneath it.
+    Renders a dark background bar with up to three stacked lines: the
+    predicted label (prominent, white), an optional confidence percentage,
+    and an optional detected handedness ("Left" / "Right").  The bar height
+    is returned so callers can stack further bars beneath it.
 
     Args:
         frame: OpenCV BGR frame to draw on.
         label: Predicted gesture label string (e.g., "A", "B").
         confidence: Optional float in [0, 1] for the model prediction
             confidence, displayed as a percentage on a second line.
+        handedness: Optional string indicating which hand was detected
+            (e.g., "Left" or "Right"), displayed on a third line.
         y_offset: Vertical pixel offset from the top of the frame at
             which the bar should be drawn.  Defaults to 0 (top of frame).
 
@@ -141,16 +148,16 @@ def draw_prediction_overlay(
     label_font_scale = 2.0
     label_thickness = 2
     padding = 12
-    line_gap = padding  # vertical space between label line and confidence line
+    line_gap = padding  # vertical space between each line
 
-    # Confidence line style — smaller, same family as the other bars.
-    confidence_font = cv2.FONT_HERSHEY_PLAIN
-    confidence_font_scale = 1.5
-    confidence_thickness = 1
+    # Confidence and handedness lines share the same style.
+    secondary_font = cv2.FONT_HERSHEY_PLAIN
+    secondary_font_scale = 1.5
+    secondary_thickness = 1
 
     background_color = (30, 30, 30)
     label_text_color = (255, 255, 255)
-    confidence_text_color = (220, 220, 220)
+    secondary_text_color = (220, 220, 220)
 
     (label_w, label_h), _ = cv2.getTextSize(
         label, label_font, label_font_scale, label_thickness
@@ -163,17 +170,24 @@ def draw_prediction_overlay(
     confidence_h = 0
     if confidence_text is not None:
         (confidence_w, confidence_h), _ = cv2.getTextSize(
-            confidence_text,
-            confidence_font,
-            confidence_font_scale,
-            confidence_thickness,
+            confidence_text, secondary_font, secondary_font_scale, secondary_thickness
         )
 
-    # Bar height grows to accommodate both lines when confidence is present.
+    # Measure the optional handedness line.
+    handedness_text = f"Hand: {handedness}" if handedness is not None else None
+    handedness_h = 0
+    if handedness_text is not None:
+        (handedness_w, handedness_h), _ = cv2.getTextSize(
+            handedness_text, secondary_font, secondary_font_scale, secondary_thickness
+        )
+
+    # Bar height grows to accommodate whichever optional lines are present.
+    bar_height = padding + label_h
     if confidence_text is not None:
-        bar_height = padding + label_h + line_gap + confidence_h + padding
-    else:
-        bar_height = label_h + padding * 2
+        bar_height += line_gap + confidence_h
+    if handedness_text is not None:
+        bar_height += line_gap + handedness_h
+    bar_height += padding
 
     cv2.rectangle(
         frame,
@@ -201,10 +215,34 @@ def draw_prediction_overlay(
             frame,
             confidence_text,
             (padding, y_offset + padding + label_h + line_gap + confidence_h),
-            confidence_font,
-            confidence_font_scale,
-            confidence_text_color,
-            confidence_thickness,
+            secondary_font,
+            secondary_font_scale,
+            secondary_text_color,
+            secondary_thickness,
+            cv2.LINE_AA,
+        )
+
+    # Draw the handedness on the third line if available.
+    if handedness_text is not None:
+        handedness_anchor_y = (
+            y_offset
+            + padding
+            + label_h
+            + line_gap
+            + confidence_h
+            + line_gap
+            + handedness_h
+            if confidence_text is not None
+            else y_offset + padding + label_h + line_gap + handedness_h
+        )
+        cv2.putText(
+            frame,
+            handedness_text,
+            (padding, handedness_anchor_y),
+            secondary_font,
+            secondary_font_scale,
+            secondary_text_color,
+            secondary_thickness,
             cv2.LINE_AA,
         )
 
