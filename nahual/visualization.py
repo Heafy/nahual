@@ -113,70 +113,102 @@ def draw_hand_connections(frame, hand_landmarker_result):
         )
 
 
-def draw_prediction_overlay(frame, label, confidence=None):
-    """Draw the predicted gesture label prominently on the frame.
+def draw_prediction_overlay(
+    frame, label: str, confidence=None, y_offset: int = 0
+) -> int:
+    """Draw the predicted gesture label as a full-width bar on the frame.
 
-    Renders a large text banner at the top of the frame showing the
-    predicted LSM letter on the main line, with the model confidence
-    percentage displayed as a smaller sub-line below it.
+    Renders a dark background bar using the same visual style as
+    draw_status_bar and draw_hint_bar.  The predicted label is shown on
+    the first line; an optional confidence percentage is shown on the
+    second line directly below.  The bar height is returned so callers
+    can stack further bars beneath it.
 
     Args:
         frame: OpenCV BGR frame to draw on.
         label: Predicted gesture label string (e.g., "A", "B").
-        confidence: Optional float in [0, 1] for the model prediction confidence,
-            displayed as a percentage on a sub-line below the label.
+        confidence: Optional float in [0, 1] for the model prediction
+            confidence, displayed as a percentage on a second line.
+        y_offset: Vertical pixel offset from the top of the frame at
+            which the bar should be drawn.  Defaults to 0 (top of frame).
+
+    Returns:
+        The pixel height of the drawn bar so the next bar can use it as
+        its own y_offset.
     """
-    font = cv2.FONT_HERSHEY_DUPLEX
-    font_scale = 2.0
-    thickness = 3
-    padding = 10
+    # Label line style — larger, more prominent.
+    label_font = cv2.FONT_HERSHEY_DUPLEX
+    label_font_scale = 2.0
+    label_thickness = 2
+    padding = 12
+    line_gap = padding  # vertical space between label line and confidence line
 
-    sub_font = cv2.FONT_HERSHEY_SIMPLEX
-    sub_font_scale = 0.6
-    sub_thickness = 1
-    sub_gap = 6  # vertical gap between the two text lines
+    # Confidence line style — smaller, same family as the other bars.
+    confidence_font = cv2.FONT_HERSHEY_PLAIN
+    confidence_font_scale = 1.5
+    confidence_thickness = 1
 
-    (text_w, text_h), baseline = cv2.getTextSize(label, font, font_scale, thickness)
+    background_color = (30, 30, 30)
+    label_text_color = (255, 255, 255)
+    confidence_text_color = (220, 220, 220)
 
-    # Measure the optional confidence sub-line.
-    sub_text = f"{confidence * 100:.0f}% confidence" if confidence is not None else None
-    sub_h = 0
-    sub_w = 0
-    if sub_text is not None:
-        (sub_w, sub_h), _ = cv2.getTextSize(
-            sub_text, sub_font, sub_font_scale, sub_thickness
+    (label_w, label_h), _ = cv2.getTextSize(
+        label, label_font, label_font_scale, label_thickness
+    )
+
+    # Measure the optional confidence line.
+    confidence_text = (
+        f"{confidence * 100:.0f}% confidence" if confidence is not None else None
+    )
+    confidence_h = 0
+    if confidence_text is not None:
+        (confidence_w, confidence_h), _ = cv2.getTextSize(
+            confidence_text,
+            confidence_font,
+            confidence_font_scale,
+            confidence_thickness,
         )
 
-    # Background rectangle covers both lines.
-    box_width = max(text_w, sub_w) + padding * 2
-    box_height = text_h + baseline + padding * 2 + (sub_gap + sub_h if sub_text else 0)
-    cv2.rectangle(frame, (0, 0), (box_width, box_height), (0, 0, 0), -1)
+    # Bar height grows to accommodate both lines when confidence is present.
+    if confidence_text is not None:
+        bar_height = padding + label_h + line_gap + confidence_h + padding
+    else:
+        bar_height = label_h + padding * 2
 
-    # Draw the main prediction label.
+    cv2.rectangle(
+        frame,
+        (0, y_offset),
+        (frame.shape[1], bar_height + y_offset),
+        background_color,
+        -1,
+    )
+
+    # Draw the main prediction label on the first line.
     cv2.putText(
         frame,
         label,
-        (padding, text_h + padding),
-        font,
-        font_scale,
-        (0, 255, 0),
-        thickness,
+        (padding, y_offset + padding + label_h),
+        label_font,
+        label_font_scale,
+        label_text_color,
+        label_thickness,
         cv2.LINE_AA,
     )
 
-    # Draw the confidence sub-line if available.
-    if sub_text is not None:
-        sub_y = text_h + padding + baseline + sub_gap + sub_h
+    # Draw the confidence percentage on the second line if available.
+    if confidence_text is not None:
         cv2.putText(
             frame,
-            sub_text,
-            (padding, sub_y),
-            sub_font,
-            sub_font_scale,
-            (180, 180, 180),
-            sub_thickness,
+            confidence_text,
+            (padding, y_offset + padding + label_h + line_gap + confidence_h),
+            confidence_font,
+            confidence_font_scale,
+            confidence_text_color,
+            confidence_thickness,
             cv2.LINE_AA,
         )
+
+    return bar_height
 
 
 def draw_status_bar(
