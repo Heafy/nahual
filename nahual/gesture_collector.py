@@ -172,12 +172,14 @@ class GestureCollector:
 
                 current_landmark_frame: Optional[LandmarkFrame] = None
                 hand_confidence: Optional[float] = None
+                handedness: Optional[str] = None
                 if result and result.hand_landmarks:
                     current_landmark_frame = self.heuristics.extract_landmark_frame(
                         result, timestamp_ms
                     )
                     if result.handedness:
                         hand_confidence = result.handedness[0][0].score
+                        handedness = result.handedness[0][0].display_name
                     if self.config.show_landmark_debug:
                         draw_landmark_debug(frame, result)
                     draw_hand_connections(frame, result)
@@ -189,7 +191,9 @@ class GestureCollector:
                     if elapsed >= self.config.dynamic_capture_duration_seconds:
                         self.stop_dynamic_capture_and_save()
 
-                self._draw_overlay(frame, current_landmark_frame, hand_confidence)
+                self._draw_overlay(
+                    frame, current_landmark_frame, hand_confidence, handedness
+                )
                 cv2.imshow(self.config.window_name, frame)
 
                 key = cv2.waitKey(1) & 0xFF
@@ -464,6 +468,7 @@ class GestureCollector:
         self,
         current_landmark_frame: Optional[LandmarkFrame],
         hand_confidence: Optional[float],
+        handedness: Optional[str] = None,
     ) -> str:
         """Build the keyboard-hint string shown in the hint bar.
 
@@ -477,28 +482,38 @@ class GestureCollector:
                 hand is currently detected.
             hand_confidence: Detection confidence score in [0, 1] from MediaPipe
                 handedness, or None when no hand is detected.
+            handedness: Detected hand side ("Left" or "Right") from MediaPipe,
+                or None when no hand is detected.
 
         Returns:
             A single-line string combining the hand-detection status prefix and
             the keyboard shortcut hints, e.g.:
-                "HAND: 96%  |  [l] label  [s] static  [d] dynamic start/stop  [q] quit"
+                "Hand: Right  |  Hand confidence: 96%  |  [l] label  [s] static  ..."
                 "NO HAND DETECTED  |  [l] label  [s] static  [d] dynamic start/stop  [q] quit"
         """
         base_hint = "[l] label  [s] static  [d] dynamic start/stop  [q] quit"
         if current_landmark_frame is None:
             return "NO HAND DETECTED  |  " + base_hint
-        confidence_label = (
-            f"HAND: {hand_confidence * 100:.0f}%"
-            if hand_confidence is not None
-            else "HAND DETECTED"
-        )
-        return confidence_label + "  |  " + base_hint
+
+        if hand_confidence is not None and handedness is not None:
+            status_prefix = (
+                f"Hand: {handedness}  |  Hand confidence: {hand_confidence * 100:.0f}%"
+            )
+        elif hand_confidence is not None:
+            status_prefix = f"HAND: {hand_confidence * 100:.0f}%"
+        elif handedness is not None:
+            status_prefix = f"Hand: {handedness}"
+        else:
+            status_prefix = "HAND DETECTED"
+
+        return status_prefix + "  |  " + base_hint
 
     def _draw_overlay(
         self,
         frame: np.ndarray,
         current_landmark_frame: Optional[LandmarkFrame],
         hand_confidence: Optional[float] = None,
+        handedness: Optional[str] = None,
     ) -> None:
         """Draw the hint bar and status bar onto the frame.
 
@@ -512,6 +527,8 @@ class GestureCollector:
                 no hand is detected (used to show a "no hand" warning).
             hand_confidence: Detection confidence in [0, 1] from MediaPipe
                 handedness, or None when no hand is detected.
+            handedness: Detected hand side ("Left" or "Right") from MediaPipe,
+                or None when no hand is detected.
         """
         # Determine recording message.
         recording_message: Optional[str] = None
@@ -520,7 +537,9 @@ class GestureCollector:
             remaining = max(0.0, self.config.dynamic_capture_duration_seconds - elapsed)
             recording_message = f"REC {remaining:.1f}s"
 
-        hint_text = self._build_hint_text(current_landmark_frame, hand_confidence)
+        hint_text = self._build_hint_text(
+            current_landmark_frame, hand_confidence, handedness
+        )
         hint_bar_height = draw_hint_bar(frame, hint_text)
         draw_status_bar(
             frame,

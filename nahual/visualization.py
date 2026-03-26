@@ -165,7 +165,7 @@ def draw_prediction_overlay(
 
     # Build the single secondary line combining handedness and confidence.
     if confidence is not None and handedness is not None:
-        confidence_text = f"Hand: {handedness}  |  {confidence * 100:.0f}%"
+        confidence_text = f"Hand: {handedness} | Confidence: {confidence * 100:.0f}%"
     elif confidence is not None:
         confidence_text = f"{confidence * 100:.0f}%"
     elif handedness is not None:
