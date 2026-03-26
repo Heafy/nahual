@@ -145,14 +145,14 @@ def draw_prediction_overlay(
     """
     # Label line style — larger, more prominent.
     label_font = cv2.FONT_HERSHEY_DUPLEX
-    label_font_scale = 2.0
+    label_font_scale = 1.4
     label_thickness = 2
     padding = 12
-    line_gap = padding  # vertical space between each line
+    line_gap = padding  # vertical space between label and secondary line
 
-    # Confidence and handedness lines share the same style.
-    secondary_font = cv2.FONT_HERSHEY_PLAIN
-    secondary_font_scale = 1.5
+    # Secondary line style — handedness + confidence on one line.
+    secondary_font = cv2.FONT_HERSHEY_SIMPLEX
+    secondary_font_scale = 0.8
     secondary_thickness = 1
 
     background_color = (30, 30, 30)
@@ -163,30 +163,26 @@ def draw_prediction_overlay(
         label, label_font, label_font_scale, label_thickness
     )
 
-    # Measure the optional confidence line.
-    confidence_text = (
-        f"{confidence * 100:.0f}% confidence" if confidence is not None else None
-    )
+    # Build the single secondary line combining handedness and confidence.
+    if confidence is not None and handedness is not None:
+        confidence_text = f"Hand: {handedness}  |  {confidence * 100:.0f}%"
+    elif confidence is not None:
+        confidence_text = f"{confidence * 100:.0f}%"
+    elif handedness is not None:
+        confidence_text = f"Hand: {handedness}"
+    else:
+        confidence_text = None
+
     confidence_h = 0
     if confidence_text is not None:
         (confidence_w, confidence_h), _ = cv2.getTextSize(
             confidence_text, secondary_font, secondary_font_scale, secondary_thickness
         )
 
-    # Measure the optional handedness line.
-    handedness_text = f"Hand: {handedness}" if handedness is not None else None
-    handedness_h = 0
-    if handedness_text is not None:
-        (handedness_w, handedness_h), _ = cv2.getTextSize(
-            handedness_text, secondary_font, secondary_font_scale, secondary_thickness
-        )
-
-    # Bar height grows to accommodate whichever optional lines are present.
+    # Bar height grows to accommodate the optional secondary line.
     bar_height = padding + label_h
     if confidence_text is not None:
         bar_height += line_gap + confidence_h
-    if handedness_text is not None:
-        bar_height += line_gap + handedness_h
     bar_height += padding
 
     cv2.rectangle(
@@ -209,36 +205,12 @@ def draw_prediction_overlay(
         cv2.LINE_AA,
     )
 
-    # Draw the confidence percentage on the second line if available.
+    # Draw the combined handedness / confidence on the second line if available.
     if confidence_text is not None:
         cv2.putText(
             frame,
             confidence_text,
             (padding, y_offset + padding + label_h + line_gap + confidence_h),
-            secondary_font,
-            secondary_font_scale,
-            secondary_text_color,
-            secondary_thickness,
-            cv2.LINE_AA,
-        )
-
-    # Draw the handedness on the third line if available.
-    if handedness_text is not None:
-        handedness_anchor_y = (
-            y_offset
-            + padding
-            + label_h
-            + line_gap
-            + confidence_h
-            + line_gap
-            + handedness_h
-            if confidence_text is not None
-            else y_offset + padding + label_h + line_gap + handedness_h
-        )
-        cv2.putText(
-            frame,
-            handedness_text,
-            (padding, handedness_anchor_y),
             secondary_font,
             secondary_font_scale,
             secondary_text_color,
@@ -277,12 +249,19 @@ def draw_status_bar(
         The pixel height of the drawn bar so the next bar can use it as its
         own y_offset.
     """
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.6
-    thickness = 1
-    padding = 6
+    # Status text — label tier, matches draw_prediction_overlay label line.
+    label_font = cv2.FONT_HERSHEY_SIMPLEX
+    label_font_scale = 0.8
+    label_thickness = 1
+    padding = 8
+    label_text_color = (220, 220, 220)
+
+    # Message badge — secondary tier, matches draw_prediction_overlay secondary line.
+    secondary_font = cv2.FONT_HERSHEY_DUPLEX
+    secondary_font_scale = 1.4
+    secondary_thickness = 1
+
     background_color = (30, 30, 30)
-    text_color = (220, 220, 220)
     highlight_color = (0, 0, 220)
 
     status_text = (
@@ -291,7 +270,9 @@ def draw_status_bar(
         f"Samples: {samples_captured}"
     )
 
-    (text_w, text_h), _ = cv2.getTextSize(status_text, font, font_scale, thickness)
+    (text_w, text_h), _ = cv2.getTextSize(
+        status_text, label_font, label_font_scale, label_thickness
+    )
     bar_height = text_h + padding * 2
 
     cv2.rectangle(
@@ -305,15 +286,17 @@ def draw_status_bar(
         frame,
         status_text,
         (padding, text_h + padding + y_offset),
-        font,
-        font_scale,
-        text_color,
-        thickness,
+        label_font,
+        label_font_scale,
+        label_text_color,
+        label_thickness,
         cv2.LINE_AA,
     )
 
     if message:
-        (msg_w, msg_h), _ = cv2.getTextSize(message, font, font_scale, thickness)
+        (msg_w, msg_h), _ = cv2.getTextSize(
+            message, secondary_font, secondary_font_scale, secondary_thickness
+        )
         msg_x = frame.shape[1] - msg_w - padding * 2
         cv2.rectangle(
             frame,
@@ -326,10 +309,10 @@ def draw_status_bar(
             frame,
             message,
             (msg_x, text_h + padding + y_offset),
-            font,
-            font_scale,
+            secondary_font,
+            secondary_font_scale,
             (255, 255, 255),
-            thickness,
+            secondary_thickness,
             cv2.LINE_AA,
         )
 
