@@ -158,6 +158,8 @@ def draw_prediction_overlay(
     background_color = (30, 30, 30)
     label_text_color = (255, 255, 255)
     secondary_text_color = (220, 220, 220)
+    low_confidence_threshold = 0.65
+    low_confidence_color = (80, 80, 255)  # Bright red in BGR
 
     (label_w, label_h), _ = cv2.getTextSize(
         label, label_font, label_font_scale, label_thickness
@@ -179,10 +181,22 @@ def draw_prediction_overlay(
             confidence_text, secondary_font, secondary_font_scale, secondary_thickness
         )
 
-    # Bar height grows to accommodate the optional secondary line.
+    # Determine whether a "Low confidence" warning line must be rendered.
+    low_confidence_text = None
+    low_confidence_h = 0
+    if confidence is not None and confidence < low_confidence_threshold:
+        low_confidence_text = "Low confidence"
+        (low_confidence_w, low_confidence_h), _ = cv2.getTextSize(
+            low_confidence_text, secondary_font, secondary_font_scale, secondary_thickness
+        )
+
+    # Bar height grows to accommodate the optional secondary line and the
+    # optional low-confidence warning line.
     bar_height = padding + label_h
     if confidence_text is not None:
         bar_height += line_gap + confidence_h
+    if low_confidence_text is not None:
+        bar_height += line_gap + low_confidence_h
     bar_height += padding
 
     cv2.rectangle(
@@ -214,6 +228,20 @@ def draw_prediction_overlay(
             secondary_font,
             secondary_font_scale,
             secondary_text_color,
+            secondary_thickness,
+            cv2.LINE_AA,
+        )
+
+    # Draw the low-confidence warning beneath all other lines when the
+    # prediction confidence falls below the defined threshold.
+    if low_confidence_text is not None:
+        cv2.putText(
+            frame,
+            low_confidence_text,
+            (padding, y_offset + bar_height - padding),
+            secondary_font,
+            secondary_font_scale,
+            low_confidence_color,
             secondary_thickness,
             cv2.LINE_AA,
         )
