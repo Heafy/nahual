@@ -159,7 +159,7 @@ def draw_prediction_overlay(
     label_text_color = (255, 255, 255)
     secondary_text_color = (220, 220, 220)
     low_confidence_threshold = 0.65
-    low_confidence_color = (80, 80, 255)  # Bright red in BGR
+    low_confidence_color = (40, 80, 255)  # Bright red in BGR
 
     (label_w, label_h), _ = cv2.getTextSize(
         label, label_font, label_font_scale, label_thickness

@@ -94,6 +94,11 @@ def main() -> None:
                         result, timestamp_ms
                     )
                     if landmark_frame is not None:
+                        if result.handedness and result.handedness[0][0].display_name == "Left":
+                            # Mirror left-hand coordinates to match right-hand training data.
+                            # Negating the X-axis reflects the hand across the sagittal plane,
+                            # making it geometrically equivalent to a right hand for the model.
+                            landmark_frame.coordinates[:, 0] *= -1
                         features = heuristics.extract_features_static(landmark_frame)
                         try:
                             # Concatenate all heuristic outputs into the same 81-feature
