@@ -75,6 +75,13 @@ MOTION_VELOCITY_THRESHOLD: float = 0.002
 # 90 frames ≈ 3 seconds at 30 fps.
 MAX_DYNAMIC_FRAMES: int = 90
 
+# Feature vector length for dynamic gesture statistical features.
+# See extract_statistical_features_dynamic() for the full layout.
+#   252 (per-channel stats) + 126 (velocity stats) + 63 (displacement)
+#   + 63 (direction reversals) + 5 (path lengths) + 20 (first/last angles)
+#   + 16 (first/last distances) = 545
+DYNAMIC_STATISTICAL_FEATURE_LENGTH: int = 545
+
 
 # ---------------------------------------------------------------------------
 # Enums and dataclasses
@@ -362,6 +369,156 @@ class GestureHeuristics:
             gesture_type=GestureType.DYNAMIC,
             frame_sequence=normalized_sequence,
         )
+
+    def extract_statistical_features_dynamic(
+        self,
+        frame_sequence: np.ndarray,
+    ) -> np.ndarray:
+        """Extract temporal statistical features from a dynamic gesture sequence.
+
+        Computes per-landmark-axis statistics across time to produce a
+        fixed-length feature vector suitable for a traditional classifier
+        (e.g. Random Forest).  This approach captures trajectory shape
+        without requiring a sequence model.
+
+        The input must already be normalized (wrist-centered, palm-width-scaled),
+        which is the format produced by the collector and by
+        extract_features_dynamic().frame_sequence.
+
+        Feature layout (545 total):
+
+            Index Range  Count  Description
+            ----------- ------ ------------------------------------------
+              0 -  62      63  Per-channel mean
+             63 - 125      63  Per-channel std
+            126 - 188      63  Per-channel min
+            189 - 251      63  Per-channel max
+            252 - 314      63  Per-channel velocity mean
+            315 - 377      63  Per-channel velocity std
+            378 - 440      63  Per-channel displacement (last - first)
+            441 - 503      63  Per-channel direction reversal count
+            504 - 508       5  Fingertip path lengths
+            509 - 518      10  First frame finger angles
+            519 - 528      10  Last frame finger angles
+            529 - 536       8  First frame inter-landmark distances
+            537 - 544       8  Last frame inter-landmark distances
+
+        Args:
+            frame_sequence: numpy array of shape (N_frames, 21, 3), dtype
+                float32.  Already normalized coordinates for each frame.
+
+        Returns:
+            Flat numpy array of shape (545,), dtype float32.
+
+        Raises:
+            ValueError: If frame_sequence has unexpected shape or is empty.
+        """
+        if frame_sequence.ndim != 3 or frame_sequence.shape[1:] != (21, 3):
+            raise ValueError(
+                f"Expected shape (N_frames, 21, 3), got {frame_sequence.shape}."
+            )
+        if frame_sequence.shape[0] == 0:
+            raise ValueError("frame_sequence must contain at least one frame.")
+
+        number_of_frames = frame_sequence.shape[0]
+
+        # --- Per-channel temporal statistics (252 features) ----------------
+        # Reshape to (N_frames, 63) so each column is one landmark-axis channel.
+        channels = frame_sequence.reshape(number_of_frames, -1)  # (N, 63)
+
+        channel_mean = channels.mean(axis=0)  # (63,)
+        channel_std = channels.std(axis=0)  # (63,)
+        channel_min = channels.min(axis=0)  # (63,)
+        channel_max = channels.max(axis=0)  # (63,)
+
+        # --- Velocity statistics (126 features) ----------------------------
+        if number_of_frames >= 2:
+            velocity = np.diff(channels, axis=0)  # (N-1, 63)
+            velocity_mean = velocity.mean(axis=0)  # (63,)
+            velocity_std = velocity.std(axis=0)  # (63,)
+        else:
+            velocity_mean = np.zeros(63, dtype=np.float32)
+            velocity_std = np.zeros(63, dtype=np.float32)
+
+        # --- Displacement (63 features) ------------------------------------
+        displacement = channels[-1] - channels[0]  # (63,)
+
+        # --- Direction reversal count (63 features) ------------------------
+        if number_of_frames >= 3:
+            velocity_sign = np.sign(velocity)
+            sign_changes = np.diff(velocity_sign, axis=0)  # (N-2, 63)
+            direction_reversals = np.count_nonzero(sign_changes, axis=0).astype(
+                np.float32
+            )  # (63,)
+        else:
+            direction_reversals = np.zeros(63, dtype=np.float32)
+
+        # --- Fingertip path lengths (5 features) --------------------------
+        fingertip_path_lengths = self._compute_fingertip_path_lengths(
+            frame_sequence
+        )  # (5,)
+
+        # --- First and last frame finger angles (20 features) -------------
+        first_frame_angles = self.compute_finger_angles(frame_sequence[0])  # (10,)
+        last_frame_angles = self.compute_finger_angles(frame_sequence[-1])  # (10,)
+
+        # --- First and last frame inter-landmark distances (16 features) ---
+        first_frame_distances = self.compute_inter_landmark_distances(
+            frame_sequence[0]
+        )  # (8,)
+        last_frame_distances = self.compute_inter_landmark_distances(
+            frame_sequence[-1]
+        )  # (8,)
+
+        # --- Concatenate all features -------------------------------------
+        feature_vector = np.concatenate(
+            [
+                channel_mean,  # 63
+                channel_std,  # 63
+                channel_min,  # 63
+                channel_max,  # 63
+                velocity_mean,  # 63
+                velocity_std,  # 63
+                displacement,  # 63
+                direction_reversals,  # 63
+                fingertip_path_lengths,  # 5
+                first_frame_angles,  # 10
+                last_frame_angles,  # 10
+                first_frame_distances,  # 8
+                last_frame_distances,  # 8
+            ]
+        ).astype(np.float32)
+
+        return feature_vector
+
+    def _compute_fingertip_path_lengths(
+        self,
+        frame_sequence: np.ndarray,
+    ) -> np.ndarray:
+        """Compute the total path length traced by each fingertip.
+
+        For each fingertip landmark, sums the Euclidean distance between
+        consecutive frames to measure how far the fingertip travelled
+        during the gesture.
+
+        Args:
+            frame_sequence: numpy array of shape (N_frames, 21, 3).
+
+        Returns:
+            numpy array of shape (5,), dtype float32, one path length
+            per fingertip in FINGERTIP_INDICES order.
+        """
+        path_lengths = np.zeros(len(FINGERTIP_INDICES), dtype=np.float32)
+
+        if frame_sequence.shape[0] < 2:
+            return path_lengths
+
+        for index, fingertip_landmark in enumerate(FINGERTIP_INDICES):
+            trajectory = frame_sequence[:, fingertip_landmark, :]  # (N, 3)
+            deltas = np.diff(trajectory, axis=0)  # (N-1, 3)
+            path_lengths[index] = np.sum(np.linalg.norm(deltas, axis=1))
+
+        return path_lengths
 
     # TODO: It seems like its not used, because the gesture type is set by the user
     def classify_gesture_type(

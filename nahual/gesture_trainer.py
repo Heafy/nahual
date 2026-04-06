@@ -36,6 +36,9 @@ from sklearn.metrics import (accuracy_score, classification_report,
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
+from nahual.gesture_heuristics import (DYNAMIC_STATISTICAL_FEATURE_LENGTH,
+                                       GestureHeuristics)
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -153,6 +156,8 @@ class GestureTrainer:
         self.config = config or TrainingConfig()
         self._model: Optional[Any] = None
         self._label_encoder: Optional[LabelEncoder] = None
+        self._dynamic_model: Optional[Any] = None
+        self._dynamic_label_encoder: Optional[LabelEncoder] = None
 
     # ------------------------------------------------------------------
     # Data loading
@@ -243,27 +248,94 @@ class GestureTrainer:
         return feature_matrix, labels
 
     def load_dynamic_data(self) -> Tuple[np.ndarray, List[str]]:
-        """Load all dynamic gesture samples into a padded tensor.
+        """Load all dynamic gesture samples and extract statistical features.
 
         Walks ``data/dynamic/<label>/`` directories, loads each .npy file
-        (shape (N_frames, 21, 3)), and pads or truncates to MAX_DYNAMIC_FRAMES
-        so all samples have a uniform shape (90, 21, 3).  Each frame is then
-        flattened to 63 values, giving a per-sample shape of (90, 63).
+        (shape (N_frames, 21, 3)), and computes temporal statistical features
+        via GestureHeuristics.extract_statistical_features_dynamic() to produce
+        a fixed-length feature vector per sample.
+
+        No padding is needed because the statistical feature extraction
+        inherently handles variable-length sequences.
 
         Returns:
             Tuple of:
-                sequence_tensor: numpy array of shape (N_samples, 90, 63),
+                feature_matrix: numpy array of shape
+                    (N_samples, DYNAMIC_STATISTICAL_FEATURE_LENGTH),
                     dtype float32.
                 labels: List of string labels, length N_samples.
 
         Raises:
             FileNotFoundError: If the dynamic data directory does not exist.
-            NotImplementedError: Dynamic data loading is Phase 2 scope.
+            ValueError: If no valid .npy sample files are found.
         """
-        raise NotImplementedError(
-            "load_dynamic_data is not yet implemented.  "
-            "Dynamic gesture classification is planned for Phase 2."
+        dynamic_directory = self.config.data_root_directory / "dynamic"
+        if not dynamic_directory.exists():
+            raise FileNotFoundError(
+                f"Dynamic data directory not found: {dynamic_directory}.  "
+                "Collect dynamic training data with GestureCollector first."
+            )
+
+        heuristics = GestureHeuristics()
+        feature_vectors: List[np.ndarray] = []
+        labels: List[str] = []
+        samples_per_class: Dict[str, int] = {}
+
+        for label_directory in sorted(dynamic_directory.iterdir()):
+            if not label_directory.is_dir():
+                continue
+
+            label = label_directory.name
+            class_sample_count = 0
+
+            for sample_path in sorted(label_directory.glob("*.npy")):
+                try:
+                    sample = np.load(sample_path)
+                except Exception:
+                    logger.warning("Failed to load %s — skipping.", sample_path)
+                    continue
+
+                if sample.ndim != 3 or sample.shape[1:] != (21, 3):
+                    logger.warning(
+                        "Unexpected shape %s in %s — expected (N, 21, 3).  "
+                        "Skipping.",
+                        sample.shape,
+                        sample_path,
+                    )
+                    continue
+
+                statistical_features = heuristics.extract_statistical_features_dynamic(
+                    sample
+                )
+                feature_vectors.append(statistical_features)
+                labels.append(label)
+                class_sample_count += 1
+
+            if class_sample_count > 0:
+                samples_per_class[label] = class_sample_count
+                if class_sample_count < MINIMUM_SAMPLES_PER_CLASS_WARNING:
+                    logger.warning(
+                        "Class '%s' has only %d dynamic samples.  "
+                        "Consider collecting at least %d for reliable training.",
+                        label,
+                        class_sample_count,
+                        MINIMUM_SAMPLES_PER_CLASS_WARNING,
+                    )
+
+        if not feature_vectors:
+            raise ValueError(
+                f"No valid .npy sample files found in {dynamic_directory}.  "
+                "Collect dynamic training data with GestureCollector first."
+            )
+
+        feature_matrix = np.stack(feature_vectors).astype(np.float32)
+        logger.info(
+            "Loaded %d dynamic samples across %d classes: %s",
+            len(labels),
+            len(samples_per_class),
+            samples_per_class,
         )
+        return feature_matrix, labels
 
     # ------------------------------------------------------------------
     # Training and evaluation
@@ -422,6 +494,70 @@ class GestureTrainer:
         )
 
     # ------------------------------------------------------------------
+    # Dynamic gesture training
+    # ------------------------------------------------------------------
+
+    def train_dynamic(
+        self,
+        feature_matrix: np.ndarray,
+        labels: List[str],
+    ) -> TrainingResult:
+        """Fit a dynamic gesture model and evaluate on the test split.
+
+        Mirrors train() but operates on the dynamic model attributes
+        (_dynamic_model, _dynamic_label_encoder) so both static and
+        dynamic models can coexist within the same GestureTrainer instance.
+
+        Args:
+            feature_matrix: numpy array of shape
+                (N, DYNAMIC_STATISTICAL_FEATURE_LENGTH).
+            labels: List of string labels, length N.
+
+        Returns:
+            TrainingResult containing accuracy, per-class metrics,
+            confusion matrix, and the path of the saved model artifact.
+        """
+        self._dynamic_label_encoder = LabelEncoder()
+        self._dynamic_label_encoder.fit(labels)
+
+        hyperparameters = {
+            **DEFAULT_RF_HYPERPARAMETERS,
+            **self.config.model_hyperparameters,
+        }
+        hyperparameters["random_state"] = self.config.random_seed
+        self._dynamic_model = RandomForestClassifier(**hyperparameters)
+
+        logger.info(
+            "Training dynamic RandomForestClassifier with hyperparameters: %s",
+            hyperparameters,
+        )
+
+        x_train, x_test, y_train, y_test = self.split_train_test(feature_matrix, labels)
+        self._dynamic_model.fit(x_train, y_train)
+
+        # Evaluate using the dynamic model temporarily swapped into _model
+        # so that the existing evaluate() method works unchanged.
+        original_model = self._model
+        original_encoder = self._label_encoder
+        self._model = self._dynamic_model
+        self._label_encoder = self._dynamic_label_encoder
+
+        result = self.evaluate(x_test, y_test)
+
+        # Restore the static model references.
+        self._model = original_model
+        self._label_encoder = original_encoder
+
+        saved_path = self.save_dynamic_model()
+        result.model_output_path = saved_path
+
+        logger.info(
+            "Dynamic training complete.  Test accuracy: %.2f%%",
+            result.accuracy * 100,
+        )
+        return result
+
+    # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
 
@@ -486,6 +622,75 @@ class GestureTrainer:
             len(self._label_encoder.classes_) if self._label_encoder else 0,
         )
 
+    def save_dynamic_model(self, output_path: Optional[Path] = None) -> Path:
+        """Persist the trained dynamic gesture model to disk using joblib.
+
+        Serialises a dictionary containing the dynamic model, label encoder,
+        and metadata so that load_dynamic_model can restore the state.
+
+        Args:
+            output_path: Override the default output path.  If None,
+                the path is derived from config.model_output_directory
+                as ``models/dynamic_gesture_classifier.pkl``.
+
+        Returns:
+            The path the model was saved to.
+
+        Raises:
+            RuntimeError: If no dynamic model has been trained yet.
+        """
+        if self._dynamic_model is None:
+            raise RuntimeError(
+                "No dynamic model to save.  Train a dynamic model first."
+            )
+
+        if output_path is None:
+            output_path = (
+                self.config.model_output_directory / "dynamic_gesture_classifier.pkl"
+            )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        artifact = {
+            "model": self._dynamic_model,
+            "label_encoder": self._dynamic_label_encoder,
+            "feature_length": DYNAMIC_STATISTICAL_FEATURE_LENGTH,
+            "model_type": "random_forest_dynamic",
+        }
+        joblib.dump(artifact, output_path)
+        logger.info("Dynamic model saved to %s", output_path)
+        return output_path
+
+    def load_dynamic_model(self, model_path: Path) -> None:
+        """Deserialise a previously saved dynamic model.
+
+        Restores the dynamic estimator and label encoder from a joblib
+        artifact produced by save_dynamic_model.
+
+        Args:
+            model_path: Path to the serialised dynamic model file (.pkl).
+
+        Raises:
+            FileNotFoundError: If model_path does not exist.
+        """
+        if not model_path.exists():
+            raise FileNotFoundError(f"Dynamic model file not found: {model_path}")
+
+        artifact = joblib.load(model_path)
+        self._dynamic_model = artifact["model"]
+        self._dynamic_label_encoder = artifact["label_encoder"]
+
+        logger.info(
+            "Loaded %s model from %s with %d classes.",
+            artifact.get("model_type", "unknown"),
+            model_path,
+            (
+                len(self._dynamic_label_encoder.classes_)
+                if self._dynamic_label_encoder
+                else 0
+            ),
+        )
+
     # ------------------------------------------------------------------
     # Inference
     # ------------------------------------------------------------------
@@ -516,9 +721,7 @@ class GestureTrainer:
         prediction = self._model.predict(reshaped_vector)
         return prediction[0]
 
-    def predict_with_confidence(
-        self, feature_vector: np.ndarray
-    ) -> tuple[str, float]:
+    def predict_with_confidence(self, feature_vector: np.ndarray) -> tuple[str, float]:
         """Run inference and return the predicted label together with its confidence.
 
         Uses the classifier's class probability estimates (predict_proba) to
@@ -543,5 +746,38 @@ class GestureTrainer:
         probabilities = self._model.predict_proba(reshaped_vector)[0]
         predicted_index = int(probabilities.argmax())
         label = self._model.classes_[predicted_index]
+        confidence = float(probabilities[predicted_index])
+        return label, confidence
+
+    def predict_dynamic_with_confidence(
+        self, feature_vector: np.ndarray
+    ) -> tuple[str, float]:
+        """Run inference on a dynamic gesture statistical feature vector.
+
+        Uses the dynamic model's class probability estimates to predict
+        the gesture label and associated confidence score.
+
+        Args:
+            feature_vector: numpy array of shape
+                (DYNAMIC_STATISTICAL_FEATURE_LENGTH,) produced by
+                GestureHeuristics.extract_statistical_features_dynamic().
+
+        Returns:
+            A tuple of (label, confidence) where label is the predicted
+            class string and confidence is a float in [0, 1].
+
+        Raises:
+            RuntimeError: If no dynamic model has been loaded or trained.
+        """
+        if self._dynamic_model is None:
+            raise RuntimeError(
+                "No dynamic model available.  "
+                "Train a dynamic model or load one from disk first."
+            )
+
+        reshaped_vector = feature_vector.reshape(1, -1)
+        probabilities = self._dynamic_model.predict_proba(reshaped_vector)[0]
+        predicted_index = int(probabilities.argmax())
+        label = self._dynamic_model.classes_[predicted_index]
         confidence = float(probabilities[predicted_index])
         return label, confidence
