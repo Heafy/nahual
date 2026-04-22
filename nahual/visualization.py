@@ -208,9 +208,10 @@ def draw_prediction_overlay(
     )
 
     # Draw the main prediction label on the first line.
+    display_label = "Letter: " + label.removeprefix("letra_")
     cv2.putText(
         frame,
-        label,
+        display_label,
         (padding, y_offset + padding + label_h),
         label_font,
         label_font_scale,

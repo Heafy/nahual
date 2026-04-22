@@ -233,6 +233,7 @@ class GestureCollector:
             return
 
         self.session.label = label
+        self.session.samples_captured = 0
         self._ensure_label_directories(label)
         print(f"[collector] Label set to '{label}'.")
 
