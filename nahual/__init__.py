@@ -8,4 +8,5 @@ Modules:
     gesture_heuristics -- Landmark preprocessing and feature extraction.
     gesture_collector  -- Interactive data collection tool.
     gesture_trainer    -- Model training and inference (skeleton).
+    data_inspector     -- Dataset inspection utilities (sample counts per label).
 """
