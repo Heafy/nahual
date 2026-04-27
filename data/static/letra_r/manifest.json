@@ -841,6 +841,636 @@
         ],
         "total_features": 81
       }
+    },
+    {
+      "file": "91ede5a9-f2b5-4ede-a6ea-1bb78cf90855.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:58:27",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "18439e9f-17d4-4eef-a30e-dd2fce887c9a.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:58:31",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "d9256eeb-647e-45cb-a0f4-cc2e26690f70.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:58:33",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "813df9d6-c874-4ff6-b715-657c60cc17f4.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:58:38",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "7264f857-612c-4e77-990b-76c243257782.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:00",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "9fb6bfad-53c1-43a4-9589-6d939576f46d.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:05",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "ab7336d9-f39c-49a7-aea1-1dc443d5aecc.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:09",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "dbf70df1-2c91-4ea9-8006-8af2a1776f4c.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:13",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "c3a6bbbf-9012-4284-b872-897d3e9846c3.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:17",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "8c6b327f-c784-4120-83f2-0dc38f20c0f5.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:20",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "6d919d19-ad01-42b0-8f31-d69200b53944.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:24",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "5bb53c75-ecd3-41cd-9c31-905c1089eaf8.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:32",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "a84811b6-b690-4c55-aa29-71f3f128c526.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:38",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "e973dd53-a02d-471b-8661-2b930fa17afc.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:44",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "8f8cb317-d5fe-48c1-aff5-c0b381af3aa9.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:50",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "8f409ae3-eadd-4630-a328-318fc5b6ef29.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:53",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "e038af08-749c-4105-83ac-f8f3f5a1f481.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T22:59:57",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "a37a6f85-16f8-4671-9665-fdc4fda6218b.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:00",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "c474281d-ec4f-4441-9c32-4088597807b6.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:03",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "cff0726b-3156-493a-927f-9f47497ddd6d.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:07",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "c7da8c49-9124-4ad6-9237-a083ccb7cf6a.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:10",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "47657a2e-194a-4b82-9880-f51d63f30577.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:17",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "1697510e-f7c6-455d-b856-420934d7165b.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:20",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "66692bcf-5761-4f07-a0d3-792e799c7574.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:23",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "7ca0ef6b-f744-4e25-9115-8f9713b066e9.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:28",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "869f4fed-43b6-44f7-816f-faa9d2afd672.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:31",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "2816a045-7dba-479b-8e36-df60e7ed2b98.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:33",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "43633a6b-cc1c-49e5-9362-f745dff3c543.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:37",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "f21d817f-12b0-4a69-9842-b3fd589599e6.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:40",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
+    },
+    {
+      "file": "6fc92c68-adda-4912-bc35-b15c905531e9.npy",
+      "session_id": "4f5d96db-2e11-4da7-9d47-d2be5ed5bda0",
+      "captured_at_iso": "2026-04-23T23:00:44",
+      "gesture_type": "static",
+      "feature_layout": {
+        "normalized_coordinates": [
+          0,
+          63
+        ],
+        "finger_angles": [
+          63,
+          73
+        ],
+        "inter_landmark_distances": [
+          73,
+          81
+        ],
+        "total_features": 81
+      }
     }
   ]
 }

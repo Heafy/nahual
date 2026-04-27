@@ -323,6 +323,174 @@
       "captured_at_iso": "2026-04-07T12:52:54",
       "gesture_type": "dynamic",
       "frame_count": 62
+    },
+    {
+      "file": "fb94c145-0d2d-4e7b-9ee9-61b2e4a5e294.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:57:28",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "64a9189a-2124-4e04-8806-16fd4a188cf6.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:57:32",
+      "gesture_type": "dynamic",
+      "frame_count": 53
+    },
+    {
+      "file": "0180252d-012c-4ee5-bf03-49026c2fc0fb.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:57:35",
+      "gesture_type": "dynamic",
+      "frame_count": 37
+    },
+    {
+      "file": "0aba8602-de41-44ae-9981-c709031d32f1.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:57:39",
+      "gesture_type": "dynamic",
+      "frame_count": 50
+    },
+    {
+      "file": "45ed6a15-03ca-4214-bb02-400c4fe171ce.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:59:16",
+      "gesture_type": "dynamic",
+      "frame_count": 55
+    },
+    {
+      "file": "9295e7e1-1654-41c3-a168-c64e8d9e6aa4.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T08:59:21",
+      "gesture_type": "dynamic",
+      "frame_count": 67
+    },
+    {
+      "file": "a863f81c-36fd-47a4-a3c8-fb5847fe00fd.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:02:05",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "1311b322-8cfc-4db7-9f21-a1e88bf42406.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:02:09",
+      "gesture_type": "dynamic",
+      "frame_count": 46
+    },
+    {
+      "file": "2036defe-29fc-4e3e-a51c-514c8c4935ad.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:02:12",
+      "gesture_type": "dynamic",
+      "frame_count": 41
+    },
+    {
+      "file": "e6aa915b-25c3-40ae-9417-bc2fc9ab3516.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:02:16",
+      "gesture_type": "dynamic",
+      "frame_count": 45
+    },
+    {
+      "file": "9a83b82c-4d47-4f41-a3a7-66a05ef29cf0.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:07:20",
+      "gesture_type": "dynamic",
+      "frame_count": 40
+    },
+    {
+      "file": "2dba6d0a-0541-43e9-84b7-9f3b1916862c.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:07:24",
+      "gesture_type": "dynamic",
+      "frame_count": 54
+    },
+    {
+      "file": "81a487f2-7b5b-4059-8598-9b4a13a6b5b5.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:07:27",
+      "gesture_type": "dynamic",
+      "frame_count": 47
+    },
+    {
+      "file": "d3ca99c7-21f8-4285-8e3f-204299f14922.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:07:31",
+      "gesture_type": "dynamic",
+      "frame_count": 59
+    },
+    {
+      "file": "978bb33f-1412-4794-8f69-52fb14ca95da.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:14:13",
+      "gesture_type": "dynamic",
+      "frame_count": 40
+    },
+    {
+      "file": "f899caa4-918d-4146-93c4-3aa6df2ab6b3.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:14:17",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "c2a0ad90-fc56-4966-8819-340a4114fb17.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:14:21",
+      "gesture_type": "dynamic",
+      "frame_count": 46
+    },
+    {
+      "file": "d0bf6ef9-fe68-44cc-ad2e-aeb0f6db94d2.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:14:26",
+      "gesture_type": "dynamic",
+      "frame_count": 73
+    },
+    {
+      "file": "0914eb17-b757-45fb-a048-560c62c6c92d.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:17",
+      "gesture_type": "dynamic",
+      "frame_count": 52
+    },
+    {
+      "file": "81f64f9d-4374-45bf-8e54-43c19b7c1b71.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:21",
+      "gesture_type": "dynamic",
+      "frame_count": 69
+    },
+    {
+      "file": "04a473ad-5c5d-497c-ae4e-b968a8c48655.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:26",
+      "gesture_type": "dynamic",
+      "frame_count": 50
+    },
+    {
+      "file": "c14f5990-2459-4ea3-b68f-3e1d3b9f4e52.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:31",
+      "gesture_type": "dynamic",
+      "frame_count": 55
+    },
+    {
+      "file": "71f1ff6c-e9fb-48ef-982c-412cc5211ac2.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:46",
+      "gesture_type": "dynamic",
+      "frame_count": 36
+    },
+    {
+      "file": "230be907-efb1-4842-b67b-8f9fb63b4f16.npy",
+      "session_id": "87a07d53-ca79-4b1b-878b-b03f2de2c614",
+      "captured_at_iso": "2026-04-23T09:16:49",
+      "gesture_type": "dynamic",
+      "frame_count": 43
     }
   ]
 }
