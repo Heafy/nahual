@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from prettytable import PrettyTable
 
 # Expected shape for a valid static gesture feature vector:
 # 63 normalized coordinates + 10 finger angles + 8 inter-landmark distances.
@@ -176,12 +177,11 @@ def collect_dataset_summary(data_root_directory: Path) -> list[LabelSummary]:
 
 
 def format_dataset_table(summaries: list[LabelSummary]) -> str:
-    """Render a list of LabelSummary objects as a formatted text table.
+    """Render a list of LabelSummary objects as a formatted PrettyTable.
 
-    The table has four columns: Label, Type, Shape, Count. Column widths
-    are computed dynamically from the widest value in each column (including
-    the header row). Columns are separated by two spaces. A horizontal
-    separator line of dashes is drawn under the header row.
+    Builds a four-column table (Label, Type, Shape, Count) using PrettyTable.
+    Label, Type and Shape are left-aligned; Count is right-aligned to make
+    numbers easy to scan. A totals summary is appended below the table.
 
     Args:
         summaries: List of LabelSummary objects as returned by
@@ -194,39 +194,24 @@ def format_dataset_table(summaries: list[LabelSummary]) -> str:
     if not summaries:
         return "No data found. Collect samples with:\n" "    uv run python collect.py"
 
-    headers = ("Label", "Type", "Shape", "Count")
-    rows = [
-        (
-            summary.label_name,
-            summary.gesture_type,
-            summary.shape_description,
-            str(summary.sample_count),
+    table = PrettyTable()
+    table.field_names = ["Label", "Type", "Shape", "Count"]
+
+    # Left-align text columns, right-align the numeric Count column.
+    table.align["Label"] = "l"
+    table.align["Type"] = "l"
+    table.align["Shape"] = "l"
+    table.align["Count"] = "r"
+
+    for summary in summaries:
+        table.add_row(
+            [
+                summary.label_name,
+                summary.gesture_type,
+                summary.shape_description,
+                summary.sample_count,
+            ]
         )
-        for summary in summaries
-    ]
-
-    all_rows = [headers] + rows
-    column_widths = [
-        max(len(row[column_index]) for row in all_rows)
-        for column_index in range(len(headers))
-    ]
-
-    def format_row(row: tuple[str, ...]) -> str:
-        """Format a single table row by padding each cell to its column width."""
-        return "  ".join(
-            cell.ljust(column_widths[column_index])
-            for column_index, cell in enumerate(row)
-        )
-
-    header_line = format_row(headers)
-    separator_line = "  ".join("-" * width for width in column_widths)
-
-    output_lines = [header_line, separator_line]
-    for row in rows:
-        output_lines.append(format_row(row))
-
-    # Trim trailing whitespace from each line for clean output.
-    output_lines = [line.rstrip() for line in output_lines]
 
     total_static = sum(
         summary.sample_count
@@ -240,9 +225,10 @@ def format_dataset_table(summaries: list[LabelSummary]) -> str:
     )
     grand_total = total_static + total_dynamic
 
-    output_lines.append("")
-    output_lines.append(f"Static samples:  {total_static}")
-    output_lines.append(f"Dynamic samples: {total_dynamic}")
-    output_lines.append(f"Grand total:     {grand_total}")
+    totals_lines = (
+        f"\nStatic samples:  {total_static}"
+        f"\nDynamic samples: {total_dynamic}"
+        f"\nGrand total:     {grand_total}"
+    )
 
-    return "\n".join(output_lines)
+    return str(table) + totals_lines
