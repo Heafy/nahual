@@ -121,6 +121,7 @@ def draw_prediction_overlay(
     confidence=None,
     handedness: Optional[str] = None,
     y_offset: int = 0,
+    prefix: Optional[str] = None,
 ) -> int:
     """Draw the predicted gesture label as a full-width bar on the frame.
 
@@ -138,6 +139,8 @@ def draw_prediction_overlay(
             (e.g., "Left" or "Right"), displayed on a third line.
         y_offset: Vertical pixel offset from the top of the frame at
             which the bar should be drawn.  Defaults to 0 (top of frame).
+        prefix: Optional short prefix prepended to the main label line
+            (e.g., "S" or "D" to mark static vs. dynamic predictions).
 
     Returns:
         The pixel height of the drawn bar so the next bar can use it as
@@ -187,7 +190,10 @@ def draw_prediction_overlay(
     if confidence is not None and confidence < low_confidence_threshold:
         low_confidence_text = "Low confidence"
         (low_confidence_w, low_confidence_h), _ = cv2.getTextSize(
-            low_confidence_text, secondary_font, secondary_font_scale, secondary_thickness
+            low_confidence_text,
+            secondary_font,
+            secondary_font_scale,
+            secondary_thickness,
         )
 
     # Bar height grows to accommodate the optional secondary line and the
@@ -209,6 +215,8 @@ def draw_prediction_overlay(
 
     # Draw the main prediction label on the first line.
     display_label = "Letter: " + label.removeprefix("letra_")
+    if prefix:
+        display_label = f"{prefix} {display_label}"
     cv2.putText(
         frame,
         display_label,

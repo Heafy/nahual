@@ -4,12 +4,14 @@ main.py
 Real-time LSM gesture recognition demo.
 
 Opens a webcam window with MediaPipe hand landmarks overlaid.
-If a trained model exists, the predicted gesture label is displayed
-on-screen.  If no model is found, the demo runs in landmark-only mode.
+Static and dynamic gesture predictions are produced continuously and
+shown stacked on screen — static on the first line (prefix "S") and
+dynamic on the second line (prefix "D"). Dynamic capture is motion-gated:
+the recording starts automatically when hand motion is detected and ends
+when the hand becomes still (or the buffer/timeout limit is hit).
 
-Press 'd' to start recording a dynamic gesture.  Press 'd' again
-(or wait 3 seconds) to classify the buffered sequence with the
-dynamic model.
+Press 'q' to quit. Press 'm' to toggle a motion-debug readout used to
+calibrate the motion thresholds.
 
 Usage::
 
@@ -29,8 +31,7 @@ from mediapipe.tasks.python import vision
 from nahual.gesture_heuristics import (MAX_DYNAMIC_FRAMES, GestureHeuristics,
                                        LandmarkFrame)
 from nahual.gesture_trainer import GestureTrainer, TrainingConfig
-from nahual.visualization import (draw_hand_connections, draw_landmark_debug,
-                                  draw_prediction_overlay)
+from nahual.visualization import draw_hand_connections, draw_prediction_overlay
 
 MODEL_ASSET_PATH = "models/hand_landmarker.task"
 TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
@@ -41,6 +42,30 @@ DYNAMIC_CAPTURE_TIMEOUT_SECONDS: float = 3.0
 
 # How long (seconds) to keep displaying a dynamic prediction on screen.
 DYNAMIC_PREDICTION_DISPLAY_SECONDS: float = 3.0
+
+# --- Motion-gated dynamic capture tunables --------------------------------
+# Smoothed per-frame motion (mean L2 distance of normalized landmarks
+# between consecutive frames) above this value transitions IDLE -> RECORDING.
+MOTION_START_THRESHOLD: float = 0.015
+
+# Smoothed motion below this value, sustained for MOTION_STOP_FRAMES frames,
+# transitions RECORDING -> classify. Hysteresis (stop < start) prevents
+# rapid flapping near the boundary.
+MOTION_STOP_THRESHOLD: float = 0.008
+
+# Number of consecutive low-motion frames required to end a recording.
+MOTION_STOP_FRAMES: int = 5
+
+# EMA smoothing factor for the raw motion signal (0 < alpha <= 1).
+# Higher = more reactive, lower = smoother.
+MOTION_EMA_ALPHA: float = 0.4
+
+# Minimum buffered frames required to attempt dynamic classification.
+# Prevents spurious classifications from very short twitches.
+MIN_DYNAMIC_FRAMES: int = 8
+
+# Minimum dynamic-model confidence required to latch and display a result.
+DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.65
 
 
 def build_hand_landmarker() -> vision.HandLandmarker:
@@ -101,6 +126,101 @@ def classify_dynamic_buffer(
     return prediction, confidence
 
 
+def compute_frame_motion(
+    current_normalized: np.ndarray,
+    previous_normalized: Optional[np.ndarray],
+) -> float:
+    """Compute the mean L2 distance between two normalized landmark frames.
+
+    Used as the raw motion signal driving the motion-gated dynamic capture
+    state machine. Returns 0.0 on the first frame (no previous reference).
+
+    Args:
+        current_normalized: Normalized landmark coordinates for the current
+            frame, shape (21, 3).
+        previous_normalized: Normalized landmark coordinates for the previous
+            frame, or None if no previous frame is available.
+
+    Returns:
+        Mean per-landmark Euclidean distance between the two frames, in the
+        same normalized units as the coordinates. 0.0 if previous is None.
+    """
+    if previous_normalized is None:
+        return 0.0
+    per_landmark_distances = np.linalg.norm(
+        current_normalized - previous_normalized, axis=1
+    )
+    return float(np.mean(per_landmark_distances))
+
+
+def draw_motion_debug(
+    frame,
+    raw_motion: float,
+    smoothed_motion: float,
+    state: str,
+    buffer_length: int,
+) -> None:
+    """Render a small motion-debug readout in the bottom-left corner.
+
+    Shows the raw motion value, the EMA-smoothed value, the current capture
+    state, and the buffered frame count so the motion thresholds can be
+    tuned interactively.
+
+    Args:
+        frame: OpenCV BGR frame to draw on.
+        raw_motion: The raw per-frame motion value.
+        smoothed_motion: The EMA-smoothed motion value used for thresholds.
+        state: Current state of the motion-gated capture state machine
+            ("IDLE" or "RECORDING").
+        buffer_length: Number of frames currently buffered for dynamic
+            classification.
+    """
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    thickness = 1
+    padding = 6
+    text_color = (0, 255, 0)
+    background_color = (0, 0, 0)
+
+    lines = [
+        f"raw motion : {raw_motion:.4f}",
+        f"smoothed   : {smoothed_motion:.4f}",
+        f"start/stop : {MOTION_START_THRESHOLD:.4f}/{MOTION_STOP_THRESHOLD:.4f}",
+        f"state      : {state}  buf={buffer_length}",
+    ]
+
+    line_heights = [
+        cv2.getTextSize(line, font, font_scale, thickness)[0][1] for line in lines
+    ]
+    line_widths = [
+        cv2.getTextSize(line, font, font_scale, thickness)[0][0] for line in lines
+    ]
+
+    line_spacing = 4
+    block_height = sum(line_heights) + line_spacing * (len(lines) - 1) + padding * 2
+    block_width = max(line_widths) + padding * 2
+
+    frame_h = frame.shape[0]
+    x0 = 0
+    y0 = frame_h - block_height
+    cv2.rectangle(frame, (x0, y0), (x0 + block_width, frame_h), background_color, -1)
+
+    cursor_y = y0 + padding
+    for line, line_h in zip(lines, line_heights):
+        cursor_y += line_h
+        cv2.putText(
+            frame,
+            line,
+            (x0 + padding, cursor_y),
+            font,
+            font_scale,
+            text_color,
+            thickness,
+            cv2.LINE_AA,
+        )
+        cursor_y += line_spacing
+
+
 def main() -> None:
     """Run the real-time LSM gesture recognition demo."""
     heuristics = GestureHeuristics()
@@ -123,15 +243,22 @@ def main() -> None:
         except Exception:
             dynamic_model_available = False
 
-    # Dynamic capture state.
+    # --- Motion-gated dynamic capture state -------------------------------
     dynamic_frame_buffer: List[LandmarkFrame] = []
-    dynamic_capture_active: bool = False
-    dynamic_capture_start_time: float = 0.0
+    capture_state: str = "IDLE"  # "IDLE" or "RECORDING"
+    capture_start_time: float = 0.0
+    previous_normalized: Optional[np.ndarray] = None
+    smoothed_motion: float = 0.0
+    raw_motion: float = 0.0
+    consecutive_still_frames: int = 0
 
-    # Dynamic prediction display state.
+    # Latched dynamic prediction display state.
     dynamic_prediction_label: Optional[str] = None
     dynamic_prediction_confidence: float = 0.0
     dynamic_prediction_display_time: float = 0.0
+
+    # Motion debug overlay toggle.
+    show_motion_debug: bool = False
 
     capture = cv2.VideoCapture(0)
     if not capture.isOpened():
@@ -156,9 +283,14 @@ def main() -> None:
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
             result = landmarker.detect_for_video(mp_image, timestamp_ms)
 
-            if result.hand_landmarks:
+            # Per-frame transient outputs reset on every iteration.
+            static_label: Optional[str] = None
+            static_confidence: float = 0.0
+            detected_handedness: Optional[str] = None
+            hand_visible: bool = bool(result.hand_landmarks)
+
+            if hand_visible:
                 draw_hand_connections(frame, result)
-                # draw_landmark_debug(frame, result)
 
                 landmark_frame = heuristics.extract_landmark_frame(result, timestamp_ms)
                 if landmark_frame is not None:
@@ -179,26 +311,64 @@ def main() -> None:
                         else None
                     )
 
-                    # --- Dynamic capture: buffer frames --------------------
-                    if dynamic_capture_active:
-                        if len(dynamic_frame_buffer) < MAX_DYNAMIC_FRAMES:
-                            dynamic_frame_buffer.append(landmark_frame)
+                    # --- Motion signal -----------------------------------
+                    current_normalized = heuristics.normalize_coordinates(
+                        landmark_frame.coordinates
+                    )
+                    raw_motion = compute_frame_motion(
+                        current_normalized, previous_normalized
+                    )
+                    smoothed_motion = (
+                        MOTION_EMA_ALPHA * raw_motion
+                        + (1.0 - MOTION_EMA_ALPHA) * smoothed_motion
+                    )
+                    previous_normalized = current_normalized
 
-                        # Auto-stop after timeout.
-                        elapsed = current_time - dynamic_capture_start_time
-                        if elapsed >= DYNAMIC_CAPTURE_TIMEOUT_SECONDS:
-                            result_dynamic = classify_dynamic_buffer(
-                                heuristics, trainer, dynamic_frame_buffer
+                    # --- Dynamic capture state machine --------------------
+                    if dynamic_model_available:
+                        if capture_state == "IDLE":
+                            if smoothed_motion >= MOTION_START_THRESHOLD:
+                                capture_state = "RECORDING"
+                                capture_start_time = current_time
+                                consecutive_still_frames = 0
+                                dynamic_frame_buffer.clear()
+                                dynamic_frame_buffer.append(landmark_frame)
+                        else:  # RECORDING
+                            if len(dynamic_frame_buffer) < MAX_DYNAMIC_FRAMES:
+                                dynamic_frame_buffer.append(landmark_frame)
+
+                            if smoothed_motion < MOTION_STOP_THRESHOLD:
+                                consecutive_still_frames += 1
+                            else:
+                                consecutive_still_frames = 0
+
+                            elapsed = current_time - capture_start_time
+                            should_classify = (
+                                consecutive_still_frames >= MOTION_STOP_FRAMES
+                                or len(dynamic_frame_buffer) >= MAX_DYNAMIC_FRAMES
+                                or elapsed >= DYNAMIC_CAPTURE_TIMEOUT_SECONDS
                             )
-                            if result_dynamic is not None:
-                                dynamic_prediction_label = result_dynamic[0]
-                                dynamic_prediction_confidence = result_dynamic[1]
-                                dynamic_prediction_display_time = current_time
-                            dynamic_capture_active = False
-                            dynamic_frame_buffer.clear()
+                            if should_classify:
+                                if len(dynamic_frame_buffer) >= MIN_DYNAMIC_FRAMES:
+                                    result_dynamic = classify_dynamic_buffer(
+                                        heuristics, trainer, dynamic_frame_buffer
+                                    )
+                                    if (
+                                        result_dynamic is not None
+                                        and result_dynamic[1]
+                                        >= DYNAMIC_CONFIDENCE_THRESHOLD
+                                    ):
+                                        dynamic_prediction_label = result_dynamic[0]
+                                        dynamic_prediction_confidence = result_dynamic[
+                                            1
+                                        ]
+                                        dynamic_prediction_display_time = current_time
+                                capture_state = "IDLE"
+                                consecutive_still_frames = 0
+                                dynamic_frame_buffer.clear()
 
-                    # --- Static prediction (when not recording dynamic) ----
-                    if not dynamic_capture_active and model_available and dynamic_prediction_label is None:
+                    # --- Static prediction (always, when hand visible) ---
+                    if model_available:
                         features = heuristics.extract_features_static(landmark_frame)
                         try:
                             feature_vector = np.concatenate(
@@ -211,65 +381,64 @@ def main() -> None:
                             prediction, confidence = trainer.predict_with_confidence(
                                 feature_vector
                             )
-                            draw_prediction_overlay(
-                                frame,
-                                prediction,
-                                confidence,
-                                detected_handedness,
-                            )
+                            static_label = prediction
+                            static_confidence = confidence
                         except Exception:
                             pass
+            else:
+                # Hand left the frame: discard any in-progress capture and
+                # reset the motion reference so we don't compute distance
+                # against a stale frame when the hand returns.
+                if capture_state == "RECORDING":
+                    capture_state = "IDLE"
+                    consecutive_still_frames = 0
+                    dynamic_frame_buffer.clear()
+                previous_normalized = None
+                smoothed_motion = 0.0
+                raw_motion = 0.0
 
-            # --- Dynamic capture UI overlay --------------------------------
-            if dynamic_capture_active:
-                elapsed = current_time - dynamic_capture_start_time
-                remaining = max(0.0, DYNAMIC_CAPTURE_TIMEOUT_SECONDS - elapsed)
-                recording_info = (
-                    f"{remaining:.1f}s remaining  |  "
-                    f"{len(dynamic_frame_buffer)} frames"
-                )
-                draw_prediction_overlay(
+            # --- Draw stacked overlays -----------------------------------
+            stacked_y = 0
+            if static_label is not None:
+                stacked_y += draw_prediction_overlay(
                     frame,
-                    "RECORDING",
-                    handedness=recording_info,
+                    static_label,
+                    static_confidence,
+                    detected_handedness,
+                    y_offset=stacked_y,
+                    prefix="S",
                 )
 
-            # --- Display dynamic prediction for a few seconds -------------
             if dynamic_prediction_label is not None:
                 time_since_prediction = current_time - dynamic_prediction_display_time
                 if time_since_prediction < DYNAMIC_PREDICTION_DISPLAY_SECONDS:
-                    draw_prediction_overlay(
+                    stacked_y += draw_prediction_overlay(
                         frame,
                         dynamic_prediction_label,
                         dynamic_prediction_confidence,
                         None,
+                        y_offset=stacked_y,
+                        prefix="D",
                     )
                 else:
                     dynamic_prediction_label = None
+
+            if show_motion_debug:
+                draw_motion_debug(
+                    frame,
+                    raw_motion,
+                    smoothed_motion,
+                    capture_state,
+                    len(dynamic_frame_buffer),
+                )
 
             cv2.imshow("Nahual", frame)
             key = cv2.waitKey(1) & 0xFF
 
             if key == ord("q"):
                 break
-            elif key == ord("d") and dynamic_model_available:
-                if not dynamic_capture_active:
-                    # Start dynamic capture.
-                    dynamic_capture_active = True
-                    dynamic_frame_buffer.clear()
-                    dynamic_capture_start_time = current_time
-                    dynamic_prediction_label = None
-                else:
-                    # Stop and classify.
-                    result_dynamic = classify_dynamic_buffer(
-                        heuristics, trainer, dynamic_frame_buffer
-                    )
-                    if result_dynamic is not None:
-                        dynamic_prediction_label = result_dynamic[0]
-                        dynamic_prediction_confidence = result_dynamic[1]
-                        dynamic_prediction_display_time = current_time
-                    dynamic_capture_active = False
-                    dynamic_frame_buffer.clear()
+            elif key == ord("m"):
+                show_motion_debug = not show_motion_debug
 
     capture.release()
     cv2.destroyAllWindows()
