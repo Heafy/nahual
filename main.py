@@ -64,6 +64,12 @@ MOTION_EMA_ALPHA: float = 0.4
 # Prevents spurious classifications from very short twitches.
 MIN_DYNAMIC_FRAMES: int = 8
 
+# Minimum recording duration (seconds) before stop-detection is evaluated.
+# This prevents mid-gesture pauses (e.g. direction changes in "Z" or "J")
+# from ending the recording prematurely. Set to cover the longest natural
+# pause that can occur inside a gesture.
+MIN_RECORDING_DURATION_SECONDS: float = 1.0
+
 # Minimum dynamic-model confidence required to latch and display a result.
 DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.65
 
@@ -337,12 +343,21 @@ def main() -> None:
                             if len(dynamic_frame_buffer) < MAX_DYNAMIC_FRAMES:
                                 dynamic_frame_buffer.append(landmark_frame)
 
-                            if smoothed_motion < MOTION_STOP_THRESHOLD:
-                                consecutive_still_frames += 1
+                            elapsed = current_time - capture_start_time
+
+                            # Only count still frames after the minimum
+                            # recording duration has passed.  This prevents
+                            # mid-gesture direction-change pauses (e.g. the
+                            # corners of "Z") from triggering stop-detection
+                            # too early.
+                            if elapsed >= MIN_RECORDING_DURATION_SECONDS:
+                                if smoothed_motion < MOTION_STOP_THRESHOLD:
+                                    consecutive_still_frames += 1
+                                else:
+                                    consecutive_still_frames = 0
                             else:
                                 consecutive_still_frames = 0
 
-                            elapsed = current_time - capture_start_time
                             should_classify = (
                                 consecutive_still_frames >= MOTION_STOP_FRAMES
                                 or len(dynamic_frame_buffer) >= MAX_DYNAMIC_FRAMES
