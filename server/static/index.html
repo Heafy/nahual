@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nahual — Detector de LSM</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Nahual — Detector de gestos LSM</h1>
+      <p class="subtitle">
+        Lengua de Señas Mexicana · el video nunca sale de tu dispositivo,
+        solo se envían las coordenadas de la mano.
+      </p>
+    </header>
+
+    <main>
+      <div class="stage">
+        <!-- The raw camera feed; landmarks + predictions are drawn on the canvas above it. -->
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+
+      <div class="controls">
+        <button id="toggle-button">Iniciar cámara</button>
+        <label class="debug-toggle">
+          <input type="checkbox" id="debug-checkbox" />
+          Mostrar depuración de movimiento
+        </label>
+      </div>
+
+      <p id="status" class="status">Cargando modelo…</p>
+    </main>
+
+    <script type="module" src="/static/js/app.js"></script>
+  </body>
+</html>

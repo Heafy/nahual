@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nahual-web",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "uvicorn", "server.app:app", "--port", "8013"],
+      "port": 8013
+    }
+  ]
+}

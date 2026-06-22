@@ -6,10 +6,12 @@ readme = "README.md"
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "black>=25.11.0",
+    "fastapi>=0.115.0",
     "isort>=6.1.0",
     "mediapipe>=0.10.32",
     "numpy>=2.0",
     "opencv-python>=4.13.0.92",
     "prettytable>=3.16.0",
     "scikit-learn>=1.5",
+    "uvicorn[standard]>=0.32.0",
 ]
