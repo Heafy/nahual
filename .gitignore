@@ -215,5 +215,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-models/gesture_classifier.pkl
-models/dynamic_gesture_classifier.pkl
+# Trained models are committed so the web demo can be deployed (Render builds
+# from the repo). They are small (~5 MB total); revisit with Git LFS if they grow.
+# models/gesture_classifier.pkl
+# models/dynamic_gesture_classifier.pkl
