@@ -34,7 +34,7 @@ const HAND_CONNECTIONS = [
 // These mirror LANDMARK_NAMES in nahual/visualization.py, converted from
 // OpenCV BGR tuples to canvas RGB hex (palm/MCP joints are gray; each finger's
 // distal joints share that finger's color).
-const PALM = "#808080"; // WRIST, CMC, and all MCP joints
+const PALM = "#EF4838"; // WRIST, CMC, and all MCP joints
 const LANDMARK_COLORS = [
   PALM, // 0  WRIST
   PALM, // 1  THUMB_CMC
@@ -240,12 +240,13 @@ function drawScene(detection) {
  * @param {number} height Canvas height in pixels.
  */
 function drawHand(landmarks, width, height) {
-  // Connections.
-  canvasContext.strokeStyle = "#4ade80";
+  // Connections — colored to match the farther-from-palm endpoint.
   canvasContext.lineWidth = 3;
   for (const [startIndex, endIndex] of HAND_CONNECTIONS) {
     const start = landmarks[startIndex];
     const end = landmarks[endIndex];
+    canvasContext.strokeStyle =
+      LANDMARK_COLORS[Math.max(startIndex, endIndex)] || "#ffffff";
     canvasContext.beginPath();
     canvasContext.moveTo(start.x * width, start.y * height);
     canvasContext.lineTo(end.x * width, end.y * height);
@@ -256,6 +257,7 @@ function drawHand(landmarks, width, height) {
   // nahual/visualization.py.
   for (let index = 0; index < landmarks.length; index += 1) {
     const point = landmarks[index];
+    canvasContext.strokeStyle = LANDMARK_COLORS[index] || "#ffffff";
     canvasContext.fillStyle = LANDMARK_COLORS[index] || "#ffffff";
     canvasContext.beginPath();
     canvasContext.arc(point.x * width, point.y * height, 4, 0, Math.PI * 2);
