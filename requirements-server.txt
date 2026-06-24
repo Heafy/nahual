@@ -1,0 +1,11 @@
+# Server-only dependencies for the Nahual web demo (Render deployment).
+#
+# Intentionally slim: the web server never imports mediapipe or opencv —
+# MediaPipe runs in the browser and only hand landmarks are streamed back.
+# Versions are pinned to match the environment that produced the trained
+# .pkl models so scikit-learn unpickles them without version warnings.
+fastapi==0.128.8
+uvicorn[standard]==0.39.0
+scikit-learn==1.6.1
+numpy==2.0.2
+joblib==1.5.3
