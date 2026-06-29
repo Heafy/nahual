@@ -22,17 +22,18 @@ body {
   align-items: center;
   min-height: 100vh;
   padding: 1.5rem;
-  max-width: 680px;
+  max-width: 720px;
 }
 
-header {
+header,
+main {
   text-align: center;
-  width: min(640px, 100%);
+  width: min(675px, 100%);
 }
 
 h1 {
   margin: 0 0 0.25rem;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
 }
 
 .subtitle {
@@ -43,7 +44,7 @@ h1 {
 
 .stage {
   position: relative;
-  width: min(640px, 100%);
+  width: min(675px, 100%);
   aspect-ratio: 4 / 3;
   background: #000;
   border-radius: 12px;
