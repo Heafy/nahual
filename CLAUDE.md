@@ -7,8 +7,8 @@ continues to work smoothly.
 This application's purpose is to detect custom gestures with machine learning.
 The custom gestures are LSM (Lengua de Señas Mexicana), a sign language for
 México. The scope is to recognize every letter of the LSM alphabet, split
-across two classifiers (static poses and dynamic motion gestures), usable both
-from a desktop OpenCV demo and a browser-based web demo.
+across two classifiers (static poses and dynamic motion gestures), usable from
+a desktop OpenCV demo.
 
 # Project Structure
 
@@ -16,11 +16,8 @@ from a desktop OpenCV demo and a browser-based web demo.
   * `gesture_collector.py` – Interactive webcam data collection tool.
   * `gesture_heuristics.py` – Landmark preprocessing and feature extraction.
   * `gesture_trainer.py` – Model training and inference (static + dynamic).
-  * `realtime_session.py` – Per-frame recognition logic shared by the desktop
-    demo and the web server so both front-ends behave identically.
   * `visualization.py` – OpenCV drawing helpers (landmarks, overlays).
   * `data_inspector.py` – Dataset inspection utilities (sample counts per label).
-* `server/` – FastAPI web demo (`app.py` plus `static/` HTML/CSS/JS front-end).
 * Root entry scripts:
   * `main.py` – Real-time desktop demo (webcam + OpenCV window).
   * `collect.py` – Run the interactive data collector.
@@ -39,15 +36,16 @@ All scripts are launched through `uv`:
 * `uv run python collect.py` – Collect labeled gesture samples.
 * `uv run python train.py` – Train the classifiers from `data/`.
 * `uv run python inspect_data.py` – Inspect dataset sample counts.
-* `uv run uvicorn server.app:app` – Run the FastAPI web demo locally.
 
 # Architecture Notes
 
-* Recognition logic lives in `nahual.realtime_session.RealtimeGestureSession`
-  and is shared between the desktop demo and the FastAPI server.
-* In the web demo, MediaPipe runs in the browser: only hand landmarks are
-  streamed back to the server, which never imports `mediapipe` or `opencv`.
-  Keep server code free of those heavy dependencies.
+* Real-time recognition runs in `main.py`, which feeds MediaPipe hand landmarks
+  through `GestureHeuristics` (feature extraction) and `GestureTrainer`
+  (static + dynamic inference).
+* Feature extraction is centralized in `nahual/gesture_heuristics.py`; the
+  collector (`gesture_collector.py`) and the demo (`main.py`) share the same
+  helpers (e.g. `GestureHeuristics.flatten_static_features`) so the vectors used
+  for training and inference stay identical.
 
 # Static vs. Dynamic Gestures
 
@@ -69,20 +67,17 @@ folder and its own trained model:
 
 * If you add or update dependencies remember to run `uv lock` to update the
   lockfile.
-* There are two dependency sets, keep both consistent when changing packages:
-  * `pyproject.toml` / `uv.lock` – Full environment for the desktop tools and
-    development (includes `mediapipe`, `opencv-python`, `black`, `isort`).
-  * `requirements-server.txt` – Slim, separately maintained set for the web
-    server only (no `mediapipe` / `opencv`).
+* `pyproject.toml` / `uv.lock` define the full environment for the desktop tools
+  and development (includes `mediapipe`, `opencv-python`, `black`, `isort`).
 
 # Version Constraints
 
 * The project targets Python `>=3.9,<3.13` (see `pyproject.toml`).
 * The trained `.pkl` models are pickled with specific versions
-  (Python 3.9, `scikit-learn==1.6.1`, `numpy==2.0.2`, per
-  `requirements-server.txt`). Bumping these versions or retraining under a
-  different environment can break unpickling — change them deliberately and
-  regenerate the models when you do.
+  (Python 3.9, `scikit-learn==1.6.1`, `numpy==2.0.2`) from the environment used
+  to train them. Bumping these versions or retraining under a different
+  environment can break unpickling — change them deliberately and regenerate the
+  models when you do.
 
 # Reasoning Process
 
