@@ -122,16 +122,13 @@ def classify_dynamic_buffer(
     if not dynamic_frame_buffer:
         return None
 
-    normalized_sequence = np.stack(
-        [
-            heuristics.normalize_coordinates(frame.coordinates)
-            for frame in dynamic_frame_buffer
-        ],
-        axis=0,
-    )  # shape (N_frames, 21, 3)
-
+    # Reuse the heuristics layer for the normalize-and-stack step so the
+    # MAX_DYNAMIC_FRAMES cap and normalization live in a single place.  The
+    # returned ExtractedFeatures.frame_sequence is the normalized, capped
+    # (N_frames, 21, 3) array consumed by the statistical feature extractor.
+    features = heuristics.extract_features_dynamic(dynamic_frame_buffer)
     statistical_features = heuristics.extract_statistical_features_dynamic(
-        normalized_sequence
+        features.frame_sequence
     )
     prediction, confidence = trainer.predict_dynamic_with_confidence(
         statistical_features
