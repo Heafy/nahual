@@ -699,32 +699,6 @@ class GestureTrainer:
     # Inference
     # ------------------------------------------------------------------
 
-    # TODO: Check if this methods is still used
-    def predict(self, feature_vector: np.ndarray) -> str:
-        """Run inference on a single feature vector and return the label.
-
-        This method is the bridge between the trained model and the real-time
-        loop in main.py.  It accepts the same flat feature vector produced by
-        GestureHeuristics to keep the inference path consistent with training.
-
-        Args:
-            feature_vector: numpy array of shape (81,) for static gestures.
-
-        Returns:
-            Predicted label string (e.g., "letra_a", "letra_b").
-
-        Raises:
-            RuntimeError: If no model has been loaded or trained.
-        """
-        if self._model is None:
-            raise RuntimeError(
-                "No model available.  Train a model or load one from disk first."
-            )
-
-        reshaped_vector = feature_vector.reshape(1, -1)
-        prediction = self._model.predict(reshaped_vector)
-        return prediction[0]
-
     def predict_with_confidence(self, feature_vector: np.ndarray) -> tuple[str, float]:
         """Run inference and return the predicted label together with its confidence.
 

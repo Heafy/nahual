@@ -15,7 +15,7 @@ provides built-in scale invariance relative to the camera distance.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List, Optional, Sequence, Tuple
 
@@ -65,11 +65,6 @@ DEFAULT_LANDMARK_PAIRS: List[Tuple[int, int]] = [
     (0, 16),  # wrist      → ring tip
     (0, 20),  # wrist      → pinky tip
 ]
-
-# Velocity threshold (normalized units / ms) above which a gesture is
-# classified as DYNAMIC.  This placeholder value will be refined once
-# real LSM data is collected and analyzed.
-MOTION_VELOCITY_THRESHOLD: float = 0.002
 
 # Hard cap on sequence length for dynamic gestures.
 # 90 frames ≈ 3 seconds at 30 fps.
@@ -543,54 +538,3 @@ class GestureHeuristics:
             path_lengths[index] = np.sum(np.linalg.norm(deltas, axis=1))
 
         return path_lengths
-
-    # TODO: It seems like its not used, because the gesture type is set by the user
-    def classify_gesture_type(
-        self, landmark_frames: List[LandmarkFrame]
-    ) -> GestureType:
-        """Heuristically determine whether a gesture is static or dynamic.
-
-        Computes the mean velocity of the wrist landmark across all frames.
-        If the velocity exceeds MOTION_VELOCITY_THRESHOLD, the gesture is
-        classified as DYNAMIC.
-
-        This is a placeholder heuristic.  The threshold and the set of
-        landmarks used will be refined once real LSM data is available.
-
-        Args:
-            landmark_frames: Two or more LandmarkFrame objects to analyze.
-                A single frame always returns STATIC.
-
-        Returns:
-            GestureType.STATIC or GestureType.DYNAMIC.
-        """
-        if len(landmark_frames) < 2:
-            return GestureType.STATIC
-
-        total_displacement = 0.0
-        total_time_ms = 0
-
-        for previous_frame, current_frame in zip(
-            landmark_frames[:-1], landmark_frames[1:]
-        ):
-            delta_time_ms = current_frame.timestamp_ms - previous_frame.timestamp_ms
-            if delta_time_ms <= 0:
-                continue
-            displacement = float(
-                np.linalg.norm(
-                    current_frame.coordinates[WRIST_INDEX]
-                    - previous_frame.coordinates[WRIST_INDEX]
-                )
-            )
-            total_displacement += displacement
-            total_time_ms += delta_time_ms
-
-        if total_time_ms == 0:
-            return GestureType.STATIC
-
-        mean_velocity = total_displacement / total_time_ms
-        return (
-            GestureType.DYNAMIC
-            if mean_velocity > MOTION_VELOCITY_THRESHOLD
-            else GestureType.STATIC
-        )

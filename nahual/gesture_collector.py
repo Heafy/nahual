@@ -62,10 +62,8 @@ class CollectorConfig:
         data_root_directory: Root directory under which static/ and dynamic/
             subdirectories are created.
         camera_device_index: OpenCV camera index (0 = default webcam).
-        target_fps: Desired capture framerate; controls loop sleep timing.
         dynamic_capture_duration_seconds: Maximum recording time for dynamic
             gesture capture.  Hard-capped by MAX_DYNAMIC_FRAMES as well.
-        countdown_seconds: On-screen countdown before dynamic capture starts.
         window_name: Title of the OpenCV display window.
         show_landmark_debug: Whether to render coordinate text overlay.
     """
@@ -73,9 +71,7 @@ class CollectorConfig:
     model_asset_path: str = "models/hand_landmarker.task"
     data_root_directory: Path = Path("data")
     camera_device_index: int = 0
-    target_fps: int = 30
     dynamic_capture_duration_seconds: float = 3.0
-    countdown_seconds: int = 3
     window_name: str = "Nahual - Collector"
     show_landmark_debug: bool = False
 

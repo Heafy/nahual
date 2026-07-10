@@ -3,9 +3,9 @@ train.py
 
 Entrypoint for the LSM gesture model trainer.
 
-Loads collected samples from the data/ directory and trains a classifier.
-This script is a placeholder — the training logic in GestureTrainer
-will be implemented once data has been collected and the algorithm chosen.
+Loads collected samples from the data/ directory and trains the static and
+dynamic gesture classifiers, saving each trained model to the models/
+directory.
 
 Usage::
 
