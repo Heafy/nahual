@@ -6,12 +6,19 @@ Real-time LSM gesture recognition demo.
 Opens a webcam window with MediaPipe hand landmarks overlaid.
 Static and dynamic gesture predictions are produced continuously and
 shown stacked on screen — static on the first line (prefix "S") and
-dynamic on the second line (prefix "D"). Dynamic capture is motion-gated:
-the recording starts automatically when hand motion is detected and ends
-when the hand becomes still (or the buffer/timeout limit is hit).
+dynamic on the second line (prefix "D"). Dynamic capture works two ways,
+both active at the same time:
 
-Press 'q' to quit. Press 'm' to toggle a motion-debug readout used to
-calibrate the motion thresholds.
+* Automatic (motion-gated): recording starts when hand motion is detected
+  and ends when the hand becomes still (or the buffer/timeout limit is hit).
+* Manual: press 'd' to start a recording and 'd' again to stop and classify
+  it.  Useful for slow or low-amplitude gestures that do not reliably trip
+  the automatic motion detector.  Pressing 'd' during an automatic recording
+  stops and classifies it immediately.
+
+Press 'q' to quit. Press 'd' to start/stop a manual dynamic recording.
+Press 'm' to toggle a motion-debug readout used to calibrate the motion
+thresholds.
 
 Usage::
 
@@ -252,6 +259,7 @@ def main() -> None:
     # --- Motion-gated dynamic capture state -------------------------------
     dynamic_frame_buffer: List[LandmarkFrame] = []
     capture_state: str = "IDLE"  # "IDLE" or "RECORDING"
+    manual_capture: bool = False  # True when RECORDING was started by the 'd' key
     capture_start_time: float = 0.0
     previous_normalized: Optional[np.ndarray] = None
     smoothed_motion: float = 0.0
@@ -345,23 +353,36 @@ def main() -> None:
 
                             elapsed = current_time - capture_start_time
 
-                            # Only count still frames after the minimum
-                            # recording duration has passed.  This prevents
-                            # mid-gesture direction-change pauses (e.g. the
-                            # corners of "Z") from triggering stop-detection
-                            # too early.
-                            if elapsed >= MIN_RECORDING_DURATION_SECONDS:
-                                if smoothed_motion < MOTION_STOP_THRESHOLD:
-                                    consecutive_still_frames += 1
+                            # Manual recordings (started with 'd') ignore the
+                            # automatic stop-detection entirely — they end only
+                            # on the next 'd' press or when the buffer fills up.
+                            # Motion-started recordings use still-frame and
+                            # timeout detection as before.
+                            if not manual_capture:
+                                # Only count still frames after the minimum
+                                # recording duration has passed.  This prevents
+                                # mid-gesture direction-change pauses (e.g. the
+                                # corners of "Z") from triggering stop-detection
+                                # too early.
+                                if elapsed >= MIN_RECORDING_DURATION_SECONDS:
+                                    if smoothed_motion < MOTION_STOP_THRESHOLD:
+                                        consecutive_still_frames += 1
+                                    else:
+                                        consecutive_still_frames = 0
                                 else:
                                     consecutive_still_frames = 0
-                            else:
-                                consecutive_still_frames = 0
 
-                            should_classify = (
-                                consecutive_still_frames >= MOTION_STOP_FRAMES
-                                or len(dynamic_frame_buffer) >= MAX_DYNAMIC_FRAMES
-                                or elapsed >= DYNAMIC_CAPTURE_TIMEOUT_SECONDS
+                            # The MAX_DYNAMIC_FRAMES cap applies to both modes so
+                            # the buffer can never overflow; the still-frame and
+                            # timeout conditions apply only to automatic capture.
+                            should_classify = len(
+                                dynamic_frame_buffer
+                            ) >= MAX_DYNAMIC_FRAMES or (
+                                not manual_capture
+                                and (
+                                    consecutive_still_frames >= MOTION_STOP_FRAMES
+                                    or elapsed >= DYNAMIC_CAPTURE_TIMEOUT_SECONDS
+                                )
                             )
                             if should_classify:
                                 if len(dynamic_frame_buffer) >= MIN_DYNAMIC_FRAMES:
@@ -379,6 +400,7 @@ def main() -> None:
                                         ]
                                         dynamic_prediction_display_time = current_time
                                 capture_state = "IDLE"
+                                manual_capture = False
                                 consecutive_still_frames = 0
                                 dynamic_frame_buffer.clear()
 
@@ -406,6 +428,7 @@ def main() -> None:
                 # against a stale frame when the hand returns.
                 if capture_state == "RECORDING":
                     capture_state = "IDLE"
+                    manual_capture = False
                     consecutive_still_frames = 0
                     dynamic_frame_buffer.clear()
                 previous_normalized = None
@@ -422,6 +445,26 @@ def main() -> None:
                     detected_handedness,
                     y_offset=stacked_y,
                     prefix="S",
+                )
+
+            # --- Recording indicator -------------------------------------
+            # Let the user know a dynamic recording is in progress, whether it
+            # was started manually ('d') or automatically by motion.
+            if capture_state == "RECORDING":
+                elapsed = current_time - capture_start_time
+                if manual_capture:
+                    recording_info = f"manual  |  {len(dynamic_frame_buffer)} frames"
+                else:
+                    remaining = max(0.0, DYNAMIC_CAPTURE_TIMEOUT_SECONDS - elapsed)
+                    recording_info = (
+                        f"auto  |  {remaining:.1f}s remaining  |  "
+                        f"{len(dynamic_frame_buffer)} frames"
+                    )
+                stacked_y += draw_prediction_overlay(
+                    frame,
+                    "RECORDING",
+                    handedness=recording_info,
+                    y_offset=stacked_y,
                 )
 
             if dynamic_prediction_label is not None:
@@ -452,6 +495,33 @@ def main() -> None:
 
             if key == ord("q"):
                 break
+            elif key == ord("d") and dynamic_model_available:
+                if capture_state == "IDLE":
+                    # Manual start: begin a user-controlled dynamic recording.
+                    capture_state = "RECORDING"
+                    manual_capture = True
+                    capture_start_time = current_time
+                    consecutive_still_frames = 0
+                    dynamic_frame_buffer.clear()
+                else:
+                    # Manual stop: classify whatever is currently buffered.  This
+                    # also serves as an override for an in-progress automatic
+                    # (motion-gated) recording.
+                    if len(dynamic_frame_buffer) >= MIN_DYNAMIC_FRAMES:
+                        result_dynamic = classify_dynamic_buffer(
+                            heuristics, trainer, dynamic_frame_buffer
+                        )
+                        if (
+                            result_dynamic is not None
+                            and result_dynamic[1] >= DYNAMIC_CONFIDENCE_THRESHOLD
+                        ):
+                            dynamic_prediction_label = result_dynamic[0]
+                            dynamic_prediction_confidence = result_dynamic[1]
+                            dynamic_prediction_display_time = current_time
+                    capture_state = "IDLE"
+                    manual_capture = False
+                    consecutive_still_frames = 0
+                    dynamic_frame_buffer.clear()
             elif key == ord("m"):
                 show_motion_debug = not show_motion_debug
 
