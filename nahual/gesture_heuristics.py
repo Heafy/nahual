@@ -71,11 +71,14 @@ DEFAULT_LANDMARK_PAIRS: List[Tuple[int, int]] = [
 MAX_DYNAMIC_FRAMES: int = 90
 
 # Feature vector length for dynamic gesture statistical features.
-# See extract_statistical_features_dynamic() for the full layout.
-#   252 (per-channel stats) + 126 (velocity stats) + 63 (displacement)
-#   + 63 (direction reversals) + 5 (path lengths) + 20 (first/last angles)
-#   + 16 (first/last distances) = 545
-DYNAMIC_STATISTICAL_FEATURE_LENGTH: int = 545
+# See extract_statistical_features_dynamic() for the full layout.  The wrist
+# landmark (index 0) is excluded from the per-channel blocks because it is
+# always [0, 0, 0] after wrist-centering, so each block spans 60 channels
+# (20 landmarks x 3 axes) rather than 63.
+#   240 (per-channel stats) + 120 (velocity stats) + 60 (displacement)
+#   + 60 (direction reversals) + 5 (path lengths) + 20 (first/last angles)
+#   + 16 (first/last distances) = 521
+DYNAMIC_STATISTICAL_FEATURE_LENGTH: int = 521
 
 
 # ---------------------------------------------------------------------------
@@ -404,30 +407,35 @@ class GestureHeuristics:
         which is the format produced by the collector and by
         extract_features_dynamic().frame_sequence.
 
-        Feature layout (545 total):
+        The wrist landmark (index 0) is excluded from the per-channel blocks
+        because wrist-centering makes it always [0, 0, 0], so those features
+        would be constant zero.  Each per-channel block therefore spans 60
+        channels (20 landmarks x 3 axes) instead of 63.
+
+        Feature layout (521 total):
 
             Index Range  Count  Description
             ----------- ------ ------------------------------------------
-              0 -  62      63  Per-channel mean
-             63 - 125      63  Per-channel std
-            126 - 188      63  Per-channel min
-            189 - 251      63  Per-channel max
-            252 - 314      63  Per-channel velocity mean
-            315 - 377      63  Per-channel velocity std
-            378 - 440      63  Per-channel displacement (last - first)
-            441 - 503      63  Per-channel direction reversal count
-            504 - 508       5  Fingertip path lengths
-            509 - 518      10  First frame finger angles
-            519 - 528      10  Last frame finger angles
-            529 - 536       8  First frame inter-landmark distances
-            537 - 544       8  Last frame inter-landmark distances
+              0 -  59      60  Per-channel mean
+             60 - 119      60  Per-channel std
+            120 - 179      60  Per-channel min
+            180 - 239      60  Per-channel max
+            240 - 299      60  Per-channel velocity mean
+            300 - 359      60  Per-channel velocity std
+            360 - 419      60  Per-channel displacement (last - first)
+            420 - 479      60  Per-channel direction reversal count
+            480 - 484       5  Fingertip path lengths
+            485 - 494      10  First frame finger angles
+            495 - 504      10  Last frame finger angles
+            505 - 512       8  First frame inter-landmark distances
+            513 - 520       8  Last frame inter-landmark distances
 
         Args:
             frame_sequence: numpy array of shape (N_frames, 21, 3), dtype
                 float32.  Already normalized coordinates for each frame.
 
         Returns:
-            Flat numpy array of shape (545,), dtype float32.
+            Flat numpy array of shape (521,), dtype float32.
 
         Raises:
             ValueError: If frame_sequence has unexpected shape or is empty.
@@ -441,36 +449,38 @@ class GestureHeuristics:
 
         number_of_frames = frame_sequence.shape[0]
 
-        # --- Per-channel temporal statistics (252 features) ----------------
-        # Reshape to (N_frames, 63) so each column is one landmark-axis channel.
-        channels = frame_sequence.reshape(number_of_frames, -1)  # (N, 63)
+        # --- Per-channel temporal statistics (240 features) ----------------
+        # Exclude the wrist (landmark 0), which is always [0, 0, 0] after
+        # wrist-centering, then reshape to (N_frames, 60) so each column is one
+        # landmark-axis channel for landmarks 1..20.
+        channels = frame_sequence[:, 1:, :].reshape(number_of_frames, -1)  # (N, 60)
 
-        channel_mean = channels.mean(axis=0)  # (63,)
-        channel_std = channels.std(axis=0)  # (63,)
-        channel_min = channels.min(axis=0)  # (63,)
-        channel_max = channels.max(axis=0)  # (63,)
+        channel_mean = channels.mean(axis=0)  # (60,)
+        channel_std = channels.std(axis=0)  # (60,)
+        channel_min = channels.min(axis=0)  # (60,)
+        channel_max = channels.max(axis=0)  # (60,)
 
-        # --- Velocity statistics (126 features) ----------------------------
+        # --- Velocity statistics (120 features) ----------------------------
         if number_of_frames >= 2:
-            velocity = np.diff(channels, axis=0)  # (N-1, 63)
-            velocity_mean = velocity.mean(axis=0)  # (63,)
-            velocity_std = velocity.std(axis=0)  # (63,)
+            velocity = np.diff(channels, axis=0)  # (N-1, 60)
+            velocity_mean = velocity.mean(axis=0)  # (60,)
+            velocity_std = velocity.std(axis=0)  # (60,)
         else:
-            velocity_mean = np.zeros(63, dtype=np.float32)
-            velocity_std = np.zeros(63, dtype=np.float32)
+            velocity_mean = np.zeros(60, dtype=np.float32)
+            velocity_std = np.zeros(60, dtype=np.float32)
 
-        # --- Displacement (63 features) ------------------------------------
-        displacement = channels[-1] - channels[0]  # (63,)
+        # --- Displacement (60 features) ------------------------------------
+        displacement = channels[-1] - channels[0]  # (60,)
 
-        # --- Direction reversal count (63 features) ------------------------
+        # --- Direction reversal count (60 features) ------------------------
         if number_of_frames >= 3:
             velocity_sign = np.sign(velocity)
-            sign_changes = np.diff(velocity_sign, axis=0)  # (N-2, 63)
+            sign_changes = np.diff(velocity_sign, axis=0)  # (N-2, 60)
             direction_reversals = np.count_nonzero(sign_changes, axis=0).astype(
                 np.float32
-            )  # (63,)
+            )  # (60,)
         else:
-            direction_reversals = np.zeros(63, dtype=np.float32)
+            direction_reversals = np.zeros(60, dtype=np.float32)
 
         # --- Fingertip path lengths (5 features) --------------------------
         fingertip_path_lengths = self._compute_fingertip_path_lengths(
@@ -492,14 +502,14 @@ class GestureHeuristics:
         # --- Concatenate all features -------------------------------------
         feature_vector = np.concatenate(
             [
-                channel_mean,  # 63
-                channel_std,  # 63
-                channel_min,  # 63
-                channel_max,  # 63
-                velocity_mean,  # 63
-                velocity_std,  # 63
-                displacement,  # 63
-                direction_reversals,  # 63
+                channel_mean,  # 60
+                channel_std,  # 60
+                channel_min,  # 60
+                channel_max,  # 60
+                velocity_mean,  # 60
+                velocity_std,  # 60
+                displacement,  # 60
+                direction_reversals,  # 60
                 fingertip_path_lengths,  # 5
                 first_frame_angles,  # 10
                 last_frame_angles,  # 10
