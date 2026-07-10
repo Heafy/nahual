@@ -260,17 +260,11 @@ class GestureCollector:
         #   - inter_landmark_distances: Euclidean distances between DEFAULT_LANDMARK_PAIRS
         #     (8 values)
         # Total: 81 float32 features saved as a 1-D array of shape (81,).
-        normalized_coordinates = features.normalized_coordinates.flatten()
-        finger_angles = features.finger_angles
-        inter_landmark_distances = features.inter_landmark_distances
+        feature_vector = self.heuristics.flatten_static_features(features)
 
-        feature_vector = np.concatenate(
-            [normalized_coordinates, finger_angles, inter_landmark_distances]
-        )
-
-        nc_end = len(normalized_coordinates)
-        fa_end = nc_end + len(finger_angles)
-        ild_end = fa_end + len(inter_landmark_distances)
+        nc_end = len(features.normalized_coordinates.flatten())
+        fa_end = nc_end + len(features.finger_angles)
+        ild_end = fa_end + len(features.inter_landmark_distances)
 
         output_path = self._build_output_path(GestureType.STATIC)
         metadata = {

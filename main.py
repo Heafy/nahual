@@ -408,12 +408,8 @@ def main() -> None:
                     if model_available:
                         features = heuristics.extract_features_static(landmark_frame)
                         try:
-                            feature_vector = np.concatenate(
-                                [
-                                    features.normalized_coordinates.flatten(),
-                                    features.finger_angles,
-                                    features.inter_landmark_distances,
-                                ]
+                            feature_vector = heuristics.flatten_static_features(
+                                features
                             )
                             prediction, confidence = trainer.predict_with_confidence(
                                 feature_vector

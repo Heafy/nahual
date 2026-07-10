@@ -325,6 +325,30 @@ class GestureHeuristics:
             frame_sequence=None,
         )
 
+    def flatten_static_features(self, features: ExtractedFeatures) -> np.ndarray:
+        """Assemble the flat static feature vector from an ExtractedFeatures.
+
+        Concatenates, in a fixed order, the flattened normalized coordinates
+        (63 values), finger angles (10 values), and inter-landmark distances
+        (8 values) into the single (81,) float32 vector used for both training
+        (data collection) and real-time inference.  This method is the single
+        source of truth for the static feature layout, so the collector and the
+        demo cannot silently drift apart.
+
+        Args:
+            features: ExtractedFeatures produced by extract_features_static.
+
+        Returns:
+            numpy array of shape (81,), dtype float32.
+        """
+        return np.concatenate(
+            [
+                features.normalized_coordinates.flatten(),
+                features.finger_angles,
+                features.inter_landmark_distances,
+            ]
+        ).astype(np.float32)
+
     def extract_features_dynamic(
         self, landmark_frames: List[LandmarkFrame]
     ) -> ExtractedFeatures:
