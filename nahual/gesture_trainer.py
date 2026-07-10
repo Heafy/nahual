@@ -204,7 +204,11 @@ class GestureTrainer:
             sample_count = 0
 
             for sample_file in sorted(label_directory.glob("*.npy")):
-                sample = np.load(str(sample_file))
+                try:
+                    sample = np.load(str(sample_file))
+                except Exception:
+                    logger.warning("Failed to load %s — skipping.", sample_file)
+                    continue
 
                 if sample.shape != (STATIC_FEATURE_LENGTH,):
                     logger.warning(
