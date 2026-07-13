@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nahual — LSM Gesture Recognition</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Nahual</h1>
+    <p class="subheader">
+      Real-time recognition of the LSM (Lengua de Señas Mexicana) alphabet —
+      static poses and motion gestures detected live from your webcam.
+    </p>
+  </header>
+
+  <main>
+    <div class="video-container">
+      <video id="webcam" autoplay playsinline muted></video>
+      <canvas id="overlay-canvas"></canvas>
+      <div id="prediction-stack">
+        <div class="prediction-bar" id="static-bar" hidden>
+          <span class="prediction-label" id="static-label"></span>
+          <span class="prediction-secondary" id="static-secondary"></span>
+          <span class="prediction-warning" id="static-warning" hidden>Low confidence</span>
+        </div>
+        <div class="prediction-bar" id="recording-bar" hidden>
+          <span class="prediction-label">RECORDING</span>
+          <span class="prediction-secondary" id="recording-info"></span>
+        </div>
+        <div class="prediction-bar" id="dynamic-bar" hidden>
+          <span class="prediction-label" id="dynamic-label"></span>
+          <span class="prediction-secondary" id="dynamic-secondary"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="record-button" disabled>Start manual recording</button>
+      <p id="status-message">Connecting…</p>
+    </div>
+  </main>
+
+  <footer>
+    <h2>Resources / Links</h2>
+    <!-- Placeholder: links will be added later. -->
+    <div class="footer-placeholder"></div>
+  </footer>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

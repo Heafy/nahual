@@ -1,0 +1,13 @@
+# Dependencies for the FastAPI browser demo (web/app.py).
+#
+# Intentionally slim: the web server never imports mediapipe or opencv —
+# MediaPipe runs in the browser and only hand landmarks are streamed back.
+#
+# scikit-learn and numpy are pinned to the exact versions the .pkl models
+# in models/ were pickled with (see CLAUDE.md) — bumping them can break
+# unpickling.  The runtime Python must stay within >=3.9,<3.13.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+scikit-learn==1.6.1
+numpy==2.0.2
+joblib>=1.3
