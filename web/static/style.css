@@ -88,6 +88,14 @@ main {
   color: #ffffff;
 }
 
+/* The bars are toggled via the `hidden` attribute from JavaScript. Because
+   `.prediction-bar` sets an explicit `display`, it would otherwise override
+   the browser's default `[hidden] { display: none }` and the bars could never
+   hide — restore that behavior here. */
+.prediction-bar[hidden] {
+  display: none;
+}
+
 .prediction-label {
   font-size: 1.4rem;
   font-weight: 600;

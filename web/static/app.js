@@ -88,6 +88,11 @@ let latestOverlay = null;
 let lastVideoTimestamp = -1;
 let dynamicModelAvailable = false;
 let isRunning = false;
+// Whether a hand is visible in the most recently processed local frame.
+// The live bars (static + RECORDING) are gated on this so they disappear the
+// instant the hand leaves, matching the desktop app, instead of showing the
+// last (stale) server overlay while sends are response-gated.
+let handVisible = false;
 
 /**
  * Update the status line shown to the user.
@@ -190,6 +195,19 @@ function sendToServer(detection) {
 
   awaitingServerResponse = true;
   websocket.send(JSON.stringify(payload));
+}
+
+/**
+ * Report whether a MediaPipe detection contains a visible hand this frame.
+ * Uses the same image-space `landmarks` array that drives the skeleton so the
+ * bars and the drawn hand agree on presence.
+ * @param {object|null} detection MediaPipe detection result for this frame.
+ * @returns {boolean} True if at least one hand was detected.
+ */
+function hasHand(detection) {
+  return Boolean(
+    detection && detection.landmarks && detection.landmarks.length > 0
+  );
 }
 
 /**
@@ -316,6 +334,9 @@ function renderLoop() {
     if (timestamp > lastVideoTimestamp) {
       lastVideoTimestamp = timestamp;
       detection = handLandmarker.detectForVideo(videoElement, timestamp);
+      // Refresh hand presence only on a fresh detection; on skipped
+      // same-millisecond frames keep the previous value.
+      handVisible = hasHand(detection);
     }
 
     drawSkeleton(detection);
@@ -323,10 +344,22 @@ function renderLoop() {
       sendToServer(detection);
     }
     if (latestOverlay) {
-      updateStaticBar(latestOverlay);
-      updateRecordingBar(latestOverlay);
+      // The static and RECORDING bars are current-frame live state: gate them
+      // on the local hand presence so they vanish the instant the hand leaves,
+      // rather than lingering on the last (stale) server overlay.
+      if (handVisible) {
+        updateStaticBar(latestOverlay);
+        updateRecordingBar(latestOverlay);
+        updateRecordButton(latestOverlay);
+      } else {
+        staticBar.hidden = true;
+        recordingBar.hidden = true;
+        updateRecordButton({ capture_state: "IDLE" });
+      }
+      // The dynamic result is a server-latched, time-limited display window, so
+      // it keeps showing briefly after the gesture (even with no hand) and then
+      // disappears on its own once the server clears dynamic_label.
       updateDynamicBar(latestOverlay);
-      updateRecordButton(latestOverlay);
     }
   }
 
