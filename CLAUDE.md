@@ -14,6 +14,9 @@ a desktop OpenCV demo.
 
 * `nahual/` – Core inference and machine learning package.
   * `gesture_collector.py` – Interactive webcam data collection tool.
+  * `hand_landmarker.py` – Canonical MediaPipe HandLandmarker configuration
+    (`HandLandmarkerConfig`) and helpers (`build_hand_landmarker`,
+    `detect_landmarks`) shared by the desktop tools.
   * `gesture_heuristics.py` – Landmark preprocessing and feature extraction.
   * `gesture_trainer.py` – Model training and inference (static + dynamic).
   * `visualization.py` – OpenCV drawing helpers (landmarks, overlays).
@@ -46,6 +49,16 @@ All scripts are launched through `uv`:
   collector (`gesture_collector.py`) and the demo (`main.py`) share the same
   helpers (e.g. `GestureHeuristics.flatten_static_features`) so the vectors used
   for training and inference stay identical.
+* MediaPipe hand-detection settings (VIDEO mode, `num_hands`, the detection /
+  presence / tracking confidences) are centralized in
+  `nahual/hand_landmarker.py` as `HandLandmarkerConfig`. `main.py` and
+  `gesture_collector.py` both build their landmarker from it, so the collector
+  captures training data under the exact settings the demo recognizes it with.
+  **The browser demo (`web/static/app.js`) cannot import Python, so it keeps a
+  manual copy of these same values in `initialiseHandLandmarker`. Whenever you
+  change `HandLandmarkerConfig`, update the mirrored options in
+  `web/static/app.js` to match (and vice versa) — the two must stay in sync to
+  avoid different detection behavior across the desktop and web front-ends.**
 
 # Static vs. Dynamic Gestures
 

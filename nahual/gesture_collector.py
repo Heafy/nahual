@@ -38,13 +38,12 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import cv2
-import mediapipe as mp
 import numpy as np
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 
 from nahual.gesture_heuristics import (MAX_DYNAMIC_FRAMES, GestureHeuristics,
                                        GestureType, LandmarkFrame)
+from nahual.hand_landmarker import (HandLandmarkerConfig,
+                                    build_hand_landmarker, detect_landmarks)
 from nahual.visualization import (draw_hand_connections, draw_hint_bar,
                                   draw_landmark_debug, draw_status_bar)
 
@@ -136,16 +135,6 @@ class GestureCollector:
         Raises:
             SystemExit: If the camera or the landmarker model cannot be opened.
         """
-        base_options = python.BaseOptions(model_asset_path=self.config.model_asset_path)
-        landmarker_options = vision.HandLandmarkerOptions(
-            base_options=base_options,
-            num_hands=1,
-            running_mode=vision.RunningMode.VIDEO,
-            min_hand_detection_confidence=0.7,
-            min_hand_presence_confidence=0.6,
-            min_tracking_confidence=0.7,
-        )
-
         capture = cv2.VideoCapture(self.config.camera_device_index)
         if not capture.isOpened():
             print("Error: Could not open camera.")
@@ -154,8 +143,8 @@ class GestureCollector:
         self._print_instructions()
         start_time = time.time()
 
-        with vision.HandLandmarker.create_from_options(
-            landmarker_options
+        with build_hand_landmarker(
+            HandLandmarkerConfig(model_asset_path=self.config.model_asset_path)
         ) as landmarker:
             while True:
                 success, frame = capture.read()
@@ -334,7 +323,10 @@ class GestureCollector:
     # ------------------------------------------------------------------
 
     def _detect_landmarks(self, landmarker, frame: np.ndarray, timestamp_ms: int):
-        """Convert a BGR frame to RGB and run the hand landmarker.
+        """Run the hand landmarker on one BGR frame.
+
+        Delegates to the shared nahual.hand_landmarker.detect_landmarks helper so
+        the collector and the real-time demo use identical detection boilerplate.
 
         Args:
             landmarker: MediaPipe HandLandmarker context object.
@@ -344,9 +336,7 @@ class GestureCollector:
         Returns:
             HandLandmarkerResult, or None if detection fails.
         """
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-        return landmarker.detect_for_video(mp_image, timestamp_ms)
+        return detect_landmarks(landmarker, frame, timestamp_ms)
 
     def _buffer_dynamic_frame(self, landmark_frame: LandmarkFrame) -> None:
         """Append a frame to the dynamic capture buffer.

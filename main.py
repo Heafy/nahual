@@ -35,12 +35,11 @@ import time
 from pathlib import Path
 
 import cv2
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 
 from nahual.gesture_heuristics import GestureHeuristics
 from nahual.gesture_trainer import GestureTrainer, TrainingConfig
+from nahual.hand_landmarker import (HandLandmarkerConfig,
+                                    build_hand_landmarker, detect_landmarks)
 from nahual.realtime_session import (MOTION_START_THRESHOLD,
                                      MOTION_STOP_THRESHOLD,
                                      RealtimeGestureSession)
@@ -49,24 +48,6 @@ from nahual.visualization import draw_hand_connections, draw_prediction_overlay
 MODEL_ASSET_PATH = "models/hand_landmarker.task"
 TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
 TRAINED_DYNAMIC_MODEL_PATH = Path("models/dynamic_gesture_classifier.pkl")
-
-
-def build_hand_landmarker() -> vision.HandLandmarker:
-    """Construct and return a HandLandmarker configured for VIDEO mode.
-
-    Returns:
-        A HandLandmarker context manager configured for single-hand detection.
-    """
-    base_options = python.BaseOptions(model_asset_path=MODEL_ASSET_PATH)
-    options = vision.HandLandmarkerOptions(
-        base_options=base_options,
-        num_hands=1,
-        running_mode=vision.RunningMode.VIDEO,
-        min_hand_detection_confidence=0.7,
-        min_hand_presence_confidence=0.6,
-        min_tracking_confidence=0.7,
-    )
-    return vision.HandLandmarker.create_from_options(options)
 
 
 def draw_motion_debug(
@@ -181,7 +162,9 @@ def main() -> None:
 
     start_time = time.time()
 
-    with build_hand_landmarker() as landmarker:
+    with build_hand_landmarker(
+        HandLandmarkerConfig(model_asset_path=MODEL_ASSET_PATH)
+    ) as landmarker:
         while True:
             success, frame = capture.read()
             if not success:
@@ -190,9 +173,7 @@ def main() -> None:
 
             current_time = time.time()
             timestamp_ms = int((current_time - start_time) * 1000)
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-            result = landmarker.detect_for_video(mp_image, timestamp_ms)
+            result = detect_landmarks(landmarker, frame, timestamp_ms)
 
             landmark_frame = None
             detected_handedness = None
