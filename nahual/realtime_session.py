@@ -57,6 +57,12 @@ MOTION_STOP_THRESHOLD: float = 0.008
 # Number of consecutive low-motion frames required to end a recording.
 MOTION_STOP_FRAMES: int = 5
 
+# Consecutive missing-hand frames tolerated mid-recording before the capture is
+# abandoned. Bridges brief MediaPipe dropouts during fast motion so a momentary
+# detection loss does not discard an in-progress gesture. ~0.17 s at 30 fps;
+# tune with the FPS readout added in Step 2.
+MAX_MISSING_FRAMES: int = 5
+
 # EMA smoothing factor for the raw motion signal (0 < alpha <= 1).
 # Higher = more reactive, lower = smoother.
 MOTION_EMA_ALPHA: float = 0.4
@@ -196,6 +202,9 @@ class RealtimeGestureSession:
         self.smoothed_motion: float = 0.0
         self.raw_motion: float = 0.0
         self.consecutive_still_frames: int = 0
+        # Counts consecutive frames with no hand while RECORDING, so a brief
+        # detection dropout does not immediately abandon the capture.
+        self.consecutive_missing_frames: int = 0
 
         # --- Latched dynamic prediction display state ---------------------
         self.dynamic_prediction_label: Optional[str] = None
@@ -245,11 +254,22 @@ class RealtimeGestureSession:
         hand_visible: bool = landmark_frame is not None
 
         if not hand_visible:
-            # Hand left the frame: discard any in-progress capture and reset
-            # the motion reference so we don't compute distance against a
-            # stale frame when the hand returns.
-            self._reset_capture()
+            if self.capture_state == "RECORDING":
+                # Tolerate brief dropouts: keep the buffer, capture state, and
+                # motion reference so a momentary MediaPipe detection loss does
+                # not discard an in-progress gesture. Only give up once the gap
+                # exceeds MAX_MISSING_FRAMES consecutive frames.
+                self.consecutive_missing_frames += 1
+                if self.consecutive_missing_frames > MAX_MISSING_FRAMES:
+                    self._reset_capture()
+            else:
+                # IDLE with no hand: clear the (now stale) motion reference so
+                # we don't compute distance against it when the hand returns.
+                self._reset_capture()
         else:
+            # A visible frame ends any dropout gap.
+            self.consecutive_missing_frames = 0
+
             # Mirror left-hand coordinates to match right-hand training data.
             # Negating the X-axis reflects the hand across the sagittal plane,
             # making it geometrically equivalent to a right hand for the model.
@@ -350,6 +370,7 @@ class RealtimeGestureSession:
         self.previous_normalized = None
         self.smoothed_motion = 0.0
         self.raw_motion = 0.0
+        self.consecutive_missing_frames = 0
 
     def _advance_dynamic_capture(
         self,
