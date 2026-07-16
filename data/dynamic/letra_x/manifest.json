@@ -1,0 +1,76 @@
+{
+  "label": "letra_x",
+  "gesture_type": "dynamic",
+  "samples": [
+    {
+      "file": "0bc745b4-7fe7-40ad-8229-2694b67cb6a0.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:15",
+      "gesture_type": "dynamic",
+      "frame_count": 47
+    },
+    {
+      "file": "e9fb2788-63d6-485f-bb66-7f45bf04b1d9.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:17",
+      "gesture_type": "dynamic",
+      "frame_count": 48
+    },
+    {
+      "file": "4487b038-dfcd-4cc0-86d6-707d9dc40651.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:20",
+      "gesture_type": "dynamic",
+      "frame_count": 47
+    },
+    {
+      "file": "2cb27212-c9c6-45e3-ba6e-242aeef730b6.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:23",
+      "gesture_type": "dynamic",
+      "frame_count": 48
+    },
+    {
+      "file": "38eae46a-abd6-4387-9b9a-a1671d3e5977.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:26",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "de506295-f2c3-4e2c-8ae8-369749c38aca.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:29",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "eb4bdaa1-e6c8-4ceb-bb0a-73397d0bb706.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:31",
+      "gesture_type": "dynamic",
+      "frame_count": 47
+    },
+    {
+      "file": "ba803bf3-ce28-441b-bbe0-c416c6f5729b.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:34",
+      "gesture_type": "dynamic",
+      "frame_count": 47
+    },
+    {
+      "file": "aeff1bc7-c9d5-4762-8b97-379e725d8f12.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:37",
+      "gesture_type": "dynamic",
+      "frame_count": 49
+    },
+    {
+      "file": "0269d9eb-3c2a-4f7b-8c99-92b1cc5be09b.npy",
+      "session_id": "0502107b-e396-43b1-bdd0-599d5f968fcc",
+      "captured_at_iso": "2026-07-16T14:23:40",
+      "gesture_type": "dynamic",
+      "frame_count": 50
+    }
+  ]
+}
