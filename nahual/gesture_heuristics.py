@@ -70,6 +70,21 @@ DEFAULT_LANDMARK_PAIRS: List[Tuple[int, int]] = [
 # 90 frames ≈ 3 seconds at 30 fps.
 MAX_DYNAMIC_FRAMES: int = 90
 
+# Gap-interpolation tunables for dynamic sequences. Brief MediaPipe dropouts
+# leave holes in the buffered sequence; a hole collapses into one oversized jump
+# that distorts the temporally sensitive features (velocity, direction
+# reversals, fingertip path length). These control how holes are back-filled
+# with linearly interpolated frames before feature extraction.
+#
+# A consecutive-frame timestamp gap wider than this multiple of the sequence's
+# median frame interval is treated as dropped frames to fill.
+GAP_INTERPOLATION_THRESHOLD_RATIO: float = 1.5
+
+# Maximum interpolated frames inserted into a single gap. Matches the capture
+# grace budget (MAX_MISSING_FRAMES): a wider gap means the recording was likely
+# abandoned, so we do not fabricate a long stretch of motion.
+MAX_INTERPOLATED_FRAMES_PER_GAP: int = 5
+
 # Feature vector length for dynamic gesture statistical features.
 # See extract_statistical_features_dynamic() for the full layout.  The wrist
 # landmark (index 0) is excluded from the per-channel blocks because it is
@@ -347,6 +362,90 @@ class GestureHeuristics:
             ]
         ).astype(np.float32)
 
+    def interpolate_missing_frames(
+        self, landmark_frames: List[LandmarkFrame]
+    ) -> List[LandmarkFrame]:
+        """Fill timestamp gaps in a dynamic sequence with interpolated frames.
+
+        Brief MediaPipe dropouts remove frames from the buffered sequence, so a
+        gap collapses into one oversized jump between two retained frames. Left
+        alone this inflates the temporally sensitive dynamic features (velocity,
+        direction reversals, fingertip path length). This method detects gaps
+        from the per-frame ``timestamp_ms`` values and inserts linearly
+        interpolated frames so the trajectory stays smooth and evenly sampled.
+
+        The expected frame interval is estimated as the median of the
+        consecutive timestamp deltas, which is robust to the gaps themselves. A
+        pair whose delta exceeds ``GAP_INTERPOLATION_THRESHOLD_RATIO`` times that
+        interval is treated as a dropout and back-filled with up to
+        ``MAX_INTERPOLATED_FRAMES_PER_GAP`` evenly spaced frames. Evenly sampled
+        sequences (no gaps) are returned with their frames unchanged.
+
+        Args:
+            landmark_frames: Ordered list of LandmarkFrame objects (oldest
+                first). Coordinates are the raw (un-normalized) metric world
+                landmarks of shape (21, 3).
+
+        Returns:
+            A list of LandmarkFrame objects with interpolated frames inserted
+            into detected gaps. The original frames are preserved in order;
+            interpolation only inserts frames between them. Returned unchanged
+            when there are fewer than two frames or the timestamps are
+            non-increasing/degenerate.
+        """
+        if len(landmark_frames) < 2:
+            return landmark_frames
+
+        timestamp_deltas = [
+            landmark_frames[index + 1].timestamp_ms
+            - landmark_frames[index].timestamp_ms
+            for index in range(len(landmark_frames) - 1)
+        ]
+        positive_deltas = [delta for delta in timestamp_deltas if delta > 0]
+        if not positive_deltas:
+            # Degenerate or non-increasing timestamps: nothing reliable to fill.
+            return landmark_frames
+        nominal_interval = float(np.median(positive_deltas))
+        if nominal_interval <= 0:
+            return landmark_frames
+
+        filled_frames: List[LandmarkFrame] = [landmark_frames[0]]
+        for index in range(len(landmark_frames) - 1):
+            start_frame = landmark_frames[index]
+            end_frame = landmark_frames[index + 1]
+
+            gap_ratio = (end_frame.timestamp_ms - start_frame.timestamp_ms) / (
+                nominal_interval
+            )
+            if gap_ratio >= GAP_INTERPOLATION_THRESHOLD_RATIO:
+                # round(gap_ratio) frames should span the gap; one of them is the
+                # end frame, so (round - 1) are missing. Clamp to the grace budget.
+                missing_count = min(
+                    int(round(gap_ratio)) - 1, MAX_INTERPOLATED_FRAMES_PER_GAP
+                )
+                for step in range(1, missing_count + 1):
+                    fraction = step / (missing_count + 1)
+                    interpolated_coordinates = (
+                        start_frame.coordinates
+                        + fraction * (end_frame.coordinates - start_frame.coordinates)
+                    ).astype(np.float32)
+                    interpolated_timestamp = int(
+                        round(
+                            start_frame.timestamp_ms
+                            + fraction
+                            * (end_frame.timestamp_ms - start_frame.timestamp_ms)
+                        )
+                    )
+                    filled_frames.append(
+                        LandmarkFrame(
+                            coordinates=interpolated_coordinates,
+                            timestamp_ms=interpolated_timestamp,
+                        )
+                    )
+            filled_frames.append(end_frame)
+
+        return filled_frames
+
     def extract_features_dynamic(
         self, landmark_frames: List[LandmarkFrame]
     ) -> ExtractedFeatures:
@@ -373,6 +472,11 @@ class GestureHeuristics:
         if not landmark_frames:
             raise ValueError("landmark_frames must not be empty.")
 
+        # Back-fill frames dropped during brief detection gaps so the sequence is
+        # evenly sampled before the temporal features are computed. Runs here so
+        # both the collector (at save) and the realtime session (at inference)
+        # get identical treatment through this shared entry point.
+        landmark_frames = self.interpolate_missing_frames(landmark_frames)
         capped_frames = landmark_frames[-MAX_DYNAMIC_FRAMES:]
         normalized_sequence = np.stack(
             [self.normalize_coordinates(frame.coordinates) for frame in capped_frames],
