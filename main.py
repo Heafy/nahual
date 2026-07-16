@@ -49,6 +49,11 @@ MODEL_ASSET_PATH = "models/hand_landmarker.task"
 TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
 TRAINED_DYNAMIC_MODEL_PATH = Path("models/dynamic_gesture_classifier.pkl")
 
+# EMA smoothing factor for the effective-FPS readout in the motion-debug
+# overlay. Heavier smoothing than the motion signal so the displayed rate is
+# steady enough to read (0 < alpha <= 1; lower = smoother).
+FPS_SMOOTHING_ALPHA: float = 0.1
+
 
 def draw_motion_debug(
     frame,
@@ -56,12 +61,21 @@ def draw_motion_debug(
     smoothed_motion: float,
     state: str,
     buffer_length: int,
+    effective_fps: float,
+    camera_read_ms: float,
+    landmark_detect_ms: float,
+    other_ms: float,
+    hand_lost_during_recording: int,
 ) -> None:
     """Render a small motion-debug readout in the bottom-left corner.
 
     Shows the raw motion value, the EMA-smoothed value, the current capture
-    state, and the buffered frame count so the motion thresholds can be
-    tuned interactively.
+    state, the buffered frame count, the effective processing frame rate, a
+    per-stage timing breakdown, and the number of frames the hand was lost
+    mid-recording. The FPS and lost-frame counters diagnose whether dynamic
+    dropouts are blur-driven (many lost frames at a healthy FPS) or
+    throughput-driven (dropouts coinciding with a low FPS); the per-stage
+    timings then localize a low FPS to the camera read vs. MediaPipe inference.
 
     Args:
         frame: OpenCV BGR frame to draw on.
@@ -71,6 +85,17 @@ def draw_motion_debug(
             ("IDLE" or "RECORDING").
         buffer_length: Number of frames currently buffered for dynamic
             classification.
+        effective_fps: EMA-smoothed frames-per-second actually processed by the
+            loop (camera read + MediaPipe + drawing).
+        camera_read_ms: EMA-smoothed milliseconds spent in capture.read() per
+            frame (dominated by camera exposure/bandwidth).
+        landmark_detect_ms: EMA-smoothed milliseconds spent in MediaPipe hand
+            detection per frame (CPU inference cost).
+        other_ms: EMA-smoothed milliseconds spent on the rest of the loop
+            (feature extraction, drawing, imshow, waitKey), derived so the three
+            stages sum to the full frame period.
+        hand_lost_during_recording: Cumulative count of frames in which the hand
+            was not detected while a dynamic recording was in progress.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.5
@@ -84,6 +109,9 @@ def draw_motion_debug(
         f"smoothed   : {smoothed_motion:.4f}",
         f"start/stop : {MOTION_START_THRESHOLD:.4f}/{MOTION_STOP_THRESHOLD:.4f}",
         f"state      : {state}  buf={buffer_length}",
+        f"fps        : {effective_fps:.1f}",
+        f"ms r/d/o   : {camera_read_ms:.0f}/{landmark_detect_ms:.0f}/{other_ms:.0f}",
+        f"lost@rec   : {hand_lost_during_recording}",
     ]
 
     line_heights = [
@@ -162,18 +190,34 @@ def main() -> None:
 
     start_time = time.time()
 
+    # --- Motion-debug instrumentation state -------------------------------
+    # Effective FPS is EMA-smoothed from the per-frame wall-clock delta; the
+    # per-stage timers localize a low FPS to the camera vs. MediaPipe; the
+    # lost-frame counter accumulates frames where the hand vanished mid-record.
+    previous_frame_time: float = start_time
+    smoothed_fps: float = 0.0
+    smoothed_camera_read_ms: float = 0.0
+    smoothed_detect_ms: float = 0.0
+    smoothed_other_ms: float = 0.0
+    hand_lost_during_recording_count: int = 0
+
     with build_hand_landmarker(
         HandLandmarkerConfig(model_asset_path=MODEL_ASSET_PATH)
     ) as landmarker:
         while True:
+            read_start = time.perf_counter()
             success, frame = capture.read()
+            camera_read_ms = (time.perf_counter() - read_start) * 1000.0
             if not success:
                 print("Error: Failed to read frame from camera.")
                 break
 
             current_time = time.time()
             timestamp_ms = int((current_time - start_time) * 1000)
+
+            detect_start = time.perf_counter()
             result = detect_landmarks(landmarker, frame, timestamp_ms)
+            landmark_detect_ms = (time.perf_counter() - detect_start) * 1000.0
 
             landmark_frame = None
             detected_handedness = None
@@ -184,6 +228,41 @@ def main() -> None:
                     detected_handedness = result.handedness[0][0].display_name
 
             overlay = session.process_frame(landmark_frame, detected_handedness)
+
+            # --- Diagnostics: effective FPS + per-stage timing ------------
+            frame_delta_seconds = current_time - previous_frame_time
+            if frame_delta_seconds > 0:
+                instantaneous_fps = 1.0 / frame_delta_seconds
+                smoothed_fps = (
+                    FPS_SMOOTHING_ALPHA * instantaneous_fps
+                    + (1.0 - FPS_SMOOTHING_ALPHA) * smoothed_fps
+                )
+                # "other" is the rest of the loop period after the camera read
+                # and MediaPipe detection, so the three stages sum to the full
+                # frame period (the smoothed averages localize a low FPS).
+                frame_period_ms = frame_delta_seconds * 1000.0
+                other_ms = max(
+                    0.0, frame_period_ms - camera_read_ms - landmark_detect_ms
+                )
+                smoothed_camera_read_ms = (
+                    FPS_SMOOTHING_ALPHA * camera_read_ms
+                    + (1.0 - FPS_SMOOTHING_ALPHA) * smoothed_camera_read_ms
+                )
+                smoothed_detect_ms = (
+                    FPS_SMOOTHING_ALPHA * landmark_detect_ms
+                    + (1.0 - FPS_SMOOTHING_ALPHA) * smoothed_detect_ms
+                )
+                smoothed_other_ms = (
+                    FPS_SMOOTHING_ALPHA * other_ms
+                    + (1.0 - FPS_SMOOTHING_ALPHA) * smoothed_other_ms
+                )
+            previous_frame_time = current_time
+
+            # Count frames where the hand was lost while a recording was in
+            # progress. Step 1's grace period keeps capture_state == "RECORDING"
+            # through a brief dropout, so these are the frames it bridges.
+            if not overlay["hand_visible"] and overlay["capture_state"] == "RECORDING":
+                hand_lost_during_recording_count += 1
 
             # --- Draw stacked overlays -----------------------------------
             stacked_y = 0
@@ -233,6 +312,11 @@ def main() -> None:
                     overlay["smoothed_motion"],
                     overlay["capture_state"],
                     overlay["buffer_length"],
+                    smoothed_fps,
+                    smoothed_camera_read_ms,
+                    smoothed_detect_ms,
+                    smoothed_other_ms,
+                    hand_lost_during_recording_count,
                 )
 
             cv2.imshow("Nahual", frame)

@@ -119,18 +119,20 @@ function displayLetter(label) {
 async function initialiseHandLandmarker() {
   const visionFileset = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_PATH);
   // Canonical detection settings: these values (VIDEO mode, numHands 1,
-  // confidences 0.7 / 0.6 / 0.7) are defined once in Python in
+  // confidences 0.7 / 0.6 / 0.5) are defined once in Python in
   // nahual/hand_landmarker.py (HandLandmarkerConfig) and consumed there by
   // main.py and the data collector. The browser cannot import Python, so this
   // block is a manual mirror — keep it in sync with HandLandmarkerConfig so the
   // web demo detects hands identically to how the training data was collected.
+  // minTrackingConfidence was lowered 0.7 -> 0.5 to keep tracking through fast,
+  // blurry motion (fewer mid-recording dropouts); mirrors the Python change.
   handLandmarker = await HandLandmarker.createFromOptions(visionFileset, {
     baseOptions: { modelAssetPath: HAND_LANDMARKER_MODEL_PATH },
     runningMode: "VIDEO",
     numHands: 1,
     minHandDetectionConfidence: 0.7,
     minHandPresenceConfidence: 0.6,
-    minTrackingConfidence: 0.7,
+    minTrackingConfidence: 0.5,
   });
 }
 

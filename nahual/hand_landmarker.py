@@ -48,13 +48,26 @@ class HandLandmarkerConfig:
             score in the landmark model.
         min_tracking_confidence: Minimum confidence for the hand-tracking to be
             considered successful between frames.
+
+    Tuning note:
+        The three confidence values are being tuned for robustness to fast,
+        blurry motion. They gate *detection* only (whether MediaPipe emits a
+        hand), not the landmark geometry the classifiers consume, so they can be
+        changed and tested in ``main.py`` without retraining. Change one at a
+        time and watch ``lost@rec`` in the 'm' overlay. While these differ from
+        the ``web/static/app.js`` mirror the desktop and browser demos detect
+        differently — re-sync app.js (and recollect/retrain if the change is
+        kept) before shipping.
     """
 
     model_asset_path: str = "models/hand_landmarker.task"
     num_hands: int = 1
-    min_hand_detection_confidence: float = 0.7
-    min_hand_presence_confidence: float = 0.6
-    min_tracking_confidence: float = 0.7
+    min_hand_detection_confidence: float = 0.7  # next knob to try (-> 0.5)
+    min_hand_presence_confidence: float = 0.6  # next knob to try (-> 0.5)
+    # Tuned for motion robustness: 0.7 (baseline) -> 0.5 cut mid-record dropouts
+    # ~9 -> ~3 per quick gesture (chosen). 0.3 was tested and rejected — too
+    # sticky/unstable, it lost the hand more often. 0.5 is the sweet spot.
+    min_tracking_confidence: float = 0.5
 
 
 def build_hand_landmarker(
