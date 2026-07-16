@@ -67,8 +67,11 @@ DEFAULT_LANDMARK_PAIRS: List[Tuple[int, int]] = [
 ]
 
 # Hard cap on sequence length for dynamic gestures.
-# 90 frames ≈ 3 seconds at 30 fps.
-MAX_DYNAMIC_FRAMES: int = 90
+# 60 frames ≈ 2 seconds at 30 fps. Originally 90 frames / 3 seconds, sized
+# conservatively before the LSM gestures were well known; every dynamic letter
+# fits comfortably within 2 seconds, so the tighter window classifies sooner
+# and trims the resting tail from the longest takes ("j"/"z").
+MAX_DYNAMIC_FRAMES: int = 60
 
 # Gap-interpolation tunables for dynamic sequences. Brief MediaPipe dropouts
 # leave holes in the buffered sequence; a hole collapses into one oversized jump
@@ -453,7 +456,7 @@ class GestureHeuristics:
 
         Normalizes each frame independently, then stacks them into a 3-D
         array of shape (N_frames, 21, 3).  Frame count is capped at
-        MAX_DYNAMIC_FRAMES to enforce the 3-second limit.
+        MAX_DYNAMIC_FRAMES to enforce the 2-second limit.
 
         The normalized_coordinates, finger_angles, and inter_landmark_distances
         fields reflect the *last* frame of the sequence (most recent hand

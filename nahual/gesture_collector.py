@@ -70,7 +70,10 @@ class CollectorConfig:
     model_asset_path: str = "models/hand_landmarker.task"
     data_root_directory: Path = Path("data")
     camera_device_index: int = 0
-    dynamic_capture_duration_seconds: float = 3.0
+    # Must match DYNAMIC_CAPTURE_TIMEOUT_SECONDS in nahual/realtime_session.py
+    # so samples are collected under the same maximum window they are
+    # recognized with (train/inference consistency).
+    dynamic_capture_duration_seconds: float = 2.0
     window_name: str = "Nahual - Collector"
     show_landmark_debug: bool = False
 

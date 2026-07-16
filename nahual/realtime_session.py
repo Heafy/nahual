@@ -40,7 +40,9 @@ from nahual.gesture_trainer import GestureTrainer
 # ---------------------------------------------------------------------------
 
 # Maximum time (seconds) for a dynamic capture before auto-classifying.
-DYNAMIC_CAPTURE_TIMEOUT_SECONDS: float = 3.0
+# Lowered from 3.0 once the LSM dynamic letters were confirmed to fit within
+# 2 seconds; the wall-clock twin of MAX_DYNAMIC_FRAMES (60 frames at 30 fps).
+DYNAMIC_CAPTURE_TIMEOUT_SECONDS: float = 2.0
 
 # How long (seconds) to keep displaying a dynamic prediction on screen.
 DYNAMIC_PREDICTION_DISPLAY_SECONDS: float = 3.0
