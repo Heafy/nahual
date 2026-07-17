@@ -1,0 +1,14 @@
+# Keep the build context small and the image free of desktop-only tooling.
+.git/
+.venv/
+data/
+.claude/
+.DS_Store
+**/__pycache__/
+**/*.pyc
+
+# Desktop OpenCV/MediaPipe tools — not used by the web demo.
+main.py
+collect.py
+train.py
+inspect_data.py

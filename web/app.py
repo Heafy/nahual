@@ -41,7 +41,9 @@ from fastapi.staticfiles import StaticFiles
 
 from nahual.gesture_heuristics import LandmarkFrame
 from nahual.gesture_trainer import GestureTrainer, TrainingConfig
-from nahual.realtime_session import RealtimeGestureSession
+from nahual.realtime_session import (MOTION_START_THRESHOLD,
+                                     MOTION_STOP_THRESHOLD,
+                                     RealtimeGestureSession)
 
 logger = logging.getLogger(__name__)
 
@@ -149,14 +151,21 @@ async def home_page() -> FileResponse:
 
 @app.get("/api/status")
 async def status() -> dict:
-    """Report which models are loaded so the front-end can inform the user.
+    """Report server-side configuration the front-end needs at startup.
+
+    Exposes which models are loaded (so the UI can inform the user) and the
+    motion start/stop thresholds, so the browser's motion-debug readout can
+    display the real Python constants instead of maintaining its own copy.
 
     Returns:
-        A dict with boolean availability flags for each model.
+        A dict with boolean availability flags for each model and the two
+        motion thresholds.
     """
     return {
         "static_model_available": STATIC_MODEL_AVAILABLE,
         "dynamic_model_available": DYNAMIC_MODEL_AVAILABLE,
+        "motion_start_threshold": MOTION_START_THRESHOLD,
+        "motion_stop_threshold": MOTION_STOP_THRESHOLD,
     }
 
 

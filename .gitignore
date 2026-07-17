@@ -215,5 +215,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-models/gesture_classifier.pkl
-models/dynamic_gesture_classifier.pkl
+# The trained classifiers are committed so the Render/Docker web deploy can
+# bake them into the image (the server clones this repo and loads them at
+# startup). Retrain deliberately and commit the regenerated .pkl files.
