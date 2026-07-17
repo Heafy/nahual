@@ -112,6 +112,46 @@ main {
   color: #ff5028;
 }
 
+/* Motion-debug toggle pinned to the bottom of the webcam view. The sibling
+   #overlay-canvas sets pointer-events: none, so re-enable them here to keep the
+   checkbox clickable. Mirrors the desktop 'm'-key debug overlay. */
+.debug-toggle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--bar-background);
+  color: #ffffff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Live motion-calibration readout, anchored just above the toggle. Green
+   monospace text on a translucent dark box matches the desktop draw_motion_debug
+   panel. */
+.motion-debug {
+  position: absolute;
+  bottom: 2.1rem;
+  left: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--bar-background);
+  color: #00ff00;
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+/* Restore the browser's default [hidden] behavior, which the explicit `display`
+   above would otherwise override (same reason as .prediction-bar[hidden]). */
+.motion-debug[hidden] {
+  display: none;
+}
+
 .controls {
   margin-top: 1rem;
   display: flex;
@@ -154,8 +194,18 @@ footer {
 }
 
 footer h2 {
-  margin: 0 0 0.5rem;
+  margin: 1.25rem 0 0.5rem;
   font-size: 1.1rem;
+}
+
+footer h2:first-child {
+  margin-top: 0;
+}
+
+.footer-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
 }
 
 .footer-placeholder {

@@ -80,12 +80,19 @@ const dynamicLabel = document.getElementById("dynamic-label");
 const dynamicSecondary = document.getElementById("dynamic-secondary");
 const recordButton = document.getElementById("record-button");
 const statusMessage = document.getElementById("status-message");
+const motionDebugCheckbox = document.getElementById("motion-debug-checkbox");
+const motionDebugReadout = document.getElementById("motion-debug-readout");
 
 let handLandmarker = null;
 let websocket = null;
 let awaitingServerResponse = false;
 let latestOverlay = null;
 let lastVideoTimestamp = -1;
+// Motion start/stop thresholds shown in the motion-debug readout. Fetched from
+// the server (/api/status) so the browser mirrors the real Python constants;
+// these fallbacks only apply if that request fails.
+let motionStartThreshold = 0.015;
+let motionStopThreshold = 0.008;
 let dynamicModelAvailable = false;
 let isRunning = false;
 // Whether a hand is visible in the most recently processed local frame.
@@ -321,6 +328,28 @@ function updateRecordButton(overlay) {
 }
 
 /**
+ * Update the motion-debug readout (the web equivalent of the desktop 'm'
+ * overlay). Shows the raw and smoothed motion signals, the start/stop
+ * thresholds, the capture state, and the buffered frame count so the motion
+ * gating can be calibrated from the browser. Hidden unless the toggle is on.
+ * @param {object} overlay Server overlay for the latest processed frame.
+ */
+function updateMotionDebug(overlay) {
+  if (!motionDebugCheckbox.checked) {
+    motionDebugReadout.hidden = true;
+    return;
+  }
+  motionDebugReadout.hidden = false;
+  motionDebugReadout.textContent = [
+    `raw motion : ${overlay.raw_motion.toFixed(4)}`,
+    `smoothed   : ${overlay.smoothed_motion.toFixed(4)}`,
+    `start/stop : ${motionStartThreshold.toFixed(4)}/` +
+      `${motionStopThreshold.toFixed(4)}`,
+    `state      : ${overlay.capture_state}  buf=${overlay.buffer_length}`,
+  ].join("\n");
+}
+
+/**
  * The render loop: detect locally, draw the skeleton, stream landmarks,
  * and refresh the prediction bars once per animation frame.
  */
@@ -368,6 +397,10 @@ function renderLoop() {
       // it keeps showing briefly after the gesture (even with no hand) and then
       // disappears on its own once the server clears dynamic_label.
       updateDynamicBar(latestOverlay);
+      // The motion-debug readout is not gated on hand presence: like the desktop
+      // panel, it stays visible so the motion signal and state can be watched
+      // the instant the hand leaves the frame.
+      updateMotionDebug(latestOverlay);
     }
   }
 
@@ -403,6 +436,12 @@ async function bootstrap() {
     const response = await fetch("/api/status");
     const modelStatus = await response.json();
     dynamicModelAvailable = modelStatus.dynamic_model_available;
+    if (typeof modelStatus.motion_start_threshold === "number") {
+      motionStartThreshold = modelStatus.motion_start_threshold;
+    }
+    if (typeof modelStatus.motion_stop_threshold === "number") {
+      motionStopThreshold = modelStatus.motion_stop_threshold;
+    }
     if (!modelStatus.static_model_available && !dynamicModelAvailable) {
       setStatus("Warning: no trained models are loaded on the server.");
     }

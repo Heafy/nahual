@@ -34,6 +34,11 @@
           <span class="prediction-secondary" id="dynamic-secondary"></span>
         </div>
       </div>
+      <div id="motion-debug-readout" class="motion-debug" hidden></div>
+      <label class="debug-toggle" id="motion-debug-toggle">
+        <input type="checkbox" id="motion-debug-checkbox" />
+        Motion debug
+      </label>
     </div>
 
     <div class="controls">
@@ -56,6 +61,34 @@
            target="_blank" rel="noopener noreferrer">
           Alfabeto de Lengua de Señas Mexicana — Video
         </a>
+      </li>
+    </ul>
+
+    <h2>Motion debug parameters</h2>
+    <p class="footer-note">
+      Turn on the "Motion debug" box under the camera to see live values,
+      which show how the app tracks hand movement.
+    </p>
+    <ul class="footer-links">
+      <li>
+        <strong>raw motion</strong> — How much your hand moved between the two
+        most recent camera frames. Higher number means faster movement. It
+        reacts instantly, so it flickers up and down a lot as you move.
+      </li>
+      <li>
+        <strong>smoothed</strong> — Averaged version of raw motion.
+        This is the number the app actually uses to decide when a moving letter
+        begins and ends.
+      </li>
+      <li>
+        <strong>start/stop</strong> — Two fixed limits. When smoothed motion
+        rises above the start value, the app begins recording a moving letter;
+        when it drops below the stop value, the recording ends and is read.
+      </li>
+      <li>
+        <strong>state / buf</strong> — "state" is what the app is doing now:
+        IDLE (waiting) or RECORDING (capturing a moving letter). "buf" is how
+        many frames it has captured so far in the current recording.
       </li>
     </ul>
   </footer>
