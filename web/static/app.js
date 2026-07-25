@@ -312,8 +312,12 @@ function updateDynamicBar(overlay) {
   }
   dynamicBar.hidden = false;
   dynamicLabel.textContent = `D Letter: ${displayLetter(overlay.dynamic_label)}`;
+  // The frame count is shown alongside the confidence while the confidence gate
+  // is held open for diagnostics: the two are only meaningful as a pair, since
+  // a low confidence means something different at 15 frames than at 60.
   dynamicSecondary.textContent =
-    `${(overlay.dynamic_confidence * 100).toFixed(0)}%`;
+    `${(overlay.dynamic_confidence * 100).toFixed(0)}%  |  ` +
+    `${overlay.dynamic_frame_count} frames`;
 }
 
 /**

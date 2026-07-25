@@ -80,7 +80,14 @@ MIN_DYNAMIC_FRAMES: int = 8
 MIN_RECORDING_DURATION_SECONDS: float = 1.0
 
 # Minimum dynamic-model confidence required to latch and display a result.
-DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.65
+#
+# TEMPORARY DIAGNOSTIC — the production value is 0.65; restore it before this
+# reaches anyone but us. Set to 0.0 so every classification latches and shows
+# its real confidence on screen. Above the gate a low-confidence prediction is
+# indistinguishable from no prediction at all, which makes it impossible to
+# tell a correct-but-quiet result from a genuinely failed one on a deployed
+# environment. Expect wrong letters to appear while this is in force.
+DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -212,6 +219,11 @@ class RealtimeGestureSession:
         self.dynamic_prediction_label: Optional[str] = None
         self.dynamic_prediction_confidence: float = 0.0
         self.dynamic_prediction_display_time: float = 0.0
+        # Buffer length that produced the latched prediction. Retained because
+        # the live buffer is cleared the instant a result is classified, so it
+        # is otherwise impossible to read the frame count a given prediction
+        # was based on.
+        self.dynamic_prediction_frame_count: int = 0
 
     def process_frame(
         self,
@@ -241,6 +253,7 @@ class RealtimeGestureSession:
                 handedness: Optional[str]
                 dynamic_label: Optional[str]   # only while within display window
                 dynamic_confidence: float
+                dynamic_frame_count: int       # buffer size behind that result
                 capture_state: str             # "IDLE" or "RECORDING"
                 manual_capture: bool
                 buffer_length: int
@@ -302,11 +315,13 @@ class RealtimeGestureSession:
         # --- Resolve latched dynamic prediction display window ------------
         dynamic_label: Optional[str] = None
         dynamic_confidence: float = 0.0
+        dynamic_frame_count: int = 0
         if self.dynamic_prediction_label is not None:
             time_since_prediction = current_time - self.dynamic_prediction_display_time
             if time_since_prediction < DYNAMIC_PREDICTION_DISPLAY_SECONDS:
                 dynamic_label = self.dynamic_prediction_label
                 dynamic_confidence = self.dynamic_prediction_confidence
+                dynamic_frame_count = self.dynamic_prediction_frame_count
             else:
                 self.dynamic_prediction_label = None
 
@@ -324,6 +339,7 @@ class RealtimeGestureSession:
             "handedness": handedness,
             "dynamic_label": dynamic_label,
             "dynamic_confidence": dynamic_confidence,
+            "dynamic_frame_count": dynamic_frame_count,
             "capture_state": self.capture_state,
             "manual_capture": self.manual_capture,
             "buffer_length": len(self.dynamic_frame_buffer),
@@ -447,6 +463,7 @@ class RealtimeGestureSession:
             current_time: Wall-clock time used to start the display window.
         """
         if len(self.dynamic_frame_buffer) >= MIN_DYNAMIC_FRAMES:
+            classified_frame_count = len(self.dynamic_frame_buffer)
             result_dynamic = classify_dynamic_buffer(
                 self.heuristics, self.trainer, self.dynamic_frame_buffer
             )
@@ -456,6 +473,7 @@ class RealtimeGestureSession:
             ):
                 self.dynamic_prediction_label = result_dynamic[0]
                 self.dynamic_prediction_confidence = result_dynamic[1]
+                self.dynamic_prediction_frame_count = classified_frame_count
                 self.dynamic_prediction_display_time = current_time
         self.capture_state = "IDLE"
         self.manual_capture = False
