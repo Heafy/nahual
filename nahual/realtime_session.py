@@ -95,6 +95,24 @@ DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.65
 # rate varies. Benefits the desktop demo identically.
 STATIC_PREDICT_MIN_INTERVAL_SECONDS: float = 0.1
 
+# Minimum wall-clock interval (seconds) between dynamic-pipeline steps, i.e. the
+# motion signal and the capture state machine. This throttles the dynamic path
+# to ~30 fps independently of how fast frames actually arrive.
+#
+# It exists because the dynamic path is frame-rate sensitive in two ways: the
+# raw motion signal is the distance between *consecutive processed* frames, and
+# the statistical features are computed over the buffered frames. The dynamic
+# model was trained on desktop captures at ~30 fps (MAX_DYNAMIC_FRAMES = 60 is
+# "2 s at 30 fps"). Once frames are batched over the WebSocket, the browser
+# delivers them at its full camera rate (up to ~60 fps), which filled the
+# 60-frame buffer in ~1 s — truncating the gesture at the cap before the 2 s
+# window — and shrank per-frame motion/velocity below the tuned thresholds.
+# Ticking the dynamic pipeline at a fixed ~30 fps reproduces the training frame
+# rate regardless of arrival rate, so 60 frames again spans the full ~2 s and
+# the motion/velocity magnitudes match training. The desktop demo already runs
+# at or below this rate, so every desktop frame passes the gate unchanged.
+DYNAMIC_PROCESS_MIN_INTERVAL_SECONDS: float = 0.033
+
 
 # ---------------------------------------------------------------------------
 # Pure helpers (moved verbatim from main.py)
@@ -231,6 +249,19 @@ class RealtimeGestureSession:
         self.last_static_confidence: float = 0.0
         self.last_static_predict_time: float = 0.0
 
+        # Event-clock time of the last dynamic-pipeline step. Gates the motion
+        # signal and capture state machine to DYNAMIC_PROCESS_MIN_INTERVAL_SECONDS
+        # so they run at the training-time frame rate regardless of how fast
+        # frames arrive. Reset to 0.0 when the hand leaves so the first frame
+        # after it returns steps the pipeline immediately.
+        self.last_dynamic_process_time: float = 0.0
+
+        # The most recent event-clock time seen by process_frame (frame capture
+        # time, or wall time on the desktop). toggle_manual has no frame of its
+        # own, so it stamps its capture/latch times from this to stay on the
+        # same clock as the frame-driven timing.
+        self.last_event_time: float = 0.0
+
         # --- Latched dynamic prediction display state ---------------------
         self.dynamic_prediction_label: Optional[str] = None
         self.dynamic_prediction_confidence: float = 0.0
@@ -245,12 +276,24 @@ class RealtimeGestureSession:
         self,
         landmark_frame: Optional[LandmarkFrame],
         handedness: Optional[str],
+        timestamp_ms: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Advance the state machine by one video frame and return overlay data.
 
         Mirrors the body of the original ``main.main()`` loop: it runs the
         motion signal + capture state machine, the static per-frame prediction,
         and manages the latched dynamic prediction display window.
+
+        All timing (the dynamic-pipeline and static throttles, the capture
+        timeout, and the result display window) is driven by ``timestamp_ms``
+        when supplied, *not* by wall-clock time. This matters once frames are
+        delivered in batches: a whole batch is processed in one instant of
+        wall-clock time, so wall-clock deltas between frames collapse to zero
+        and every time-based gate would misfire. The frame's own capture
+        timestamp preserves the real spacing between frames regardless of when
+        the server happens to process them. When ``timestamp_ms`` is omitted
+        (the desktop demo, which calls this once per frame in real time), it
+        falls back to ``time.time()`` and behaves exactly as before.
 
         Args:
             landmark_frame: The hand landmarks for this frame, or None if no
@@ -259,6 +302,10 @@ class RealtimeGestureSession:
             handedness: "Left", "Right", or None.  Left-hand coordinates are
                 mirrored across the sagittal plane to match the right-hand
                 training data.
+            timestamp_ms: The frame's capture time in milliseconds (the
+                browser's ``performance.now()``), or None to use wall-clock
+                time. Supplied on every frame, including no-hand frames, so the
+                clock keeps advancing even while the hand is absent.
 
         Returns:
             A dictionary describing what to draw this frame:
@@ -278,7 +325,15 @@ class RealtimeGestureSession:
                 raw_motion: float
                 smoothed_motion: float
         """
-        current_time = time.time()
+        # Authoritative clock for every time-based decision below. Uses the
+        # frame's capture timestamp when available (batch-safe), else wall time.
+        if timestamp_ms is not None:
+            current_time = timestamp_ms / 1000.0
+        else:
+            current_time = time.time()
+        # Remembered so toggle_manual (which has no frame of its own) can stamp
+        # its capture/latch times on the same clock as the frame path.
+        self.last_event_time = current_time
 
         static_label: Optional[str] = None
         static_confidence: float = 0.0
@@ -297,9 +352,11 @@ class RealtimeGestureSession:
                 # IDLE with no hand: clear the (now stale) motion reference so
                 # we don't compute distance against it when the hand returns.
                 self._reset_capture()
-            # Force a fresh static predict on the first frame after the hand
-            # returns, so the throttle never serves a label from before the gap.
+            # Force a fresh static predict and an immediate dynamic step on the
+            # first frame after the hand returns, so neither throttle carries
+            # stale timing across the gap.
             self.last_static_predict_time = 0.0
+            self.last_dynamic_process_time = 0.0
         else:
             # A visible frame ends any dropout gap.
             self.consecutive_missing_frames = 0
@@ -310,22 +367,33 @@ class RealtimeGestureSession:
             if handedness == "Left":
                 landmark_frame.coordinates[:, 0] *= -1
 
-            # --- Motion signal --------------------------------------------
-            current_normalized = self.heuristics.normalize_coordinates(
-                landmark_frame.coordinates
-            )
-            self.raw_motion = compute_frame_motion(
-                current_normalized, self.previous_normalized
-            )
-            self.smoothed_motion = (
-                MOTION_EMA_ALPHA * self.raw_motion
-                + (1.0 - MOTION_EMA_ALPHA) * self.smoothed_motion
-            )
-            self.previous_normalized = current_normalized
+            # --- Dynamic pipeline (motion signal + capture), throttled ----
+            # Ticked at DYNAMIC_PROCESS_MIN_INTERVAL_SECONDS (~30 fps) so the
+            # motion signal and buffered sequence reproduce the training frame
+            # rate no matter how fast frames arrive. Between ticks the frame is
+            # skipped here (it still drives the static predict below), so the
+            # motion distance is always measured across a ~30 fps step and the
+            # 60-frame buffer again spans the full ~2 s window.
+            if (
+                current_time - self.last_dynamic_process_time
+                >= DYNAMIC_PROCESS_MIN_INTERVAL_SECONDS
+            ):
+                current_normalized = self.heuristics.normalize_coordinates(
+                    landmark_frame.coordinates
+                )
+                self.raw_motion = compute_frame_motion(
+                    current_normalized, self.previous_normalized
+                )
+                self.smoothed_motion = (
+                    MOTION_EMA_ALPHA * self.raw_motion
+                    + (1.0 - MOTION_EMA_ALPHA) * self.smoothed_motion
+                )
+                self.previous_normalized = current_normalized
 
-            # --- Dynamic capture state machine ----------------------------
-            if self.dynamic_model_available:
-                self._advance_dynamic_capture(landmark_frame, current_time)
+                if self.dynamic_model_available:
+                    self._advance_dynamic_capture(landmark_frame, current_time)
+
+                self.last_dynamic_process_time = current_time
 
             # --- Static prediction (throttled, when hand visible) ---------
             # Runs at most once per STATIC_PREDICT_MIN_INTERVAL_SECONDS; the
@@ -392,7 +460,10 @@ class RealtimeGestureSession:
         if not self.dynamic_model_available:
             return
 
-        current_time = time.time()
+        # Stamp on the same clock the frame path uses (frame capture time on the
+        # web, wall time on the desktop) so the display window and any elapsed
+        # timing stay consistent with process_frame.
+        current_time = self.last_event_time
         if self.capture_state == "IDLE":
             # Manual start: begin a user-controlled dynamic recording.
             self.capture_state = "RECORDING"

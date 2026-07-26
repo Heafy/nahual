@@ -246,12 +246,17 @@ async def gesture_socket(websocket: WebSocket) -> None:
             # fill the dynamic buffer, not to be drawn.
             overlay = None
             for frame_message in frames:
+                frame_timestamp_ms = frame_message.get("timestamp_ms", 0)
                 landmark_frame = build_landmark_frame(
                     frame_message.get("landmarks"),
-                    frame_message.get("timestamp_ms", 0),
+                    frame_timestamp_ms,
                 )
+                # Pass the capture timestamp so the session's timing survives
+                # batch processing (a whole batch shares one wall-clock instant).
                 overlay = session.process_frame(
-                    landmark_frame, frame_message.get("handedness")
+                    landmark_frame,
+                    frame_message.get("handedness"),
+                    timestamp_ms=frame_timestamp_ms,
                 )
 
             # An empty batch carries no state to report; wait for the next one.
