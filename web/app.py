@@ -188,11 +188,28 @@ async def gesture_socket(websocket: WebSocket) -> None:
 
     Each connection owns one RealtimeGestureSession.  All messages are JSON:
 
+        {"type": "frames",
+         "frames": [
+             {"landmarks": [[x, y, z], ...21...] | null,
+              "handedness": "Left" | "Right" | null,
+              "timestamp_ms": <int>},
+             ...
+         ]}
+            -> Every frame MediaPipe detected in the browser since the last
+               send, in capture order.  The client's sends are response-gated
+               (one message in flight), so this batches the frames that would
+               otherwise be dropped while a reply was outstanding, letting the
+               dynamic buffer fill at the full camera rate instead of the
+               network rate.  The server runs process_frame over each frame in
+               order and replies once with the overlay from the LAST frame
+               (the only one that describes the current on-screen state).
+
         {"type": "frame",
          "landmarks": [[x, y, z], ...21...] | null,
          "handedness": "Left" | "Right" | null,
          "timestamp_ms": <int>}
-            -> replies with the overlay dict from process_frame.
+            -> Legacy single-frame shape, treated as a batch of one.  Kept so
+               an older client mid-deploy still works.
 
         {"type": "toggle_manual"}
             -> starts/stops a manual dynamic recording (no reply; the state
@@ -212,17 +229,34 @@ async def gesture_socket(websocket: WebSocket) -> None:
     try:
         while True:
             message = await websocket.receive_json()
-            message_type = message.get("type", "frame")
+            message_type = message.get("type", "frames")
 
             if message_type == "toggle_manual":
                 session.toggle_manual()
                 continue
 
-            landmark_frame = build_landmark_frame(
-                message.get("landmarks"),
-                message.get("timestamp_ms", 0),
-            )
-            overlay = session.process_frame(landmark_frame, message.get("handedness"))
+            # Accept either a batch ("frames": [...]) or the legacy single-frame
+            # shape, normalising both to a list so the loop below is identical.
+            frames = message.get("frames")
+            if frames is None:
+                frames = [message]
+
+            # Advance the session over every frame in capture order; only the
+            # final overlay is sent back, since the intermediate frames exist to
+            # fill the dynamic buffer, not to be drawn.
+            overlay = None
+            for frame_message in frames:
+                landmark_frame = build_landmark_frame(
+                    frame_message.get("landmarks"),
+                    frame_message.get("timestamp_ms", 0),
+                )
+                overlay = session.process_frame(
+                    landmark_frame, frame_message.get("handedness")
+                )
+
+            # An empty batch carries no state to report; wait for the next one.
+            if overlay is None:
+                continue
 
             # Cast model labels (numpy str) to plain str for JSON safety.
             if overlay["static_label"] is not None:

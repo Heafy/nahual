@@ -12,9 +12,12 @@
  *   4. Render the prediction bars (S = static, RECORDING, D = dynamic) from
  *      the overlay the server returns.
  *
- * Sends are response-gated (one in flight at a time) while drawing runs at
- * full requestAnimationFrame rate, so the video and skeleton stay live even
- * if the server lags.
+ * Sends are response-gated (one message in flight at a time) while drawing
+ * runs at full requestAnimationFrame rate, so the video and skeleton stay live
+ * even if the server lags. Every frame detected while a reply is outstanding is
+ * buffered rather than dropped, then flushed as a single batch on the next
+ * send, so the server's dynamic buffer fills at the camera rate instead of the
+ * (much slower) network round-trip rate.
  */
 
 import {
@@ -27,6 +30,14 @@ const MEDIAPIPE_WASM_PATH =
 const HAND_LANDMARKER_MODEL_PATH = "/models/hand_landmarker.task";
 
 const LOW_CONFIDENCE_THRESHOLD = 0.65; // Mirrors visualization.py.
+
+// Safety cap on the client-side frame buffer. Sends are response-gated, so the
+// buffer normally holds only ~one round trip of frames (a handful at typical
+// latency). If the server stalls it would otherwise grow without bound; past
+// this many frames the oldest are dropped. Set well above the server's
+// MAX_DYNAMIC_FRAMES (60) so a whole gesture always fits under a healthy
+// connection; being forced to drop here means the session has already failed.
+const MAX_BUFFERED_FRAMES = 120;
 
 // Standard MediaPipe hand skeleton topology (landmark index pairs).
 const HAND_CONNECTIONS = [
@@ -88,6 +99,11 @@ let websocket = null;
 let awaitingServerResponse = false;
 let latestOverlay = null;
 let lastVideoTimestamp = -1;
+// Frames detected but not yet sent. Accumulates every render-loop detection
+// (including no-hand frames, so the server's motion/dropout state machine sees
+// the same continuous stream the desktop demo does) and is flushed as one batch
+// whenever a send is allowed. See MAX_BUFFERED_FRAMES for the overflow guard.
+let frameBuffer = [];
 // Motion start/stop thresholds shown in the motion-debug readout. Fetched from
 // the server (/api/status) so the browser mirrors the real Python constants;
 // these fallbacks only apply if that request fails.
@@ -181,33 +197,51 @@ function toCoordinateArray(worldLandmarks) {
 }
 
 /**
- * Send the current frame's landmarks to the server, if not already waiting.
- * Gating on the previous response keeps the socket from flooding and
- * decouples the (fast) draw rate from the (slower) round-trip rate.
+ * Append one detected frame to the outgoing buffer.
+ * Called for every render-loop detection so the buffer captures the full
+ * camera-rate stream; the frames wait here until flushFrames() sends them.
+ * Includes no-hand frames (landmarks null) so the server's motion and
+ * dropout-tolerance state machine sees a continuous sequence. Enforces
+ * MAX_BUFFERED_FRAMES by dropping the oldest frames if the server stalls.
  * @param {object|null} detection MediaPipe detection result for this frame.
+ * @param {number} timestampMs Capture time of this frame (performance.now()).
  */
-function sendToServer(detection) {
-  if (
-    !websocket ||
-    websocket.readyState !== WebSocket.OPEN ||
-    awaitingServerResponse
-  ) {
-    return;
-  }
-
+function bufferFrame(detection, timestampMs) {
   const hasHand =
     detection && detection.worldLandmarks && detection.worldLandmarks.length > 0;
 
-  const payload = {
-    type: "frame",
+  frameBuffer.push({
     landmarks: hasHand ? toCoordinateArray(detection.worldLandmarks[0]) : null,
     handedness:
       hasHand && detection.handedness && detection.handedness.length > 0
         ? detection.handedness[0][0].categoryName
         : null,
-    timestamp_ms: Math.round(performance.now()),
-  };
+    timestamp_ms: Math.round(timestampMs),
+  });
 
+  if (frameBuffer.length > MAX_BUFFERED_FRAMES) {
+    frameBuffer.splice(0, frameBuffer.length - MAX_BUFFERED_FRAMES);
+  }
+}
+
+/**
+ * Flush the buffered frames to the server as a single batch, if a send is
+ * allowed. Gating on the previous response keeps one message in flight (the
+ * backpressure that prevents an unbounded server-side queue) while the batch
+ * ensures no detected frame is lost to the slower round-trip rate.
+ */
+function flushFrames() {
+  if (
+    !websocket ||
+    websocket.readyState !== WebSocket.OPEN ||
+    awaitingServerResponse ||
+    frameBuffer.length === 0
+  ) {
+    return;
+  }
+
+  const payload = { type: "frames", frames: frameBuffer };
+  frameBuffer = [];
   awaitingServerResponse = true;
   websocket.send(JSON.stringify(payload));
 }
@@ -383,8 +417,12 @@ function renderLoop() {
 
     drawSkeleton(detection);
     if (detection) {
-      sendToServer(detection);
+      // Buffer every detection at the full camera rate, then flush the batch
+      // whenever the response gate is open. Frames captured while a reply is in
+      // flight accumulate here instead of being dropped.
+      bufferFrame(detection, timestamp);
     }
+    flushFrames();
     if (latestOverlay) {
       // The static and RECORDING bars are current-frame live state: gate them
       // on the local hand presence so they vanish the instant the hand leaves,
