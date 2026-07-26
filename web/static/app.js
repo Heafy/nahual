@@ -312,9 +312,10 @@ function updateDynamicBar(overlay) {
   }
   dynamicBar.hidden = false;
   dynamicLabel.textContent = `D Letter: ${displayLetter(overlay.dynamic_label)}`;
-  // The frame count is shown alongside the confidence while the confidence gate
-  // is held open for diagnostics: the two are only meaningful as a pair, since
-  // a low confidence means something different at 15 frames than at 60.
+  // Confidence is shown with the frame count it was derived from: the two are
+  // only meaningful as a pair, since a given confidence means something
+  // different at 15 buffered frames than at 60. Deployments where the round
+  // trip throttles the frame rate are diagnosable from this readout alone.
   dynamicSecondary.textContent =
     `${(overlay.dynamic_confidence * 100).toFixed(0)}%  |  ` +
     `${overlay.dynamic_frame_count} frames`;

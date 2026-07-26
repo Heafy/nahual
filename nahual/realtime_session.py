@@ -80,14 +80,20 @@ MIN_DYNAMIC_FRAMES: int = 8
 MIN_RECORDING_DURATION_SECONDS: float = 1.0
 
 # Minimum dynamic-model confidence required to latch and display a result.
-#
-# TEMPORARY DIAGNOSTIC — the production value is 0.65; restore it before this
-# reaches anyone but us. Set to 0.0 so every classification latches and shows
-# its real confidence on screen. Above the gate a low-confidence prediction is
-# indistinguishable from no prediction at all, which makes it impossible to
-# tell a correct-but-quiet result from a genuinely failed one on a deployed
-# environment. Expect wrong letters to appear while this is in force.
-DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.0
+# The gate is load-bearing: the classifier has no "none of these" class, so
+# without it any buffered hand drift is reported as whichever dynamic letter
+# happens to score highest. Raising recognition rates means raising confidence,
+# not lowering this value.
+DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.65
+
+# Minimum wall-clock interval (seconds) between static predictions. The static
+# RandomForest predict is ~3.8 ms and dominates per-frame server compute, yet a
+# held pose does not change within 100 ms, so running it at ~10 fps instead of
+# the full camera rate cuts compute with no perceptible change to the label.
+# The previous label/confidence are reused between runs. A wall-clock interval
+# (rather than "every Nth frame") keeps the cadence steady even when the frame
+# rate varies. Benefits the desktop demo identically.
+STATIC_PREDICT_MIN_INTERVAL_SECONDS: float = 0.1
 
 
 # ---------------------------------------------------------------------------
@@ -215,6 +221,16 @@ class RealtimeGestureSession:
         # detection dropout does not immediately abandon the capture.
         self.consecutive_missing_frames: int = 0
 
+        # --- Throttled static prediction cache ----------------------------
+        # The static predict runs at most once per
+        # STATIC_PREDICT_MIN_INTERVAL_SECONDS; between runs these cached values
+        # are returned unchanged. last_static_predict_time is reset to 0.0 when
+        # the hand leaves the frame so the first frame after it returns forces a
+        # fresh predict rather than serving a pre-dropout label.
+        self.last_static_label: Optional[str] = None
+        self.last_static_confidence: float = 0.0
+        self.last_static_predict_time: float = 0.0
+
         # --- Latched dynamic prediction display state ---------------------
         self.dynamic_prediction_label: Optional[str] = None
         self.dynamic_prediction_confidence: float = 0.0
@@ -281,6 +297,9 @@ class RealtimeGestureSession:
                 # IDLE with no hand: clear the (now stale) motion reference so
                 # we don't compute distance against it when the hand returns.
                 self._reset_capture()
+            # Force a fresh static predict on the first frame after the hand
+            # returns, so the throttle never serves a label from before the gap.
+            self.last_static_predict_time = 0.0
         else:
             # A visible frame ends any dropout gap.
             self.consecutive_missing_frames = 0
@@ -308,9 +327,22 @@ class RealtimeGestureSession:
             if self.dynamic_model_available:
                 self._advance_dynamic_capture(landmark_frame, current_time)
 
-            # --- Static prediction (always, when hand visible) ------------
+            # --- Static prediction (throttled, when hand visible) ---------
+            # Runs at most once per STATIC_PREDICT_MIN_INTERVAL_SECONDS; the
+            # cached label/confidence are reused on the frames in between, since
+            # a held pose does not change within that window.
             if self.static_model_available:
-                static_label, static_confidence = self._predict_static(landmark_frame)
+                if (
+                    current_time - self.last_static_predict_time
+                    >= STATIC_PREDICT_MIN_INTERVAL_SECONDS
+                ):
+                    (
+                        self.last_static_label,
+                        self.last_static_confidence,
+                    ) = self._predict_static(landmark_frame)
+                    self.last_static_predict_time = current_time
+                static_label = self.last_static_label
+                static_confidence = self.last_static_confidence
 
         # --- Resolve latched dynamic prediction display window ------------
         dynamic_label: Optional[str] = None
