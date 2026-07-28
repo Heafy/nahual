@@ -1,0 +1,25 @@
+# Render Blueprint for the browser-only Nahual demo.
+#
+# This deploys the Pyodide static site (web/browser/), NOT the old FastAPI
+# web service. A static site on Render is served from a CDN: free, automatic
+# HTTPS (so the webcam works), and — unlike the old free web service — it never
+# spins down, so there is no cold start when a partner opens the link.
+#
+# The build step just assembles the self-contained bundle into web/dist/ with
+# the project's own build script (standard-library Python only — no pip install,
+# no mediapipe/opencv). staticPublishPath then points Render at that folder.
+#
+# NOTE: Render cannot change an existing service's type. The current FastAPI
+# "Web Service" must be replaced by a new "Static Site" (see web/browser/README
+# or the deploy steps). Set `branch` below (or in the dashboard) to whichever
+# branch contains web/browser/.
+services:
+  - type: web
+    runtime: static
+    name: nahual-lsm
+    buildCommand: python3 web/browser/build.py
+    staticPublishPath: ./web/dist
+    # branch: main   # uncomment / change to the branch that holds web/browser/
+    # The app pulls Pyodide + MediaPipe from a CDN and needs no special
+    # cross-origin-isolation headers (it is single-threaded), so no headers
+    # block is required here.
