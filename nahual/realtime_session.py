@@ -79,15 +79,10 @@ MIN_DYNAMIC_FRAMES: int = 8
 # pause that can occur inside a gesture.
 MIN_RECORDING_DURATION_SECONDS: float = 1.0
 
-# Minimum dynamic-model confidence required to latch and display a result.
-#
-# TEMPORARY DIAGNOSTIC — the production value is 0.65; restore it before this
-# reaches anyone but us. Set to 0.0 so every classification latches and shows
-# its real confidence on screen. Above the gate a low-confidence prediction is
-# indistinguishable from no prediction at all, which makes it impossible to
-# tell a correct-but-quiet result from a genuinely failed one on a deployed
-# environment. Expect wrong letters to appear while this is in force.
-DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.0
+# Minimum dynamic-model confidence to latch and display a result; predictions
+# below it are discarded (no letter shown). Lower shows more gestures but more
+# false letters; higher shows fewer false letters but drops more real ones.
+DYNAMIC_CONFIDENCE_THRESHOLD: float = 0.4
 
 
 # ---------------------------------------------------------------------------
