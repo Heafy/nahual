@@ -220,30 +220,60 @@ async function initialisePyodide() {
   };
 }
 
+// Local dev wants fresh files on every reload; production wants the browser and
+// Render's CDN to cache them normally. Forcing "no-store" in production makes
+// every startup fetch bypass the CDN and hit the origin, which can briefly 404
+// a file that exists right around a deploy — so only use it on localhost.
+const IS_LOCALHOST = ["localhost", "127.0.0.1"].includes(location.hostname);
+const FETCH_CACHE_MODE = IS_LOCALHOST ? "no-store" : "default";
+
 /**
- * Fetch a URL as text, throwing on a non-OK response.
+ * Fetch a URL with a few retries and linear backoff.
+ *
+ * The static bundle is served from a CDN; immediately around a deploy (or on an
+ * edge cache miss) a request can transiently 404 a file that does exist. A
+ * single plain fetch would then abort startup, so retry a couple of times to
+ * ride over that brief window.
+ * @param {string} url URL to fetch.
+ * @param {number} retries Number of attempts before giving up.
+ * @returns {Promise<Response>} An OK response.
+ */
+async function fetchWithRetry(url, retries = 6) {
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      const response = await fetch(url, { cache: FETCH_CACHE_MODE });
+      if (response.ok) {
+        return response;
+      }
+      lastStatus = response.status;
+    } catch (error) {
+      lastStatus = -1; // Network-level failure (e.g. dropped connection).
+    }
+    if (attempt < retries - 1) {
+      // Linear backoff: 300ms, 600ms, 900ms, ...
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+  throw new Error(`fetch ${url} -> HTTP ${lastStatus} after ${retries} attempts`);
+}
+
+/**
+ * Fetch a URL as text (with retries).
  * @param {string} url URL to fetch.
  * @returns {Promise<string>} Response body as text.
  */
 async function fetchText(url) {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`fetch ${url} -> HTTP ${response.status}`);
-  }
-  return response.text();
+  return (await fetchWithRetry(url)).text();
 }
 
 /**
- * Fetch a URL as bytes, throwing on a non-OK response.
+ * Fetch a URL as bytes (with retries).
  * @param {string} url URL to fetch.
  * @returns {Promise<Uint8Array>} Response body as bytes.
  */
 async function fetchBytes(url) {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`fetch ${url} -> HTTP ${response.status}`);
-  }
-  return new Uint8Array(await response.arrayBuffer());
+  return new Uint8Array(await (await fetchWithRetry(url)).arrayBuffer());
 }
 
 /**
