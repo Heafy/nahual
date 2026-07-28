@@ -89,6 +89,25 @@ main {
   right: 0;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
+
+/* Row 1: two equal-width, equal-height columns (static | dynamic). */
+.prediction-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.prediction-col {
+  flex: 1 1 0;
+  min-width: 0; /* let long text shrink instead of overflowing the column */
+  min-height: 4rem; /* fixed, equal height whether or not line 2 has text */
+}
+
+/* Row 2: recording indicator; keep a stable height even when its text is empty. */
+.prediction-recording {
+  min-height: 2rem;
 }
 
 .prediction-bar {
@@ -112,6 +131,9 @@ main {
 .prediction-secondary {
   font-size: 0.85rem;
   color: #dcdcdc;
+  /* Reserve the line so it doesn't collapse when empty (keeps the columns a
+     stable, equal height between the idle and populated states). */
+  min-height: 1.15em;
 }
 
 .prediction-warning {

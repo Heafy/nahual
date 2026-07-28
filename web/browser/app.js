@@ -70,7 +70,9 @@ const overlayContext = overlayCanvas.getContext("2d");
 const staticBar = document.getElementById("static-bar");
 const staticLabel = document.getElementById("static-label");
 const staticSecondary = document.getElementById("static-secondary");
-const staticWarning = document.getElementById("static-warning");
+// Low-confidence warning disabled for now (kept for later re-enable); see the
+// commented span in index.html and the commented line in updateStaticBar.
+// const staticWarning = document.getElementById("static-warning");
 const recordingBar = document.getElementById("recording-bar");
 const recordingInfo = document.getElementById("recording-info");
 const dynamicBar = document.getElementById("dynamic-bar");
@@ -349,35 +351,39 @@ function drawSkeleton(detection) {
 }
 
 /**
- * Update the static prediction bar (prefix "S").
+ * Update the static column. The "Static:" header and the background stay put;
+ * only the detected letter and the Hand/Confidence line appear or clear.
  * @param {object} overlay Overlay for the latest processed frame.
  */
 function updateStaticBar(overlay) {
   if (!overlay.static_label) {
-    staticBar.hidden = true;
+    // Idle: keep the "Static:" header and background; clear the value + line.
+    staticLabel.textContent = "Static:";
+    staticSecondary.textContent = "";
     return;
   }
-  staticBar.hidden = false;
-  staticLabel.textContent = `S Letter: ${displayLetter(overlay.static_label)}`;
+  staticLabel.textContent = `Static: ${displayLetter(overlay.static_label)}`;
 
   const confidencePercent = (overlay.static_confidence * 100).toFixed(0);
   staticSecondary.textContent = overlay.handedness
     ? `Hand: ${overlay.handedness} | Confidence: ${confidencePercent}%`
-    : `${confidencePercent}%`;
-  staticWarning.hidden = overlay.static_confidence >= LOW_CONFIDENCE_THRESHOLD;
+    : `Confidence: ${confidencePercent}%`;
+  // Low-confidence warning disabled for now (kept for later re-enable):
+  // staticWarning.hidden = overlay.static_confidence >= LOW_CONFIDENCE_THRESHOLD;
 }
 
 /**
- * Update the RECORDING indicator bar with mode, remaining time, and buffered
- * frame count, matching the desktop on-screen text.
+ * Update the recording indicator (row 2). Its background stays put; the text
+ * shows only while a recording is active. The "RECORDING" label was dropped to
+ * cut visual noise. Manual recordings have no countdown, so seconds are omitted.
  * @param {object} overlay Overlay for the latest processed frame.
  */
 function updateRecordingBar(overlay) {
   if (overlay.capture_state !== "RECORDING") {
-    recordingBar.hidden = true;
+    // Idle: keep the background; clear the text.
+    recordingInfo.textContent = "";
     return;
   }
-  recordingBar.hidden = false;
   recordingInfo.textContent = overlay.manual_capture
     ? `manual  |  ${overlay.buffer_length} frames`
     : `auto  |  ${overlay.recording_remaining_seconds.toFixed(1)}s remaining` +
@@ -385,20 +391,23 @@ function updateRecordingBar(overlay) {
 }
 
 /**
- * Update the latched dynamic prediction bar (prefix "D"). The Python session
- * owns the display window, so the bar simply mirrors the overlay.
+ * Update the dynamic column. The "Dynamic:" header and background stay put; the
+ * detected letter and the Confidence line appear while a result is latched (the
+ * Python session owns the 3s display window) and clear afterwards.
  * @param {object} overlay Overlay for the latest processed frame.
  */
 function updateDynamicBar(overlay) {
   if (!overlay.dynamic_label) {
-    dynamicBar.hidden = true;
+    // Idle: keep the "Dynamic:" header and background; clear the value + line.
+    dynamicLabel.textContent = "Dynamic:";
+    dynamicSecondary.textContent = "";
     return;
   }
-  dynamicBar.hidden = false;
-  dynamicLabel.textContent = `D Letter: ${displayLetter(overlay.dynamic_label)}`;
+  dynamicLabel.textContent = `Dynamic: ${displayLetter(overlay.dynamic_label)}`;
   dynamicSecondary.textContent =
-    `${(overlay.dynamic_confidence * 100).toFixed(0)}%  |  ` +
-    `${overlay.dynamic_frame_count} frames`;
+    `Confidence: ${(overlay.dynamic_confidence * 100).toFixed(0)}%`;
+  // Frame count disabled for now (kept for later re-enable):
+  //   + `  |  ${overlay.dynamic_frame_count} frames`;
 }
 
 /**
