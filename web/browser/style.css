@@ -1,0 +1,258 @@
+/* Minimalist single-page layout: light gray/silver background, dark text.
+   Self-contained copy for the browser-only bundle (web/browser/). */
+
+:root {
+  --background-color: #d9d9de;
+  --text-color: #1f1f24;
+  --muted-text-color: #4a4a52;
+  --bar-background: rgba(30, 30, 30, 0.85);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+header {
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 2.2rem;
+  letter-spacing: 0.02em;
+}
+
+.subheader {
+  margin: 0 0 1.5rem;
+  max-width: 40rem;
+  color: var(--muted-text-color);
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.video-container {
+  position: relative;
+  width: min(640px, 100%);
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+#webcam {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#overlay-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#prediction-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.prediction-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bar-background);
+  color: #ffffff;
+}
+
+.prediction-bar[hidden] {
+  display: none;
+}
+
+.prediction-label {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.prediction-secondary {
+  font-size: 0.85rem;
+  color: #dcdcdc;
+}
+
+.prediction-warning {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff5028;
+}
+
+.debug-toggle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--bar-background);
+  color: #ffffff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.motion-debug {
+  position: absolute;
+  bottom: 2.1rem;
+  left: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--bar-background);
+  color: #00ff00;
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.motion-debug[hidden] {
+  display: none;
+}
+
+/* --- Pyodide loading overlay ------------------------------------------------
+   Covers the camera view until the WebAssembly Python runtime and the models
+   have finished their one-time load. */
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(15, 15, 18, 0.92);
+  color: #f2f2f5;
+}
+
+#loading-overlay[hidden] {
+  display: none;
+}
+
+.loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: nahual-spin 0.9s linear infinite;
+}
+
+@keyframes nahual-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#loading-text {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.loading-note {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.8rem;
+  color: #b9b9c0;
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#record-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #2b2b31;
+  color: #f2f2f5;
+  cursor: pointer;
+}
+
+#record-button:hover:not(:disabled) {
+  background: #3c3c44;
+}
+
+#record-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#status-message {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
+}
+
+footer {
+  width: 100%;
+  max-width: 640px;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #b9b9c0;
+}
+
+footer h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+footer h2:first-child {
+  margin-top: 0;
+}
+
+.footer-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
+}
+
+.footer-links {
+  margin: 0 0 0.5rem;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
+}
+
+.footer-links li {
+  margin-bottom: 0.35rem;
+}
