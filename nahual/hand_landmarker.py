@@ -10,13 +10,14 @@ guarantees that samples are captured under exactly the same detection parameters
 they are later recognized with — if the two drifted apart, the collected
 training data would no longer match what the demo sees at inference time.
 
-The browser demo (``web/static/app.js``) runs MediaPipe in JavaScript and cannot
+The browser demo (``web/browser/app.js``) runs MediaPipe in JavaScript and cannot
 import this module; it keeps its own copy of these values and must be updated in
 step with :class:`HandLandmarkerConfig` whenever they change.
 
 This module imports ``mediapipe`` and ``cv2`` at import time, so it must only be
-imported by the desktop tools. The thin web server (``web/app.py``) never builds
-a landmarker and must stay free of the mediapipe/opencv dependencies.
+imported by the desktop tools. The browser front-end runs MediaPipe in
+JavaScript and never imports this module, so the web side stays free of the
+mediapipe/opencv dependencies.
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ class HandLandmarkerConfig:
 
     This is the single source of truth for the hand-detection settings shared by
     ``main.py`` and ``nahual/gesture_collector.py``. The same values are mirrored
-    in ``web/static/app.js`` for the browser demo and must be changed together.
+    in ``web/browser/app.js`` for the browser demo and must be changed together.
 
     Attributes:
         model_asset_path: Filesystem path to the ``hand_landmarker.task`` model
@@ -55,7 +56,7 @@ class HandLandmarkerConfig:
         hand), not the landmark geometry the classifiers consume, so they can be
         changed and tested in ``main.py`` without retraining. Change one at a
         time and watch ``lost@rec`` in the 'm' overlay. While these differ from
-        the ``web/static/app.js`` mirror the desktop and browser demos detect
+        the ``web/browser/app.js`` mirror the desktop and browser demos detect
         differently — re-sync app.js (and recollect/retrain if the change is
         kept) before shipping.
     """

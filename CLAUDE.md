@@ -54,10 +54,10 @@ All scripts are launched through `uv`:
   `nahual/hand_landmarker.py` as `HandLandmarkerConfig`. `main.py` and
   `gesture_collector.py` both build their landmarker from it, so the collector
   captures training data under the exact settings the demo recognizes it with.
-  **The browser demo (`web/static/app.js`) cannot import Python, so it keeps a
+  **The browser demo (`web/browser/app.js`) cannot import Python, so it keeps a
   manual copy of these same values in `initialiseHandLandmarker`. Whenever you
   change `HandLandmarkerConfig`, update the mirrored options in
-  `web/static/app.js` to match (and vice versa) — the two must stay in sync to
+  `web/browser/app.js` to match (and vice versa) — the two must stay in sync to
   avoid different detection behavior across the desktop and web front-ends.**
 
 # Static vs. Dynamic Gestures

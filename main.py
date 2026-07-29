@@ -18,7 +18,8 @@ both active at the same time:
 
 The per-frame recognition logic lives in
 :class:`nahual.realtime_session.RealtimeGestureSession`, which is shared with
-the FastAPI web server (``web/app.py``) so both front-ends behave identically.
+the browser demo (``web/browser/``, running under Pyodide) so both front-ends
+behave identically.
 This file only handles the desktop concerns: camera capture, MediaPipe, and
 OpenCV drawing / keyboard input.
 

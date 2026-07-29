@@ -4,8 +4,8 @@ nahual/realtime_session.py
 Stateful, frame-by-frame LSM gesture recognition session.
 
 This module factors the per-frame recognition logic out of ``main.py`` so it
-can be reused by any front-end (the desktop OpenCV loop *and* the FastAPI web
-server in ``web/``) without duplicating the motion-gated state machine.
+can be reused by any front-end (the desktop OpenCV loop *and* the browser demo
+running under Pyodide) without duplicating the motion-gated state machine.
 
 A :class:`RealtimeGestureSession` owns all the mutable state that previously
 lived as local variables inside ``main.main()`` (the dynamic frame buffer, the
@@ -17,10 +17,10 @@ plain dictionary describing what should be drawn on screen.
 user-controlled dynamic recordings.
 
 The session is intentionally agnostic about *where* the landmarks come from:
-the desktop driver extracts them from MediaPipe running locally, while the web
-driver receives them over a WebSocket from MediaPipe running in the browser.
-Because both paths feed the same metric ``hand_world_landmarks``, the
-predictions are numerically identical.
+the desktop driver extracts them from MediaPipe running locally, while the
+browser demo runs this same session under Pyodide, fed by MediaPipe running in
+the browser. Because both paths feed the same metric ``hand_world_landmarks``,
+the predictions are numerically identical.
 """
 
 from __future__ import annotations
