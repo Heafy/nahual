@@ -9,6 +9,7 @@ to avoid code duplication.
 from typing import Optional
 
 import cv2
+import numpy as np
 from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
 from mediapipe.tasks.python.vision import hand_landmarker as mp_hand_landmarker
 
@@ -403,3 +404,273 @@ def draw_hint_bar(frame, hint_text: str, y_offset: int = 0) -> int:
     )
 
     return bar_height
+
+
+def _fit_font_scale(text, font, base_scale, thickness, max_width):
+    """Return the largest scale <= base_scale whose text width fits max_width.
+
+    OpenCV does not wrap or clip putText, so a long line would overflow its
+    column. This shrinks the scale in small steps until the rendered width fits,
+    letting the columns stay readable at any camera resolution or string length.
+
+    Args:
+        text: The string to be drawn.
+        font: An OpenCV HERSHEY font constant.
+        base_scale: The preferred (largest) font scale to start from.
+        thickness: Stroke thickness used for measurement.
+        max_width: Maximum allowed text width in pixels.
+
+    Returns:
+        A font scale (float) at which ``text`` fits within ``max_width``, never
+        smaller than 0.1.
+    """
+    scale = base_scale
+    while scale > 0.1:
+        (text_width, _), _ = cv2.getTextSize(text, font, scale, thickness)
+        if text_width <= max_width:
+            return scale
+        scale -= 0.05
+    return scale
+
+
+def _draw_translucent_rect(frame, top_left, bottom_right, color, alpha):
+    """Blend a filled rectangle into the frame so the background is lightly opaque.
+
+    Unlike a solid ``cv2.rectangle`` fill, this alpha-blends the color into the
+    region so the video shows through slightly, matching the web overlay's
+    translucent bars. Coordinates are clamped to the frame bounds.
+
+    Args:
+        frame: OpenCV BGR frame to draw on (modified in place).
+        top_left: (x, y) of the rectangle's top-left corner.
+        bottom_right: (x, y) of the rectangle's bottom-right corner.
+        color: BGR fill color tuple.
+        alpha: Opacity of the fill in [0, 1]; higher is more opaque.
+    """
+    x0, y0 = top_left
+    x1, y1 = bottom_right
+    x0 = max(0, x0)
+    y0 = max(0, y0)
+    x1 = min(frame.shape[1], x1)
+    y1 = min(frame.shape[0], y1)
+    if x1 <= x0 or y1 <= y0:
+        return
+
+    region = frame[y0:y1, x0:x1]
+    fill = np.zeros_like(region)
+    fill[:] = color
+    frame[y0:y1, x0:x1] = cv2.addWeighted(fill, alpha, region, 1.0 - alpha, 0)
+
+
+def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.65):
+    """Draw the fixed two-column prediction overlay on the desktop frame.
+
+    Renders a stable panel that never shifts as signs come and go: two
+    equal-height columns (static on the left, dynamic on the right) and a
+    recording row beneath them. All three backgrounds are drawn every frame with
+    a lightly-opaque black fill, and only the *text* inside appears or clears —
+    the same design as the browser demo (``web/browser/``).
+
+    The ``Static:`` / ``Dynamic:`` headers are always shown; the detected letter,
+    the secondary confidence line, and the low-confidence warning appear only
+    when there is a result. Each column reserves three text lines (label +
+    secondary + warning slot) so the box height is fixed even when the warning
+    line is absent. Long lines are auto-fit to their column width.
+
+    Args:
+        frame: OpenCV BGR frame to draw on (modified in place).
+        overlay: The dict returned by
+            :meth:`nahual.realtime_session.RealtimeGestureSession.process_frame`.
+        low_confidence_threshold: Static confidence below which the red
+            "Low confidence" warning line is shown.
+    """
+    frame_width = frame.shape[1]
+
+    # --- Style (reuse the project's existing overlay colors) --------------
+    label_font = cv2.FONT_HERSHEY_DUPLEX
+    secondary_font = cv2.FONT_HERSHEY_SIMPLEX
+    label_thickness = 2
+    secondary_thickness = 1
+    label_base_scale = 1.1
+    secondary_base_scale = 0.55
+    padding = 10
+    line_gap = 8
+    column_gap = 6
+
+    background_color = (30, 30, 30)
+    background_alpha = 0.85  # lightly opaque; the video shows through ~15%
+    label_color = (255, 255, 255)
+    secondary_color = (220, 220, 220)
+    low_confidence_color = (40, 80, 255)  # bright red in BGR, matches the old bar
+
+    # Reserve line heights from the base scales so the panel size is stable even
+    # when per-line auto-fit shrinks an individual (long) line.
+    label_height = cv2.getTextSize("Ag", label_font, label_base_scale, label_thickness)[
+        0
+    ][1]
+    secondary_height = cv2.getTextSize(
+        "Ag", secondary_font, secondary_base_scale, secondary_thickness
+    )[0][1]
+
+    # Columns reserve three text lines (label + secondary + warning slot); the
+    # recording row reserves one.
+    column_height = (
+        padding
+        + label_height
+        + line_gap
+        + secondary_height
+        + line_gap
+        + secondary_height
+        + padding
+    )
+    recording_height = padding + secondary_height + padding
+
+    left_x0 = 0
+    left_x1 = frame_width // 2 - column_gap // 2
+    right_x0 = frame_width // 2 + column_gap // 2
+    right_x1 = frame_width
+
+    # --- Backgrounds (always drawn, so the layout never shifts) -----------
+    _draw_translucent_rect(
+        frame,
+        (left_x0, 0),
+        (left_x1, column_height),
+        background_color,
+        background_alpha,
+    )
+    _draw_translucent_rect(
+        frame,
+        (right_x0, 0),
+        (right_x1, column_height),
+        background_color,
+        background_alpha,
+    )
+    _draw_translucent_rect(
+        frame,
+        (0, column_height),
+        (frame_width, column_height + recording_height),
+        background_color,
+        background_alpha,
+    )
+
+    def draw_column(x0, x1, header, letter, secondary_text, warning_text):
+        """Draw one column's three text lines within [x0, x1]."""
+        inner_width = x1 - x0 - padding * 2
+
+        # Line 1: header (always) plus the detected letter (when present).
+        line_one = header if letter is None else f"{header} {letter}"
+        scale = _fit_font_scale(
+            line_one, label_font, label_base_scale, label_thickness, inner_width
+        )
+        y = padding + label_height
+        cv2.putText(
+            frame,
+            line_one,
+            (x0 + padding, y),
+            label_font,
+            scale,
+            label_color,
+            label_thickness,
+            cv2.LINE_AA,
+        )
+
+        # Line 2: secondary confidence line (only when there is a detection).
+        y += line_gap + secondary_height
+        if secondary_text:
+            scale = _fit_font_scale(
+                secondary_text,
+                secondary_font,
+                secondary_base_scale,
+                secondary_thickness,
+                inner_width,
+            )
+            cv2.putText(
+                frame,
+                secondary_text,
+                (x0 + padding, y),
+                secondary_font,
+                scale,
+                secondary_color,
+                secondary_thickness,
+                cv2.LINE_AA,
+            )
+
+        # Line 3: reserved warning slot; text only when a warning is present.
+        y += line_gap + secondary_height
+        if warning_text:
+            scale = _fit_font_scale(
+                warning_text,
+                secondary_font,
+                secondary_base_scale,
+                secondary_thickness,
+                inner_width,
+            )
+            cv2.putText(
+                frame,
+                warning_text,
+                (x0 + padding, y),
+                secondary_font,
+                scale,
+                low_confidence_color,
+                secondary_thickness,
+                cv2.LINE_AA,
+            )
+
+    # --- Static column -----------------------------------------------------
+    static_letter = None
+    static_secondary = None
+    static_warning = None
+    if overlay["static_label"] is not None:
+        static_letter = str(overlay["static_label"]).removeprefix("letra_")
+        confidence_percent = f"{overlay['static_confidence'] * 100:.0f}"
+        handedness = overlay["handedness"]
+        if handedness:
+            static_secondary = f"Hand: {handedness} | Confidence: {confidence_percent}%"
+        else:
+            static_secondary = f"Confidence: {confidence_percent}%"
+        if overlay["static_confidence"] < low_confidence_threshold:
+            static_warning = "Low confidence"
+    draw_column(
+        left_x0, left_x1, "Static:", static_letter, static_secondary, static_warning
+    )
+
+    # --- Dynamic column ----------------------------------------------------
+    dynamic_letter = None
+    dynamic_secondary = None
+    if overlay["dynamic_label"] is not None:
+        dynamic_letter = str(overlay["dynamic_label"]).removeprefix("letra_")
+        confidence_percent = f"{overlay['dynamic_confidence'] * 100:.0f}"
+        dynamic_secondary = (
+            f"Confidence: {confidence_percent}%  |  "
+            f"{overlay['dynamic_frame_count']} frames"
+        )
+    draw_column(right_x0, right_x1, "Dynamic:", dynamic_letter, dynamic_secondary, None)
+
+    # --- Recording row (text only while a recording is in progress) -------
+    if overlay["capture_state"] == "RECORDING":
+        if overlay["manual_capture"]:
+            recording_text = f"manual  |  {overlay['buffer_length']} frames"
+        else:
+            recording_text = (
+                f"auto  |  {overlay['recording_remaining_seconds']:.1f}s remaining"
+                f"  |  {overlay['buffer_length']} frames"
+            )
+        inner_width = frame_width - padding * 2
+        scale = _fit_font_scale(
+            recording_text,
+            secondary_font,
+            secondary_base_scale,
+            secondary_thickness,
+            inner_width,
+        )
+        y = column_height + padding + secondary_height
+        cv2.putText(
+            frame,
+            recording_text,
+            (padding, y),
+            secondary_font,
+            scale,
+            secondary_color,
+            secondary_thickness,
+            cv2.LINE_AA,
+        )

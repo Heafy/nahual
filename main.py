@@ -44,7 +44,7 @@ from nahual.hand_landmarker import (HandLandmarkerConfig,
 from nahual.realtime_session import (MOTION_START_THRESHOLD,
                                      MOTION_STOP_THRESHOLD,
                                      RealtimeGestureSession)
-from nahual.visualization import draw_hand_connections, draw_prediction_overlay
+from nahual.visualization import draw_hand_connections, draw_prediction_columns
 
 MODEL_ASSET_PATH = "models/hand_landmarker.task"
 TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
@@ -265,46 +265,11 @@ def main() -> None:
             if not overlay["hand_visible"] and overlay["capture_state"] == "RECORDING":
                 hand_lost_during_recording_count += 1
 
-            # --- Draw stacked overlays -----------------------------------
-            stacked_y = 0
-            if overlay["static_label"] is not None:
-                stacked_y += draw_prediction_overlay(
-                    frame,
-                    overlay["static_label"],
-                    overlay["static_confidence"],
-                    overlay["handedness"],
-                    y_offset=stacked_y,
-                    prefix="S",
-                )
-
-            # --- Recording indicator -------------------------------------
-            # Let the user know a dynamic recording is in progress, whether it
-            # was started manually ('d') or automatically by motion.
-            if overlay["capture_state"] == "RECORDING":
-                if overlay["manual_capture"]:
-                    recording_info = f"manual  |  {overlay['buffer_length']} frames"
-                else:
-                    recording_info = (
-                        f"auto  |  "
-                        f"{overlay['recording_remaining_seconds']:.1f}s remaining"
-                        f"  |  {overlay['buffer_length']} frames"
-                    )
-                stacked_y += draw_prediction_overlay(
-                    frame,
-                    "RECORDING",
-                    handedness=recording_info,
-                    y_offset=stacked_y,
-                )
-
-            if overlay["dynamic_label"] is not None:
-                stacked_y += draw_prediction_overlay(
-                    frame,
-                    overlay["dynamic_label"],
-                    overlay["dynamic_confidence"],
-                    None,
-                    y_offset=stacked_y,
-                    prefix="D",
-                )
+            # --- Draw the prediction overlay ------------------------------
+            # Fixed two-column panel (static | dynamic) plus a recording row,
+            # with always-visible translucent backgrounds; only the text
+            # toggles, so nothing shifts on screen as signs come and go.
+            draw_prediction_columns(frame, overlay)
 
             if show_motion_debug:
                 draw_motion_debug(
