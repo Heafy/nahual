@@ -10,6 +10,16 @@
             "statusMessage": "Formatting with black + isort"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/presentation/tools/check_style.py\" --hook",
+            "statusMessage": "Checking presentation style"
+          }
+        ]
       }
     ]
   }

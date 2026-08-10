@@ -195,7 +195,7 @@
 								</p>
 								<div class="split-card__clip">
 									<span class="split-card__clip-tag">Static clip</span>
-									<!-- Drop in: <video src="media/static.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+									<!-- Drop in: <video src="media/gestures/static.mp4" autoplay loop muted playsinline data-autoplay></video> -->
 								</div>
 								<div class="chips">
 									<span class="chip">A</span><span class="chip">B</span
@@ -218,7 +218,7 @@
 								</p>
 								<div class="split-card__clip">
 									<span class="split-card__clip-tag">Dynamic clip</span>
-									<!-- Drop in: <video src="media/dynamic.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+									<!-- Drop in: <video src="media/gestures/dynamic.mp4" autoplay loop muted playsinline data-autoplay></video> -->
 								</div>
 								<div class="chips">
 									<span class="chip">J</span><span class="chip">K</span
@@ -445,6 +445,104 @@
 						<p>
 							Two Random Forest models, not one, matching the static/dynamic
 							split: one for poses, one for motion.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     Heuristics: Turning Landmarks Into Features — raw 21 points
+				     become feature groups (static + dynamic).
+				     ========================================================= -->
+				<section>
+					<div class="heur">
+						<p class="eyebrow">Heuristics: Landmarks Into Features</p>
+						<p class="heur__lead">
+							Random Forest doesn't read raw points. It needs meaningful
+							features.
+						</p>
+						<div class="heur__flow">
+							<div class="heur__raw">
+								<svg viewBox="0 0 200 240" fill="none" aria-hidden="true">
+									<g
+										stroke="#fd5108"
+										stroke-width="3.5"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<polyline points="100,220 72,196 52,176 38,158 26,142" />
+										<polyline points="100,220 78,150 72,116 68,94 65,74" />
+										<polyline points="100,220 100,144 100,106 100,82 100,60" />
+										<polyline points="100,220 122,150 128,114 132,92 135,72" />
+										<polyline points="100,220 142,162 152,136 158,118 163,100" />
+										<polyline points="78,150 100,144 122,150 142,162" />
+									</g>
+									<g fill="#000000">
+										<circle cx="100" cy="220" r="5.5" />
+										<circle cx="72" cy="196" r="4.5" />
+										<circle cx="52" cy="176" r="4.5" />
+										<circle cx="38" cy="158" r="4.5" />
+										<circle cx="26" cy="142" r="4.5" />
+										<circle cx="78" cy="150" r="4.5" />
+										<circle cx="72" cy="116" r="4.5" />
+										<circle cx="68" cy="94" r="4.5" />
+										<circle cx="65" cy="74" r="4.5" />
+										<circle cx="100" cy="144" r="4.5" />
+										<circle cx="100" cy="106" r="4.5" />
+										<circle cx="100" cy="82" r="4.5" />
+										<circle cx="100" cy="60" r="4.5" />
+										<circle cx="122" cy="150" r="4.5" />
+										<circle cx="128" cy="114" r="4.5" />
+										<circle cx="132" cy="92" r="4.5" />
+										<circle cx="135" cy="72" r="4.5" />
+										<circle cx="142" cy="162" r="4.5" />
+										<circle cx="152" cy="136" r="4.5" />
+										<circle cx="158" cy="118" r="4.5" />
+										<circle cx="163" cy="100" r="4.5" />
+									</g>
+								</svg>
+								<span class="heur__raw-caption">21 raw points</span>
+							</div>
+
+							<div class="heur__arrow">&rarr;</div>
+
+							<div class="heur__out">
+								<div class="heur-group">
+									<p class="heur-group__label">Static poses</p>
+									<ul class="heur-group__list">
+										<li>Normalized distances</li>
+										<li>Angles between fingers</li>
+									</ul>
+								</div>
+								<div class="heur-group heur-group--dynamic">
+									<p class="heur-group__label">Dynamic motion</p>
+									<ul class="heur-group__list">
+										<li>Speed</li>
+										<li>Direction</li>
+										<li>Trajectory shape</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<p class="heur__note">
+							The <strong>same feature-extraction code</strong> runs during
+							data collection and during live use, so training and live
+							recognition always speak the same language.
+						</p>
+					</div>
+					<aside class="notes">
+						<p>
+							Random Forest doesn't take raw landmark points directly, it
+							needs meaningful features.
+						</p>
+						<p>
+							This is the translation step: 21 raw points become normalized
+							distances and angles between fingers for static poses, and
+							speed, direction, and trajectory shape for dynamic motion.
+						</p>
+						<p>
+							Same feature-extraction code runs during data collection and
+							during live use, so training and the real world are always
+							speaking the same language.
 						</p>
 					</aside>
 				</section>

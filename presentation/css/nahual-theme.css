@@ -86,7 +86,7 @@
 	--r-heading-line-height: 1.12;
 	--r-link-color: var(--orange);
 	--r-link-color-hover: var(--amber);
-	--r-link-color-dark: #d84406;
+	--r-link-color-dark: var(--orange);
 	--r-selection-background-color: var(--orange);
 	--r-selection-color: var(--bg-white);
 }
@@ -841,6 +841,154 @@
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Heuristics — "Turning Landmarks Into Features": raw 21 points become
+   feature groups (static: distances/angles; dynamic: speed/direction/
+   trajectory). Input SVG -> arrow -> two feature groups.
+   ---------------------------------------------------------------------- */
+
+.heur {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.heur__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 22em;
+}
+
+.heur__flow {
+	display: grid;
+	grid-template-columns: 1fr auto 1.25fr;
+	gap: 1em;
+	flex: 1;
+	min-height: 0;
+	align-items: stretch;
+}
+
+.heur__raw {
+	position: relative;
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	border-top: 5px solid var(--orange);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5em;
+	overflow: hidden;
+}
+
+.heur__raw svg {
+	width: 50%;
+	height: auto;
+	max-height: 68%;
+}
+
+.heur__raw-caption {
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.heur__arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-text);
+	font-size: 1.5em;
+	font-weight: 700;
+	color: var(--orange);
+}
+
+.heur__out {
+	display: grid;
+	grid-template-rows: 1fr 1fr;
+	gap: 0.7em;
+	min-height: 0;
+}
+
+.heur-group {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.6em 0.9em;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	box-sizing: border-box;
+}
+
+.heur-group--dynamic {
+	border-top-color: var(--amber);
+}
+
+.heur-group__label {
+	font-family: var(--font-text);
+	font-size: 0.38em;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--orange);
+	margin: 0 0 0.45em;
+}
+
+.heur-group--dynamic .heur-group__label {
+	color: var(--text-muted);
+}
+
+.heur-group__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35em 0.9em;
+	font-family: var(--font-text);
+	font-size: 0.46em;
+	color: var(--text-black);
+}
+
+.heur-group__list li {
+	position: relative;
+	padding-left: 0.9em;
+}
+
+/* Amber square marker: tertiary accent, non-text role. */
+.heur-group__list li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.45em;
+	width: 0.35em;
+	height: 0.35em;
+	background: var(--amber);
+}
+
+.heur__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 44em;
+}
+
+.heur__note strong {
+	color: var(--text-black);
+	font-weight: 700;
 }
 
 /* -------------------------------------------------------------------------

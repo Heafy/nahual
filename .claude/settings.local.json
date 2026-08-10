@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(uv run:*)",
-      "Bash(git -C /Users/jmtz/Developer/nahual log --oneline -15)"
+      "Bash(git -C /Users/jmtz/Developer/nahual log --oneline -15)",
+      "Bash(python3 tools/check_style.py)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python3 tools/check_style.py --hook)",
+      "Bash(cp css/nahual-theme.css /tmp/theme.bak)",
+      "Bash(cp /tmp/theme.bak css/nahual-theme.css)",
+      "Bash(rm /tmp/theme.bak)",
+      "Skill(update-config)",
+      "Bash(export CLAUDE_PROJECT_DIR=/Users/jmtz/Developer/nahual)",
+      "Bash(python3 presentation/tools/check_style.py)"
     ]
   }
 }

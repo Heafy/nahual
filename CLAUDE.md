@@ -30,6 +30,12 @@ a desktop OpenCV demo.
 * `models/` – Trained artifacts: `gesture_classifier.pkl` (static),
   `dynamic_gesture_classifier.pkl` (dynamic), and the MediaPipe
   `hand_landmarker.task` model asset.
+* `presentation/` – Reveal.js slide deck (Node/npm, isolated from the Python
+  tooling). **Read `presentation/DESIGN.md` before adding or editing a slide** —
+  it is the source of truth for the deck's palette, typography, layouts, and the
+  per-slide build workflow. The mechanical rules are enforced by
+  `presentation/tools/check_style.py` via a `PostToolUse` hook; the subjective
+  ones live on that doc's checklist.
 
 ## Running the Project
 
