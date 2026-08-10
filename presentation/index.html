@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+
+		<title>Nahual</title>
+
+		<link rel="stylesheet" href="node_modules/reveal.js/dist/reset.css" />
+		<link rel="stylesheet" href="node_modules/reveal.js/dist/reveal.css" />
+		<link rel="stylesheet" href="css/nahual-theme.css" />
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<!-- ============================================================
+				     Layout 1 — Cover
+				     ========================================================= -->
+				<section>
+					<div class="cover">
+						<p class="eyebrow">Nahual</p>
+						<h1 class="cover__title">
+							Teaching a machine to read a hand the way a microphone reads a
+							<span class="accent">voice</span>
+						</h1>
+						<div class="cover__underline"></div>
+						<div class="cover__meta">
+							<span>Sign Recognition</span>
+							<span>Jorge Martinez Flores</span>
+							<span>August 2026</span>
+						</div>
+					</div>
+				</section>
+
+				<!-- ============================================================
+				     Intro — "Who Am I?" : text column + 4-photo collage
+				     ========================================================= -->
+				<section>
+					<div class="intro">
+						<div class="intro__text">
+							<h2>Who Am I?</h2>
+							<p>
+								Jorge Martinez. <br>
+								Used to develop iOS apps, now eager to develop anything related to AI.<br>
+								Cars-and-coffee guy, always up for a race, running or driving.
+							</p>
+						</div>
+						<div class="collage">
+							<div class="collage__top">
+								<div class="collage__item">
+									<span class="collage__tag">Photo 1</span>
+								</div>
+							</div>
+							<div class="collage__row">
+								<div class="collage__item">
+									<span class="collage__tag">Photo 2</span>
+								</div>
+								<div class="collage__item">
+									<span class="collage__tag">Photo 3</span>
+								</div>
+								<div class="collage__item">
+									<span class="collage__tag">Photo 4</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- ============================================================
+				     Accessibility — text-forward "why" statement (Option A)
+				     ========================================================= -->
+				<section>
+					<div class="statement">
+						<p class="eyebrow">Accessibility</p>
+						<h2 class="statement__hero">
+							None of it understands a <span class="accent">sign</span>.
+						</h2>
+						<p class="statement__sub">
+							Voice assistants listen. Captions transcribe. Dictation types.
+						</p>
+					</div>
+					<aside class="notes">
+						<p>
+							Right now, in México, millions of people communicate every
+							day in LSM, Lengua de Señas Mexicana. It isn't a translation
+							of Spanish. It's its own language, with its own grammar, used
+							daily by the Deaf community across the country.
+						</p>
+						<p>
+							And yet, look at the technology around us. Voice assistants
+							that listen. Captions that transcribe. Dictation that types
+							what we say. All of it was built to understand speech, or
+							text. None of it understands a sign.
+						</p>
+						<p>
+							That gap has been sitting there the whole time. This is
+							Nahual: a tool that reads a hand the way a microphone reads a
+							voice.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     How Nahual Was Created — vertical pair:
+				       down 1: the origin story + LSM alphabet media
+				       down 2: the origin of the name + media (display TBD)
+				     ========================================================= -->
+				<section>
+					<!-- Down 1: the origin story -->
+					<section>
+						<div class="origin">
+							<div class="origin__text">
+								<p class="eyebrow">How Nahual Was Created</p>
+								<p class="origin__body">
+									Started from a 1:1 with my manager, Pau Rico. She was
+									learning LSM (Lengua de Señas Mexicana / Mexican Sign Language), and I'd always been curious about learning
+									it too, somewhere in that conversation the idea clicked:
+								</p>
+								<p class="origin__lead">
+									Could a machine actually recognize the gestures for a
+									sign language?
+								</p>
+								<p class="origin__punch">And I took that personally.</p>
+							</div>
+							<div class="origin__media">
+								<span class="origin__media-tag">LSM alphabet</span>
+							</div>
+						</div>
+						<aside class="notes">
+							<p>
+								Started from a 1:1 with my manager, Pau Rico. She was
+								learning LSM, and I'd always been curious about learning it
+								too, somewhere in that conversation the idea clicked: could
+								a machine actually recognize the gestures for a sign
+								language? And I took that personally.
+							</p>
+						</aside>
+					</section>
+
+					<!-- Down 2: the origin of the name -->
+					<section>
+						<div class="origin origin--reverse">
+							<div class="origin__text">
+								<p class="eyebrow">How Nahual Was Created</p>
+								<p class="origin__lead">
+									A Nahual, a figure from Mesoamerican folklore, a
+									shapeshifter entity to transform and
+									<span class="accent">shift between forms.</span>
+								</p>
+								<p class="origin__body">
+									Fitting, since the whole job of this tool is translating
+									one form of expression (hand shape and motion) into
+									another (letters and text).
+								</p>
+							</div>
+							<div class="origin__media">
+								<span class="origin__media-tag">Image</span>
+							</div>
+						</div>
+						<aside class="notes">
+							<p>
+								A Nahual, a figure from Mesoamerican folklore, a
+								shapeshifter entity to transform and shift between forms.
+								Fitting, since the whole job of this tool is translating one
+								form of expression (hand shape and motion) into another
+								(letters and text).
+							</p>
+							<p>
+								Quick path from first idea to a working prototype, no need
+								to dwell here, the "why" already landed in the opener.
+							</p>
+						</aside>
+					</section>
+				</section>
+
+				<!-- ============================================================
+				     Static and Dynamic Gestures — two complementary sets (not a
+				     versus). The letter chips carry the split; no image needed.
+				     ========================================================= -->
+				<section>
+					<div class="split">
+						<p class="eyebrow">Static and Dynamic Gestures</p>
+						<p class="split__lead">
+							Not every letter in the LSM alphabet behaves the same way.
+						</p>
+						<div class="split__grid">
+							<div class="split-card">
+								<p class="split-card__label">Static</p>
+								<p class="split-card__desc">
+									Most letters are a held pose. Show the hand, hold it,
+									that's the letter.
+								</p>
+								<div class="split-card__clip">
+									<span class="split-card__clip-tag">Static clip</span>
+									<!-- Drop in: <video src="media/static.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+								</div>
+								<div class="chips">
+									<span class="chip">A</span><span class="chip">B</span
+									><span class="chip">C</span><span class="chip">D</span
+									><span class="chip">E</span><span class="chip">F</span
+									><span class="chip">G</span><span class="chip">H</span
+									><span class="chip">I</span><span class="chip">L</span
+									><span class="chip">M</span><span class="chip">N</span
+									><span class="chip">O</span><span class="chip">P</span
+									><span class="chip">R</span><span class="chip">S</span
+									><span class="chip">T</span><span class="chip">U</span
+									><span class="chip">V</span><span class="chip">W</span
+									><span class="chip">Y</span>
+								</div>
+							</div>
+							<div class="split-card split-card--dynamic">
+								<p class="split-card__label">Dynamic</p>
+								<p class="split-card__desc">
+									A handful only make sense as movement.
+								</p>
+								<div class="split-card__clip">
+									<span class="split-card__clip-tag">Dynamic clip</span>
+									<!-- Drop in: <video src="media/dynamic.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+								</div>
+								<div class="chips">
+									<span class="chip">J</span><span class="chip">K</span
+									><span class="chip">Q</span><span class="chip">X</span
+									><span class="chip">Z</span><span class="chip">Ñ</span>
+								</div>
+							</div>
+						</div>
+						<p class="split__footer">
+							This split is why there end up being
+							<strong>two separate models</strong> later, not one classifier
+							stretched to cover both.
+						</p>
+					</div>
+					<aside class="notes">
+						<p>Not every letter in the LSM alphabet behaves the same way.</p>
+						<p>
+							Most letters are a held pose: show the hand, hold it, that's
+							the letter.
+						</p>
+						<p>A handful only make sense as movement: J, K, Q, X, Z, Ñ.</p>
+						<p>
+							This split is why there end up being two separate models later,
+							not one classifier stretched to cover both.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     MediaPipe and Hand Detection — a camera frame becomes 21
+				     landmarks (image placeholder -> hand-landmark SVG).
+				     ========================================================= -->
+				<section>
+					<div class="detect">
+						<p class="eyebrow">Hand Detection</p>
+						<p class="detect__lead">
+							Before anything gets classified, the system has to see a hand.
+						</p>
+						<div class="detect__pipeline">
+							<figure class="detect__step">
+								<div class="detect__panel detect__panel--frame">
+									<span class="detect__panel-tag">Camera frame</span>
+								</div>
+								<figcaption>What the camera sees</figcaption>
+							</figure>
+
+							<div class="detect__arrow">&rarr;</div>
+
+							<figure class="detect__step">
+								<div class="detect__panel">
+									<span class="detect__panel-tag">Landmarks</span>
+									<svg viewBox="0 0 200 240" fill="none" aria-hidden="true">
+										<g
+											stroke="#fd5108"
+											stroke-width="3.5"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											<polyline points="100,220 72,196 52,176 38,158 26,142" />
+											<polyline points="100,220 78,150 72,116 68,94 65,74" />
+											<polyline points="100,220 100,144 100,106 100,82 100,60" />
+											<polyline points="100,220 122,150 128,114 132,92 135,72" />
+											<polyline points="100,220 142,162 152,136 158,118 163,100" />
+											<polyline points="78,150 100,144 122,150 142,162" />
+										</g>
+										<g fill="#000000">
+											<circle cx="100" cy="220" r="5.5" />
+											<circle cx="72" cy="196" r="4.5" />
+											<circle cx="52" cy="176" r="4.5" />
+											<circle cx="38" cy="158" r="4.5" />
+											<circle cx="26" cy="142" r="4.5" />
+											<circle cx="78" cy="150" r="4.5" />
+											<circle cx="72" cy="116" r="4.5" />
+											<circle cx="68" cy="94" r="4.5" />
+											<circle cx="65" cy="74" r="4.5" />
+											<circle cx="100" cy="144" r="4.5" />
+											<circle cx="100" cy="106" r="4.5" />
+											<circle cx="100" cy="82" r="4.5" />
+											<circle cx="100" cy="60" r="4.5" />
+											<circle cx="122" cy="150" r="4.5" />
+											<circle cx="128" cy="114" r="4.5" />
+											<circle cx="132" cy="92" r="4.5" />
+											<circle cx="135" cy="72" r="4.5" />
+											<circle cx="142" cy="162" r="4.5" />
+											<circle cx="152" cy="136" r="4.5" />
+											<circle cx="158" cy="118" r="4.5" />
+											<circle cx="163" cy="100" r="4.5" />
+										</g>
+									</svg>
+								</div>
+								<figcaption>21 landmarks &middot; 3D &middot; every frame</figcaption>
+							</figure>
+						</div>
+						<p class="detect__note">
+							MediaPipe's HandLandmarker does the detection. The
+							<strong>exact same settings</strong> run when collecting
+							training data and when recognizing live, so the model never
+							sees a different kind of input.
+						</p>
+					</div>
+					<aside class="notes">
+						<p>Before anything gets classified, the system has to see a hand at all.</p>
+						<p>
+							MediaPipe's HandLandmarker gives 21 points per hand, in 3D,
+							on every frame.
+						</p>
+						<p>
+							Detection quality is tuned deliberately (tracking confidence),
+							and the exact same settings are used both when collecting
+							training data and when recognizing live, so the model is never
+							surprised by a different kind of input.
+						</p>
+						<p>This is the foundation everything downstream depends on.</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     Machine Learning and Random Forest — decision trees vote,
+				     majority wins. Text left, voting diagram right.
+				     ========================================================= -->
+				<section>
+					<div class="forest">
+						<div class="forest__text">
+							<p class="eyebrow">Machine Learning &middot; Random Forest</p>
+							<p class="forest__lead">
+								Landmarks alone don't say which letter they are. Something
+								has to decide.
+							</p>
+							<ul class="forest__why">
+								<li>Solid accuracy on a modest dataset</li>
+								<li>No GPU needed</li>
+								<li>Quick to retrain as data grows</li>
+							</ul>
+							<p class="forest__note">
+								Two models, not one, matching the split from earlier: one
+								for <strong>static poses</strong>, one for
+								<strong>dynamic motion</strong>.
+							</p>
+						</div>
+						<div class="forest__vote">
+							<div class="forest__trees">
+								<div class="forest__tree">
+									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+											<line x1="22" y1="10" x2="11" y2="30" />
+											<line x1="22" y1="10" x2="33" y2="30" />
+										</g>
+										<circle cx="22" cy="10" r="5" fill="#fd5108" />
+										<circle cx="11" cy="30" r="4.5" fill="#000000" />
+										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+									</svg>
+									<span class="forest__tree-vote">A</span>
+								</div>
+								<div class="forest__tree">
+									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+											<line x1="22" y1="10" x2="11" y2="30" />
+											<line x1="22" y1="10" x2="33" y2="30" />
+										</g>
+										<circle cx="22" cy="10" r="5" fill="#fd5108" />
+										<circle cx="11" cy="30" r="4.5" fill="#000000" />
+										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+									</svg>
+									<span class="forest__tree-vote">A</span>
+								</div>
+								<div class="forest__tree">
+									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+											<line x1="22" y1="10" x2="11" y2="30" />
+											<line x1="22" y1="10" x2="33" y2="30" />
+										</g>
+										<circle cx="22" cy="10" r="5" fill="#fd5108" />
+										<circle cx="11" cy="30" r="4.5" fill="#000000" />
+										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+									</svg>
+									<span class="forest__tree-vote">S</span>
+								</div>
+								<div class="forest__tree">
+									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+											<line x1="22" y1="10" x2="11" y2="30" />
+											<line x1="22" y1="10" x2="33" y2="30" />
+										</g>
+										<circle cx="22" cy="10" r="5" fill="#fd5108" />
+										<circle cx="11" cy="30" r="4.5" fill="#000000" />
+										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+									</svg>
+									<span class="forest__tree-vote">A</span>
+								</div>
+								<div class="forest__tree">
+									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+											<line x1="22" y1="10" x2="11" y2="30" />
+											<line x1="22" y1="10" x2="33" y2="30" />
+										</g>
+										<circle cx="22" cy="10" r="5" fill="#fd5108" />
+										<circle cx="11" cy="30" r="4.5" fill="#000000" />
+										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+									</svg>
+									<span class="forest__tree-vote">A</span>
+								</div>
+							</div>
+							<div class="forest__arrow">&darr;</div>
+							<div class="forest__result">
+								<span class="forest__result-letter">A</span>
+								<span class="forest__result-caption">Majority vote</span>
+							</div>
+						</div>
+					</div>
+					<aside class="notes">
+						<p>
+							Landmarks alone don't say which letter they are, something has
+							to decide.
+						</p>
+						<p>
+							The algorithm is a Random Forest: many decision trees voting
+							together.
+						</p>
+						<p>
+							Why Random Forest: solid accuracy without needing a huge
+							dataset, no GPU, straightforward to retrain as more data comes
+							in.
+						</p>
+						<p>
+							Two Random Forest models, not one, matching the static/dynamic
+							split: one for poses, one for motion.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     Layout 2 — Media-dominant with overlapping text card
+				     ========================================================= -->
+				<section>
+					<div class="feature">
+						<div class="feature__media">
+							<span class="feature__tag">Image / video / gif</span>
+							<svg viewBox="0 0 200 240" fill="none" aria-hidden="true">
+								<g
+									stroke="#fd5108"
+									stroke-width="3.5"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<polyline points="100,220 72,196 52,176 38,158 26,142" />
+									<polyline points="100,220 78,150 72,116 68,94 65,74" />
+									<polyline points="100,220 100,144 100,106 100,82 100,60" />
+									<polyline points="100,220 122,150 128,114 132,92 135,72" />
+									<polyline points="100,220 142,162 152,136 158,118 163,100" />
+									<polyline points="78,150 100,144 122,150 142,162" />
+								</g>
+								<g fill="#000000">
+									<circle cx="100" cy="220" r="5.5" />
+									<circle cx="72" cy="196" r="4.5" />
+									<circle cx="52" cy="176" r="4.5" />
+									<circle cx="38" cy="158" r="4.5" />
+									<circle cx="26" cy="142" r="4.5" />
+									<circle cx="78" cy="150" r="4.5" />
+									<circle cx="72" cy="116" r="4.5" />
+									<circle cx="68" cy="94" r="4.5" />
+									<circle cx="65" cy="74" r="4.5" />
+									<circle cx="100" cy="144" r="4.5" />
+									<circle cx="100" cy="106" r="4.5" />
+									<circle cx="100" cy="82" r="4.5" />
+									<circle cx="100" cy="60" r="4.5" />
+									<circle cx="122" cy="150" r="4.5" />
+									<circle cx="128" cy="114" r="4.5" />
+									<circle cx="132" cy="92" r="4.5" />
+									<circle cx="135" cy="72" r="4.5" />
+									<circle cx="142" cy="162" r="4.5" />
+									<circle cx="152" cy="136" r="4.5" />
+									<circle cx="158" cy="118" r="4.5" />
+									<circle cx="163" cy="100" r="4.5" />
+								</g>
+							</svg>
+						</div>
+						<div class="feature__card">
+							<p class="eyebrow">Section label</p>
+							<h2>A placeholder heading</h2>
+							<p>
+								The card floats over the media, carrying two or three lines of
+								explanation while the visual does most of the work behind it.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<!-- ============================================================
+				     Layout 3 — Two-column comparison over a stat row
+				     ========================================================= -->
+				<section>
+					<div class="compare">
+						<h2 class="compare__heading">A comparison slide</h2>
+						<div class="compare__grid">
+							<div class="card">
+								<div class="card__label">Column one</div>
+								<h3>First concept</h3>
+								<p>
+									A couple of lines describing this side of the comparison
+									and what makes it distinct.
+								</p>
+								<div class="card__media">Media</div>
+							</div>
+							<div class="card card--alt">
+								<div class="card__label">Column two</div>
+								<h3>Second concept</h3>
+								<p>
+									The matching description for the other side, kept parallel
+									in length and structure.
+								</p>
+								<div class="card__media">Media</div>
+							</div>
+						</div>
+						<div class="stat-row">
+							<span><strong>21</strong> placeholder</span>
+							<span><strong>2</strong> placeholder</span>
+							<span><strong>30</strong> placeholder</span>
+						</div>
+					</div>
+				</section>
+
+				<!-- ============================================================
+				     Layout 4 — Pull quote (Georgia, never italic)
+				     ========================================================= -->
+				<section>
+					<div class="quote">
+						<p class="quote__mark">&ldquo;</p>
+						<p class="quote__text">
+							A placeholder quotation sits here, set in Georgia at display
+							size so it carries the slide on its own.
+						</p>
+						<p class="quote__attribution">Attribution &middot; Role</p>
+					</div>
+				</section>
+
+				<!-- ============================================================
+				     Layout 5 — Data slide
+				     Single series, every mark directly labelled.
+				     ========================================================= -->
+				<section>
+					<div class="data">
+						<h2 class="data__heading">A data slide</h2>
+						<p class="data__sub">
+							One series, direct labels on every bar. The orange ramp is
+							sequential, so it encodes magnitude rather than separate
+							categories.
+						</p>
+						<div class="chart">
+							<div class="bar">
+								<span class="bar__value">98</span>
+								<div class="bar__fill" style="height: 82%"></div>
+								<span class="bar__label">Label A</span>
+							</div>
+							<div class="bar">
+								<span class="bar__value">91</span>
+								<div class="bar__fill" style="height: 74%"></div>
+								<span class="bar__label">Label B</span>
+							</div>
+							<div class="bar">
+								<span class="bar__value">86</span>
+								<div class="bar__fill" style="height: 66%"></div>
+								<span class="bar__label">Label C</span>
+							</div>
+							<div class="bar">
+								<span class="bar__value">74</span>
+								<div class="bar__fill" style="height: 52%"></div>
+								<span class="bar__label">Label D</span>
+							</div>
+							<div class="bar">
+								<span class="bar__value">61</span>
+								<div class="bar__fill" style="height: 38%"></div>
+								<span class="bar__label">Label E</span>
+							</div>
+						</div>
+						<p class="data__footnote">Placeholder figures.</p>
+					</div>
+				</section>
+			</div>
+		</div>
+
+		<script src="node_modules/reveal.js/dist/reveal.js"></script>
+		<script src="node_modules/reveal.js/dist/plugin/notes.js"></script>
+		<script src="node_modules/reveal.js/dist/plugin/markdown.js"></script>
+		<script>
+			Reveal.initialize({
+				hash: true,
+				center: false,
+				margin: 0.08,
+				plugins: [RevealMarkdown, RevealNotes],
+			});
+		</script>
+	</body>
+</html>

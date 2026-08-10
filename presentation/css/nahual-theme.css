@@ -1,0 +1,1141 @@
+/* =========================================================================
+   Nahual — presentation design system
+   =========================================================================
+
+   Typography
+   ----------
+   Georgia  — headlines and quotes.        Regular or bold. Never italic.
+   Arial    — sub-heads, body, intros,     Regular or bold. Never italic.
+              labels, large data numbers.
+   Both ship by default on macOS and Windows, so there is no @font-face, no
+   download and no CDN. The trailing serif / sans-serif are CSS generic
+   category keywords, not additional typefaces.
+
+   Color roles
+   -----------
+   #000000  body text. The only text color that passes contrast on every
+            background in this system.
+   #FD5108  core orange. Text ONLY at display sizes and only on white or
+            #FFF5ED (3.30:1 and 3.07:1, large-text threshold is 3:1).
+            Everywhere else it is structural: rules, bars, fills.
+   #A1A8B3  NON-TEXT ONLY. 2.40:1 on white fails both text thresholds.
+            Hairlines, borders, dividers, gridlines, inactive dots.
+   #595959  de-emphasized text (black at 65%, 7.0:1 on white). Use this
+            wherever a muted grey text tone is wanted.
+   #FF9F00  illustration and tertiary accent. Never carries text (2.06:1).
+   Status   #059669 / #E9B01F / #DC2626 — functional state only, never a
+            decorative or series color, always paired with an icon or label.
+
+   Data visualization
+   ------------------
+   #FD5108 → #FE7C39 → #FFAA72 is a SEQUENTIAL ramp (one hue, monotonically
+   lightening: OKLab L 0.669 → 0.727 → 0.810). It is not a categorical
+   palette — adjacent normal-vision separation is deltaE 7.6 against a floor
+   of 15, so these three cannot label three distinct series. Use for
+   magnitude, cap at ~3 steps, and always direct-label the marks.
+   ====================================================================== */
+
+:root {
+	/* Core */
+	--orange: #fd5108;
+
+	/* Data visualization — sequential ramp, dark to light */
+	--viz-1: #fd5108;
+	--viz-2: #fe7c39;
+	--viz-3: #ffaa72;
+
+	/* Backgrounds */
+	--bg-white: #ffffff;
+	--bg-peach-300: #ffcda8;
+	--bg-peach-200: #ffe8d4;
+	--bg-peach-100: #fff5ed;
+
+	/* Text */
+	--text-black: #000000;
+	--text-muted: #595959;
+
+	/* Non-text grey: rules, borders, gridlines */
+	--line-grey: #a1a8b3;
+
+	/* Tertiary / illustration */
+	--amber: #ff9f00;
+
+	/* Status — functional use only */
+	--status-good: #059669;
+	--status-warn: #e9b01f;
+	--status-bad: #dc2626;
+
+	/* Type */
+	--font-display: Georgia, serif;
+	--font-text: Arial, sans-serif;
+
+	/* Reveal theme variables. --r-background is the viewport surround OUTSIDE
+	   the slide canvas and defaults to #2b2b2b, so it must be set too or the
+	   deck renders inside a dark frame. */
+	--r-background: var(--bg-peach-200);
+	--r-background-color: var(--bg-white);
+	--r-main-color: var(--text-black);
+	--r-heading-color: var(--text-black);
+	--r-main-font: var(--font-text);
+	--r-heading-font: var(--font-display);
+	--r-code-font: monospace;
+	--r-main-font-size: 30px;
+	--r-heading-text-transform: none;
+	--r-heading-font-weight: 700;
+	--r-heading-letter-spacing: -0.015em;
+	--r-heading-line-height: 1.12;
+	--r-link-color: var(--orange);
+	--r-link-color-hover: var(--amber);
+	--r-link-color-dark: #d84406;
+	--r-selection-background-color: var(--orange);
+	--r-selection-color: var(--bg-white);
+}
+
+.reveal .slides section {
+	text-align: left;
+	height: 100%;
+	padding: 0;
+}
+
+/* Georgia and Arial are used at regular and bold only. Nothing in this deck
+   is italic, so neutralize the tags that would slant by default. */
+.reveal em,
+.reveal i,
+.reveal blockquote,
+.reveal q {
+	font-style: normal;
+}
+
+/* -------------------------------------------------------------------------
+   Shared elements
+   ---------------------------------------------------------------------- */
+
+/* Small Arial label. Replaces the monospace eyebrow from the earlier draft. */
+.eyebrow {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--orange);
+	margin: 0 0 0.9em;
+}
+
+/* Accent word inside a Georgia headline. Emphasis is carried by color, never
+   by slant. */
+.accent {
+	color: var(--orange);
+}
+
+/* -------------------------------------------------------------------------
+   Layout 1 — Cover
+   ---------------------------------------------------------------------- */
+
+.cover {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 2em 2.6em;
+	background: linear-gradient(
+		135deg,
+		var(--bg-peach-200) 0%,
+		var(--bg-peach-100) 45%,
+		var(--bg-white) 100%
+	);
+	border-left: 10px solid var(--orange);
+}
+
+.cover__title {
+	font-family: var(--font-display);
+	font-size: 2em;
+	font-weight: 700;
+	line-height: 1.08;
+	letter-spacing: -0.02em;
+	margin: 0;
+	max-width: 13em;
+}
+
+.cover__underline {
+	width: 4.5em;
+	height: 6px;
+	background: var(--orange);
+	margin: 0.85em 0 0;
+}
+
+.cover__meta {
+	display: flex;
+	gap: 0.6em;
+	align-items: center;
+	margin-top: 1.5em;
+	font-family: var(--font-text);
+	font-size: 0.42em;
+	color: var(--text-muted);
+}
+
+.cover__meta span:not(:last-child)::after {
+	content: " /";
+	color: var(--orange);
+}
+
+/* -------------------------------------------------------------------------
+   Intro — "Who Am I?" : narrow text column + a 4-photo collage
+   ---------------------------------------------------------------------- */
+
+.intro {
+	display: grid;
+	grid-template-columns: 1fr 4fr;
+	gap: 1.5em;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.4em;
+	align-items: stretch;
+}
+
+/* Keep the text vertically centered against the full-height collage. */
+.intro__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.intro__role {
+	font-family: var(--font-text);
+	font-size: 0.42em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--orange);
+	margin: 0 0 0.9em;
+}
+
+.intro__text h2 {
+	font-family: var(--font-display);
+	font-size: 1.5em;
+	margin: 0 0 0.5em;
+}
+
+.intro__text p {
+	font-family: var(--font-text);
+	font-size: 0.56em;
+	line-height: 1.65;
+	color: var(--text-black);
+	margin: 0;
+	max-width: 18em;
+}
+
+.collage {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6em;
+	height: 100%;
+}
+
+.collage__item {
+	position: relative;
+	background: var(--bg-peach-200);
+	border: 1px solid var(--line-grey);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	min-height: 0;
+}
+
+/* Photo 1: the larger square anchor on top, sized as a share of the collage
+   width and centered, with the orange top rule tying it to the card motif. */
+.collage__top {
+	flex: 0 0 auto;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.collage__top .collage__item {
+	width: 55%;
+	aspect-ratio: 1 / 1;
+	border-top: 5px solid var(--orange);
+}
+
+/* Photos 2-4: three smaller squares in a row beneath. */
+.collage__row {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.6em;
+}
+
+.collage__row .collage__item {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+}
+
+.collage__tag {
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Statement — a text-forward "why" slide (e.g. Accessibility)
+   Background is #FFF5ED so the orange turn line clears large-text contrast
+   (3.07:1); it would fail on the darker peach tints.
+   ---------------------------------------------------------------------- */
+
+.statement {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.4em 1.9em;
+	background: var(--bg-peach-100);
+}
+
+.statement__head {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0 0 0.7em;
+}
+
+.statement__list {
+	list-style: none;
+	margin: 0 0 1.1em;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.62em;
+	line-height: 1.7;
+	color: var(--text-black);
+	max-width: 28em;
+}
+
+.statement__list li {
+	position: relative;
+	padding-left: 1.1em;
+}
+
+/* Amber square marker: tertiary accent, non-text role. */
+.statement__list li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.62em;
+	width: 0.42em;
+	height: 0.42em;
+	background: var(--amber);
+}
+
+.statement__turn {
+	font-family: var(--font-display);
+	font-size: 1.5em;
+	font-weight: 700;
+	line-height: 1.12;
+	color: var(--orange);
+	margin: 0;
+	max-width: 16em;
+}
+
+/* Option A variant: the turn line becomes the hero headline, with the tech
+   list demoted to one muted supporting line. */
+.statement__hero {
+	font-family: var(--font-display);
+	font-size: 1.9em;
+	font-weight: 700;
+	line-height: 1.08;
+	margin: 0.15em 0 0.55em;
+	max-width: 14em;
+}
+
+.statement__sub {
+	font-family: var(--font-text);
+	font-size: 0.56em;
+	font-weight: 400;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 30em;
+}
+
+/* -------------------------------------------------------------------------
+   Origin — "How Nahual Was Created": two-column story + media, used as a
+   pair of vertical slides (the origin story, then the name).
+   ---------------------------------------------------------------------- */
+
+.origin {
+	display: grid;
+	grid-template-columns: 1.05fr 1fr;
+	gap: 1.6em;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.3em 1.6em;
+	align-items: stretch;
+}
+
+/* Image on the left, text on the right (DOM stays text-first). */
+.origin--reverse {
+	grid-template-columns: 1fr 1.05fr;
+}
+
+.origin--reverse .origin__media {
+	order: -1;
+}
+
+.origin__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+/* Georgia display line: the hook / concept of the slide. */
+.origin__lead {
+	font-family: var(--font-display);
+	font-size: 1.35em;
+	font-weight: 700;
+	line-height: 1.16;
+	margin: 0 0 0.5em;
+	max-width: 15em;
+}
+
+/* Arial supporting copy: setup or rationale, kept muted and secondary. */
+.origin__body {
+	font-family: var(--font-text);
+	font-size: 0.56em;
+	line-height: 1.7;
+	color: var(--text-muted);
+	margin: 0 0 0.7em;
+	max-width: 24em;
+}
+
+.origin__body:last-child {
+	margin-bottom: 0;
+}
+
+/* Orange payoff line: the emotional close, in Georgia to match the lead. */
+.origin__punch {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	line-height: 1.15;
+	color: var(--orange);
+	margin: 0.25em 0 0;
+	max-width: 15em;
+}
+
+.origin__media {
+	position: relative;
+	min-height: 0;
+	background: var(--bg-peach-200);
+	border: 1px solid var(--line-grey);
+	border-top: 5px solid var(--orange);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.origin__media-tag {
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Split — "Static and Dynamic Gestures": two complementary sets of letters
+   (not a versus). The letter chips themselves carry the split, so no image
+   is required.
+   ---------------------------------------------------------------------- */
+
+.split {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.split__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 20em;
+}
+
+.split__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1em;
+	flex: 1;
+	min-height: 0;
+}
+
+.split-card {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.85em 1em;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+}
+
+.split-card--dynamic {
+	border-top-color: var(--amber);
+}
+
+.split-card__label {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--orange);
+	margin: 0 0 0.5em;
+}
+
+.split-card--dynamic .split-card__label {
+	color: var(--text-muted);
+}
+
+.split-card__desc {
+	font-family: var(--font-text);
+	font-size: 0.52em;
+	line-height: 1.55;
+	color: var(--text-black);
+	margin: 0;
+}
+
+/* Looping clip that fills the middle of the card: a held pose in Static, the
+   motion in Dynamic. flex:1 so it absorbs whatever space the chips leave,
+   which closes the gap in both cards regardless of chip count. */
+.split-card__clip {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	margin-top: 0.7em;
+	background: var(--bg-peach-200);
+	border: 1px solid var(--line-grey);
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.split-card__clip video,
+.split-card__clip img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.split-card__clip-tag {
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* The alphabet, split into two sets. */
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em;
+	margin-top: 0.7em;
+}
+
+.chip {
+	font-family: var(--font-text);
+	font-weight: 700;
+	font-size: 0.5em;
+	min-width: 2.1em;
+	padding: 0.3em 0.25em;
+	text-align: center;
+	background: var(--bg-peach-100);
+	color: var(--text-black);
+	border: 1px solid var(--line-grey);
+	border-radius: 5px;
+}
+
+.split-card--dynamic .chip {
+	border-color: var(--orange);
+}
+
+.split__footer {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 42em;
+}
+
+.split__footer strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Detect — "MediaPipe and Hand Detection": a camera frame becomes 21
+   landmarks. The pipeline (image placeholder -> hand SVG) carries the idea.
+   ---------------------------------------------------------------------- */
+
+.detect {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.detect__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 22em;
+}
+
+.detect__pipeline {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	gap: 1em;
+	flex: 1;
+	min-height: 0;
+	align-items: stretch;
+}
+
+.detect__step {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	margin: 0;
+}
+
+.detect__panel {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	border-top: 5px solid var(--orange);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+/* The "raw" panel is an image placeholder until a real camera frame lands. */
+.detect__panel--frame {
+	background: var(--bg-peach-200);
+}
+
+.detect__panel svg {
+	width: 56%;
+	height: auto;
+	max-height: 82%;
+}
+
+.detect__panel-tag {
+	position: absolute;
+	top: 0.5em;
+	left: 0.6em;
+	font-family: var(--font-text);
+	font-size: 0.32em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.detect__step figcaption {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	text-align: center;
+	margin-top: 0.6em;
+}
+
+.detect__arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-text);
+	font-size: 1.5em;
+	font-weight: 700;
+	color: var(--orange);
+}
+
+.detect__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 44em;
+}
+
+.detect__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Forest — "Machine Learning and Random Forest": many decision trees vote,
+   the majority wins. Text left, voting diagram right.
+   ---------------------------------------------------------------------- */
+
+.forest {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.4em;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	align-items: stretch;
+	background: var(--bg-peach-100);
+}
+
+.forest__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.forest__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	line-height: 1.16;
+	margin: 0 0 0.7em;
+	max-width: 16em;
+}
+
+.forest__why {
+	list-style: none;
+	margin: 0 0 0.9em;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.52em;
+	line-height: 1.5;
+	color: var(--text-black);
+}
+
+.forest__why li {
+	position: relative;
+	padding-left: 1.1em;
+	margin-bottom: 0.35em;
+}
+
+/* Amber square marker: tertiary accent, non-text role. */
+.forest__why li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.5em;
+	width: 0.4em;
+	height: 0.4em;
+	background: var(--amber);
+}
+
+.forest__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 22em;
+}
+
+.forest__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+.forest__vote {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.7em;
+	min-height: 0;
+}
+
+.forest__trees {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 0.4em;
+	width: 100%;
+}
+
+.forest__tree {
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	border-radius: 6px;
+	padding: 0.4em 0.2em;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25em;
+}
+
+.forest__tree svg {
+	width: 74%;
+	height: auto;
+}
+
+.forest__tree-vote {
+	font-family: var(--font-text);
+	font-size: 0.44em;
+	font-weight: 700;
+	color: var(--text-muted);
+}
+
+.forest__arrow {
+	font-family: var(--font-text);
+	font-size: 1.1em;
+	font-weight: 700;
+	color: var(--orange);
+	line-height: 1;
+}
+
+.forest__result {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.15em;
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.5em 1.3em;
+}
+
+.forest__result-letter {
+	font-family: var(--font-display);
+	font-size: 1.6em;
+	font-weight: 700;
+	color: var(--text-black);
+	line-height: 1;
+}
+
+.forest__result-caption {
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Layout 2 — Media-dominant with an overlapping text card
+   ---------------------------------------------------------------------- */
+
+.feature {
+	position: relative;
+	height: 100%;
+}
+
+.feature__media {
+	position: absolute;
+	inset: 0 0 3.2em 6em;
+	background: var(--bg-peach-200);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.feature__media svg {
+	width: 40%;
+	height: auto;
+	max-height: 82%;
+}
+
+.feature__tag {
+	position: absolute;
+	top: 0.9em;
+	right: 1.1em;
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--orange);
+}
+
+.feature__card {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 54%;
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
+	padding: 1em 1.2em;
+	box-sizing: border-box;
+}
+
+.feature__card h2 {
+	font-family: var(--font-display);
+	font-size: 0.95em;
+	margin: 0 0 0.35em;
+}
+
+.feature__card p {
+	font-family: var(--font-text);
+	font-size: 0.56em;
+	line-height: 1.6;
+	margin: 0;
+	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Layout 3 — Two-column comparison over a stat row
+   ---------------------------------------------------------------------- */
+
+.compare {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	gap: 0.8em;
+	padding: 1.2em 1.4em;
+	background: var(--bg-peach-100);
+}
+
+.compare__heading {
+	font-family: var(--font-display);
+	font-size: 1.05em;
+	margin: 0;
+}
+
+.compare__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1em;
+	flex: 1;
+	min-height: 0;
+}
+
+.card {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.9em 1.05em;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+}
+
+.card--alt {
+	border-top-color: var(--viz-3);
+}
+
+.card__label {
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--orange);
+	margin-bottom: 0.6em;
+}
+
+.card--alt .card__label {
+	color: var(--text-muted);
+}
+
+.card h3 {
+	font-family: var(--font-display);
+	font-size: 0.8em;
+	font-weight: 700;
+	margin: 0 0 0.4em;
+	text-transform: none;
+}
+
+.card p {
+	font-family: var(--font-text);
+	font-size: 0.52em;
+	line-height: 1.6;
+	margin: 0 0 0.9em;
+	color: var(--text-muted);
+}
+
+.card__media {
+	flex: 1;
+	min-height: 0;
+	background: var(--bg-peach-100);
+	border: 1px solid var(--line-grey);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.stat-row {
+	display: flex;
+	gap: 2.4em;
+	padding-top: 0.7em;
+	border-top: 1px solid var(--line-grey);
+	font-family: var(--font-text);
+	font-size: 0.42em;
+	color: var(--text-muted);
+}
+
+/* Large data numbers are Arial, per the type standard. */
+.stat-row strong {
+	font-family: var(--font-text);
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Layout 4 — Pull quote
+   ---------------------------------------------------------------------- */
+
+.quote {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 2em 3em;
+	background: var(--bg-peach-200);
+}
+
+.quote__mark {
+	font-family: var(--font-display);
+	font-size: 3em;
+	font-weight: 700;
+	line-height: 0.7;
+	color: var(--orange);
+	margin: 0 0 0.1em;
+}
+
+/* Georgia, regular or bold, never italic. */
+.quote__text {
+	font-family: var(--font-display);
+	font-size: 1.35em;
+	font-weight: 400;
+	font-style: normal;
+	line-height: 1.35;
+	margin: 0;
+	max-width: 16em;
+	color: var(--text-black);
+}
+
+.quote__attribution {
+	font-family: var(--font-text);
+	font-size: 0.44em;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 1.6em 0 0;
+	padding-left: 0.9em;
+	border-left: 4px solid var(--orange);
+}
+
+/* -------------------------------------------------------------------------
+   Layout 5 — Data slide
+   ---------------------------------------------------------------------- */
+
+.data {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.4em;
+	gap: 0.5em;
+}
+
+.data__heading {
+	font-family: var(--font-display);
+	font-size: 1.05em;
+	margin: 0;
+}
+
+.data__sub {
+	font-family: var(--font-text);
+	font-size: 0.46em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0 0 0.4em;
+	max-width: 30em;
+}
+
+.chart {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	align-items: flex-end;
+	gap: 1.1em;
+	padding: 0.6em 0 0;
+	border-bottom: 1px solid var(--line-grey);
+}
+
+.bar {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	height: 100%;
+	gap: 0.35em;
+}
+
+/* Every mark is directly labelled: the ramp's lighter steps sit below 3:1
+   against the surface, so labels are required, not optional. Direct labels
+   also beat a legend on a projected slide. */
+.bar__value {
+	font-family: var(--font-text);
+	font-size: 0.62em;
+	font-weight: 700;
+	color: var(--text-black);
+	line-height: 1;
+}
+
+.bar__fill {
+	width: 100%;
+	background: var(--viz-1);
+	border-radius: 4px 4px 0 0;
+}
+
+.bar__label {
+	font-family: var(--font-text);
+	font-size: 0.38em;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	line-height: 1.2;
+	text-align: center;
+}
+
+.data__footnote {
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	color: var(--text-muted);
+	margin: 0.6em 0 0;
+}
