@@ -21,16 +21,58 @@
 				     ========================================================= -->
 				<section>
 					<div class="cover">
-						<p class="eyebrow">Nahual</p>
-						<h1 class="cover__title">
-							Teaching a machine to read a hand the way a microphone reads a
-							<span class="accent">voice</span>
-						</h1>
-						<div class="cover__underline"></div>
-						<div class="cover__meta">
-							<span>Sign Recognition</span>
-							<span>Jorge Martinez Flores</span>
-							<span>August 2026</span>
+						<div class="cover__text">
+							<p class="eyebrow">Nahual</p>
+							<h1 class="cover__title">
+								Teaching a machine to read a hand the way a microphone reads a
+								<span class="accent">voice</span>
+							</h1>
+							<div class="cover__underline"></div>
+							<div class="cover__meta">
+								<span>Sign Recognition</span>
+								<span>Jorge Martinez Flores</span>
+								<span>August 2026</span>
+							</div>
+						</div>
+						<div class="cover__art" aria-hidden="true">
+							<svg viewBox="0 0 200 240" fill="none">
+								<g
+									stroke="#fd5108"
+									stroke-width="3.5"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<polyline points="100,220 72,196 52,176 38,158 26,142" />
+									<polyline points="100,220 78,150 72,116 68,94 65,74" />
+									<polyline points="100,220 100,144 100,106 100,82 100,60" />
+									<polyline points="100,220 122,150 128,114 132,92 135,72" />
+									<polyline points="100,220 142,162 152,136 158,118 163,100" />
+									<polyline points="78,150 100,144 122,150 142,162" />
+								</g>
+								<g fill="#000000">
+									<circle cx="100" cy="220" r="5.5" />
+									<circle cx="72" cy="196" r="4.5" />
+									<circle cx="52" cy="176" r="4.5" />
+									<circle cx="38" cy="158" r="4.5" />
+									<circle cx="26" cy="142" r="4.5" />
+									<circle cx="78" cy="150" r="4.5" />
+									<circle cx="72" cy="116" r="4.5" />
+									<circle cx="68" cy="94" r="4.5" />
+									<circle cx="65" cy="74" r="4.5" />
+									<circle cx="100" cy="144" r="4.5" />
+									<circle cx="100" cy="106" r="4.5" />
+									<circle cx="100" cy="82" r="4.5" />
+									<circle cx="100" cy="60" r="4.5" />
+									<circle cx="122" cy="150" r="4.5" />
+									<circle cx="128" cy="114" r="4.5" />
+									<circle cx="132" cy="92" r="4.5" />
+									<circle cx="135" cy="72" r="4.5" />
+									<circle cx="142" cy="162" r="4.5" />
+									<circle cx="152" cy="136" r="4.5" />
+									<circle cx="158" cy="118" r="4.5" />
+									<circle cx="163" cy="100" r="4.5" />
+								</g>
+							</svg>
 						</div>
 					</div>
 				</section>
@@ -51,15 +93,24 @@
 						<div class="collage">
 							<div class="collage__top">
 								<div class="collage__item">
-									<span class="collage__tag">Photo 1</span>
+									<img
+										src="media/intro/photo-1.jpg"
+										alt="Jorge standing on a rocky mountain summit overlooking a forested valley"
+									/>
 								</div>
 							</div>
 							<div class="collage__row">
 								<div class="collage__item">
-									<span class="collage__tag">Photo 2</span>
+									<img
+										src="media/intro/photo-2.jpg"
+										alt="An F1 race car on track in front of a packed grandstand"
+									/>
 								</div>
 								<div class="collage__item">
-									<span class="collage__tag">Photo 3</span>
+									<img
+										src="media/intro/photo-3.jpg"
+										alt="A dog and two cats nose to nose next to a cat tree"
+									/>
 								</div>
 								<div class="collage__item">
 									<span class="collage__tag">Photo 4</span>
@@ -125,8 +176,11 @@
 								</p>
 								<p class="origin__punch">And I took that personally.</p>
 							</div>
-							<div class="origin__media">
-								<span class="origin__media-tag">LSM alphabet</span>
+							<div class="origin__media origin__media--contain">
+								<img
+									src="media/origin/lsm-alphabet.jpg"
+									alt="LSM fingerspelling chart showing the hand shape for every letter, A through Z including &Ntilde;"
+								/>
 							</div>
 						</div>
 						<aside class="notes">
@@ -156,8 +210,19 @@
 									another (letters and text).
 								</p>
 							</div>
-							<div class="origin__media">
-								<span class="origin__media-tag">Image</span>
+							<div class="origin__media-stack">
+								<div class="origin__media-tile">
+									<img
+										src="media/origin/nahual-01.jpg"
+										alt="Codex-style illustration of a nahual, a coyote-like shapeshifter figure"
+									/>
+								</div>
+								<div class="origin__media-tile origin__media-tile--contain">
+									<img
+										src="media/origin/nahual-02.jpg"
+										alt="Wood-carved alebrije of a nahual with tall rabbit ears and a bearded human face"
+									/>
+								</div>
 							</div>
 						</div>
 						<aside class="notes">
@@ -194,8 +259,7 @@
 									that's the letter.
 								</p>
 								<div class="split-card__clip">
-									<span class="split-card__clip-tag">Static clip</span>
-									<!-- Drop in: <video src="media/gestures/static.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+									<video src="media/gestures/static.mp4" autoplay loop muted playsinline data-autoplay></video>
 								</div>
 								<div class="chips">
 									<span class="chip">A</span><span class="chip">B</span
@@ -217,13 +281,12 @@
 									A handful only make sense as movement.
 								</p>
 								<div class="split-card__clip">
-									<span class="split-card__clip-tag">Dynamic clip</span>
-									<!-- Drop in: <video src="media/gestures/dynamic.mp4" autoplay loop muted playsinline data-autoplay></video> -->
+									<video src="media/gestures/dynamic.mp4" autoplay loop muted playsinline data-autoplay></video>
 								</div>
 								<div class="chips">
 									<span class="chip">J</span><span class="chip">K</span
-									><span class="chip">Q</span><span class="chip">X</span
-									><span class="chip">Z</span><span class="chip">Ñ</span>
+									><span class="chip">Ñ</span><span class="chip">Q</span
+									><span class="chip">X</span><span class="chip">Z</span>
 								</div>
 							</div>
 						</div>
@@ -253,14 +316,17 @@
 				     ========================================================= -->
 				<section>
 					<div class="detect">
-						<p class="eyebrow">Hand Detection</p>
+						<p class="eyebrow">Computer Vision &middot; Hand Detection</p>
 						<p class="detect__lead">
 							Before anything gets classified, the system has to see a hand.
 						</p>
 						<div class="detect__pipeline">
 							<figure class="detect__step">
 								<div class="detect__panel detect__panel--frame">
-									<span class="detect__panel-tag">Camera frame</span>
+									<img
+										src="media/detect/landmarks-01.png"
+										alt="A hand holding an egg, with MediaPipe hand landmarks overlaid"
+									/>
 								</div>
 								<figcaption>What the camera sees</figcaption>
 							</figure>
@@ -270,42 +336,42 @@
 							<figure class="detect__step">
 								<div class="detect__panel">
 									<span class="detect__panel-tag">Landmarks</span>
-									<svg viewBox="0 0 200 240" fill="none" aria-hidden="true">
+									<svg viewBox="0 0 400 430" fill="none" aria-hidden="true">
 										<g
 											stroke="#fd5108"
 											stroke-width="3.5"
 											stroke-linecap="round"
 											stroke-linejoin="round"
 										>
-											<polyline points="100,220 72,196 52,176 38,158 26,142" />
-											<polyline points="100,220 78,150 72,116 68,94 65,74" />
-											<polyline points="100,220 100,144 100,106 100,82 100,60" />
-											<polyline points="100,220 122,150 128,114 132,92 135,72" />
-											<polyline points="100,220 142,162 152,136 158,118 163,100" />
-											<polyline points="78,150 100,144 122,150 142,162" />
+											<polyline points="371,399 361,290 294,179 267,100 252,29" />
+											<polyline points="371,399 138,279 30,181 48,132 78,59" />
+											<polyline points="371,399 132,298 25,209 96,130 172,111" />
+											<polyline points="371,399 131,316 37,242 135,170 207,157" />
+											<polyline points="371,399 157,350 80,296 144,209 208,197" />
+											<polyline points="138,279 132,298 131,316 157,350" />
 										</g>
 										<g fill="#000000">
-											<circle cx="100" cy="220" r="5.5" />
-											<circle cx="72" cy="196" r="4.5" />
-											<circle cx="52" cy="176" r="4.5" />
-											<circle cx="38" cy="158" r="4.5" />
-											<circle cx="26" cy="142" r="4.5" />
-											<circle cx="78" cy="150" r="4.5" />
-											<circle cx="72" cy="116" r="4.5" />
-											<circle cx="68" cy="94" r="4.5" />
-											<circle cx="65" cy="74" r="4.5" />
-											<circle cx="100" cy="144" r="4.5" />
-											<circle cx="100" cy="106" r="4.5" />
-											<circle cx="100" cy="82" r="4.5" />
-											<circle cx="100" cy="60" r="4.5" />
-											<circle cx="122" cy="150" r="4.5" />
-											<circle cx="128" cy="114" r="4.5" />
-											<circle cx="132" cy="92" r="4.5" />
-											<circle cx="135" cy="72" r="4.5" />
-											<circle cx="142" cy="162" r="4.5" />
-											<circle cx="152" cy="136" r="4.5" />
-											<circle cx="158" cy="118" r="4.5" />
-											<circle cx="163" cy="100" r="4.5" />
+											<circle cx="371" cy="399" r="5.5" />
+											<circle cx="361" cy="290" r="4.5" />
+											<circle cx="294" cy="179" r="4.5" />
+											<circle cx="267" cy="100" r="4.5" />
+											<circle cx="252" cy="29" r="4.5" />
+											<circle cx="138" cy="279" r="4.5" />
+											<circle cx="30" cy="181" r="4.5" />
+											<circle cx="48" cy="132" r="4.5" />
+											<circle cx="78" cy="59" r="4.5" />
+											<circle cx="132" cy="298" r="4.5" />
+											<circle cx="25" cy="209" r="4.5" />
+											<circle cx="96" cy="130" r="4.5" />
+											<circle cx="172" cy="111" r="4.5" />
+											<circle cx="131" cy="316" r="4.5" />
+											<circle cx="37" cy="242" r="4.5" />
+											<circle cx="135" cy="170" r="4.5" />
+											<circle cx="207" cy="157" r="4.5" />
+											<circle cx="157" cy="350" r="4.5" />
+											<circle cx="80" cy="296" r="4.5" />
+											<circle cx="144" cy="209" r="4.5" />
+											<circle cx="208" cy="197" r="4.5" />
 										</g>
 									</svg>
 								</div>
@@ -548,151 +614,617 @@
 				</section>
 
 				<!-- ============================================================
-				     Layout 2 — Media-dominant with overlapping text card
+				     Capture, Training, and Live Demo — the "Proof" act, built as
+				     a vertical pair:
+				       down 1: the end-to-end workflow as a live-demo backdrop
+				               (Collect -> Train -> Recognize live, desktop + web)
+				       down 2: architecture recap (four entry scripts share one
+				               nahual/ package underneath)
 				     ========================================================= -->
 				<section>
-					<div class="feature">
-						<div class="feature__media">
-							<span class="feature__tag">Image / video / gif</span>
-							<svg viewBox="0 0 200 240" fill="none" aria-hidden="true">
-								<g
-									stroke="#fd5108"
-									stroke-width="3.5"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<polyline points="100,220 72,196 52,176 38,158 26,142" />
-									<polyline points="100,220 78,150 72,116 68,94 65,74" />
-									<polyline points="100,220 100,144 100,106 100,82 100,60" />
-									<polyline points="100,220 122,150 128,114 132,92 135,72" />
-									<polyline points="100,220 142,162 152,136 158,118 163,100" />
-									<polyline points="78,150 100,144 122,150 142,162" />
-								</g>
-								<g fill="#000000">
-									<circle cx="100" cy="220" r="5.5" />
-									<circle cx="72" cy="196" r="4.5" />
-									<circle cx="52" cy="176" r="4.5" />
-									<circle cx="38" cy="158" r="4.5" />
-									<circle cx="26" cy="142" r="4.5" />
-									<circle cx="78" cy="150" r="4.5" />
-									<circle cx="72" cy="116" r="4.5" />
-									<circle cx="68" cy="94" r="4.5" />
-									<circle cx="65" cy="74" r="4.5" />
-									<circle cx="100" cy="144" r="4.5" />
-									<circle cx="100" cy="106" r="4.5" />
-									<circle cx="100" cy="82" r="4.5" />
-									<circle cx="100" cy="60" r="4.5" />
-									<circle cx="122" cy="150" r="4.5" />
-									<circle cx="128" cy="114" r="4.5" />
-									<circle cx="132" cy="92" r="4.5" />
-									<circle cx="135" cy="72" r="4.5" />
-									<circle cx="142" cy="162" r="4.5" />
-									<circle cx="152" cy="136" r="4.5" />
-									<circle cx="158" cy="118" r="4.5" />
-									<circle cx="163" cy="100" r="4.5" />
-								</g>
-							</svg>
-						</div>
-						<div class="feature__card">
-							<p class="eyebrow">Section label</p>
-							<h2>A placeholder heading</h2>
-							<p>
-								The card floats over the media, carrying two or three lines of
-								explanation while the visual does most of the work behind it.
+					<!-- Down 1: the workflow / live-demo backdrop -->
+					<section>
+						<div class="proof">
+							<p class="eyebrow">Capture, Training, and Live Demo</p>
+							<p class="proof__lead">
+								Collect, train, then watch it run live.
+							</p>
+							<div class="proof__flow">
+								<div class="proof__step">
+									<p class="proof__step-tag">Step 1 &middot; Collect</p>
+									<p class="proof__step-desc">
+										Label samples letter by letter with the interactive
+										collector.
+									</p>
+								</div>
+
+								<div class="proof__arrow">&rarr;</div>
+
+								<div class="proof__step">
+									<p class="proof__step-tag">Step 2 &middot; Train</p>
+									<p class="proof__step-desc">
+										Fit the static and dynamic classifiers from that
+										dataset.
+									</p>
+								</div>
+
+								<div class="proof__arrow">&rarr;</div>
+
+								<div class="proof__step">
+									<p class="proof__step-tag">Step 3 &middot; Recognize live</p>
+									<p class="proof__step-desc">
+										The same recognition, running in two places.
+									</p>
+									<div class="proof__targets">
+										<span class="proof__target">Desktop app</span>
+										<span class="proof__target"
+											>Public website &middot; no install</span
+										>
+									</div>
+								</div>
+							</div>
+							<p class="proof__note">
+								The demo is a live run of this pipeline:
+								<strong>first the desktop app</strong>, then the same
+								recognition from a link on the
+								<strong>public website</strong>.
 							</p>
 						</div>
-					</div>
+						<aside class="notes">
+							<p>This is the practical workflow, start to finish.</p>
+							<p>
+								First, collecting labeled samples letter by letter with the
+								interactive collector.
+							</p>
+							<p>
+								Then training the static and dynamic classifiers from that
+								dataset.
+							</p>
+							<p>
+								DEMO: switch to the desktop app, show a few static letters,
+								then a dynamic one.
+							</p>
+							<p>
+								DEMO: switch to the public website, the same recognition,
+								now running from a link, no install.
+							</p>
+						</aside>
+					</section>
+
+					<!-- Down 2: architecture recap (many entry scripts -> one core) -->
+					<section>
+						<div class="arch">
+							<p class="eyebrow">Capture, Training, and Live Demo</p>
+							<p class="arch__lead">
+								Four scripts, one package underneath.
+							</p>
+							<div class="arch__hub">
+								<div class="arch__entries">
+									<div class="arch__entry">
+										<code>main.py</code>
+										<span class="arch__entry-role">Live demo</span>
+									</div>
+									<div class="arch__entry">
+										<code>collect.py</code>
+										<span class="arch__entry-role">Capture</span>
+									</div>
+									<div class="arch__entry">
+										<code>train.py</code>
+										<span class="arch__entry-role">Training</span>
+									</div>
+									<div class="arch__entry">
+										<code>inspect_data.py</code>
+										<span class="arch__entry-role">Dataset check</span>
+									</div>
+								</div>
+
+								<div class="arch__arrow">&darr;</div>
+
+								<div class="arch__core">
+									<code class="arch__core-name">nahual/</code>
+									<span class="arch__core-caption"
+										>Shared core &middot; landmarks &middot; features
+										&middot; models</span
+									>
+								</div>
+							</div>
+							<p class="arch__note">
+								Every entry point runs the <strong>same</strong> landmark,
+								feature, and model code, so what trains is exactly what
+								recognizes.
+							</p>
+						</div>
+						<aside class="notes">
+							<p>To close this section, a short architecture recap.</p>
+							<p>
+								Four entry scripts: main.py runs the real-time desktop demo,
+								collect.py runs the collector, train.py trains the
+								classifiers, and inspect_data.py prints the dataset sample
+								counts.
+							</p>
+							<p>
+								All four sit on top of the same nahual/ package: the same
+								landmark detection, the same feature extraction, the same
+								models. That is why what trains is exactly what recognizes.
+							</p>
+							<p>
+								That ties the whole workflow back into one picture before we
+								move on.
+							</p>
+						</aside>
+					</section>
 				</section>
 
 				<!-- ============================================================
-				     Layout 3 — Two-column comparison over a stat row
+				     §9 — Challenges Along the Way (The Real Story). Three
+				     Problem/Fix cards: two on the hand detection itself, one
+				     on serving it over the web. Card 2 carries the 9 -> 3
+				     dropped-frames metric as the slide's orange accent.
 				     ========================================================= -->
 				<section>
-					<div class="compare">
-						<h2 class="compare__heading">A comparison slide</h2>
-						<div class="compare__grid">
-							<div class="card">
-								<div class="card__label">Column one</div>
-								<h3>First concept</h3>
-								<p>
-									A couple of lines describing this side of the comparison
-									and what makes it distinct.
-								</p>
-								<div class="card__media">Media</div>
-							</div>
-							<div class="card card--alt">
-								<div class="card__label">Column two</div>
-								<h3>Second concept</h3>
-								<p>
-									The matching description for the other side, kept parallel
-									in length and structure.
-								</p>
-								<div class="card__media">Media</div>
-							</div>
-						</div>
-						<div class="stat-row">
-							<span><strong>21</strong> placeholder</span>
-							<span><strong>2</strong> placeholder</span>
-							<span><strong>30</strong> placeholder</span>
-						</div>
-					</div>
-				</section>
-
-				<!-- ============================================================
-				     Layout 4 — Pull quote (Georgia, never italic)
-				     ========================================================= -->
-				<section>
-					<div class="quote">
-						<p class="quote__mark">&ldquo;</p>
-						<p class="quote__text">
-							A placeholder quotation sits here, set in Georgia at display
-							size so it carries the slide on its own.
+					<div class="trials">
+						<p class="eyebrow">Challenges Along the Way</p>
+						<p class="trials__lead">
+							The smooth demo took real debugging to get there.
 						</p>
-						<p class="quote__attribution">Attribution &middot; Role</p>
+						<div class="trials__row">
+							<div class="trials__card">
+								<p class="trials__tag">
+									Challenge 1 &middot; Dialing in detection
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Problem</span>
+									MediaPipe's detection, presence, and tracking
+									confidences all interact. Too loose, the hand
+									flickers and false-fires; too strict, it never
+									appears. Finding one setup stable across lighting
+									and hand positions took real iteration.
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Fix</span>
+									Locked the balanced configuration into a single
+									shared config, so every tool sees the exact same
+									detection.
+								</p>
+							</div>
+
+							<div class="trials__card">
+								<p class="trials__tag">
+									Challenge 2 &middot; Lost hands in motion
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Problem</span>
+									Even with detection stable, fast motion still
+									dropped the hand mid-gesture, exactly when the
+									dynamic letters need it most.
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Fix</span>
+									Raised tracking sensitivity, interpolated the
+									remaining gaps, then retrained the dynamic
+									classifier on the cleaner motion data.
+								</p>
+								<p class="trials__metric">
+									9 &rarr; 3
+									<span class="trials__metric-caption"
+										>dropped frames per quick gesture</span
+									>
+								</p>
+							</div>
+
+							<div class="trials__card">
+								<p class="trials__tag">
+									Challenge 3 &middot; Worse on the web
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Problem</span>
+									Hosted, the demo felt worse than local. Latency
+									starved the model of frames and eroded confidence
+									below its threshold.
+								</p>
+								<p class="trials__line">
+									<span class="trials__line-label">Fix</span>
+									Instead of patching the network, moved
+									recognition fully into the browser. No round trip
+									per frame, and it predicts bit-identical to the
+									desktop app.
+								</p>
+							</div>
+						</div>
+						<p class="trials__note">
+							Two problems in the hand detection itself, one in how it
+							was served.
+							<strong>Sometimes you tune the settings, sometimes you
+							rethink the whole architecture.</strong>
+						</p>
 					</div>
+					<aside class="notes">
+						<p>Getting here was not a straight line.</p>
+						<p>
+							Challenge one was just getting MediaPipe to see the hand
+							reliably. Its detection, presence, and tracking
+							confidences all interact, and there was no obvious right
+							combination: too loose and the hand flickers and
+							false-fires, too strict and it drops out. It took real
+							iteration to find one setup stable across lighting and
+							hand positions, and I locked that into a single shared
+							config so every tool sees the exact same detection.
+						</p>
+						<p>
+							Challenge two is closely related, still the hand
+							detection: even with detection stable, fast motion still
+							dropped the hand mid-gesture, exactly where the dynamic
+							letters live. Tuning tracking sensitivity cut dropped
+							frames during a quick gesture from about nine down to
+							about three, and I filled the remaining gaps with
+							interpolation. Because that changed the motion data, I
+							retrained the dynamic classifier on the cleaner
+							sequences.
+						</p>
+						<p>
+							Challenge three was a different kind of problem. The web
+							demo felt worse hosted than it did locally. It turned out
+							to be network latency starving the model of frames and
+							quietly eroding its confidence below the threshold, not a
+							compute problem. Throttling and batching helped, but the
+							real fix was architectural: move recognition fully into
+							the browser, so there is no network round trip per frame.
+							I verified it predicts bit-identical to the desktop app.
+						</p>
+						<p>
+							The point: real problems, reasoned through. Sometimes you
+							tune the settings, sometimes you rethink the whole
+							architecture.
+						</p>
+					</aside>
 				</section>
 
 				<!-- ============================================================
-				     Layout 5 — Data slide
-				     Single series, every mark directly labelled.
+				     §10 — Built with Claude (The Real Story). Option B: the
+				     specific credit leads (ML design + real-time engineering);
+				     the maturity arc (vibe coding -> spec-driven workflow) is
+				     the body diagram and gets the framing note. Orange accent:
+				     the transition arrow.
 				     ========================================================= -->
 				<section>
-					<div class="data">
-						<h2 class="data__heading">A data slide</h2>
-						<p class="data__sub">
-							One series, direct labels on every bar. The orange ramp is
-							sequential, so it encodes magnitude rather than separate
-							categories.
+					<div class="craft">
+						<p class="eyebrow">Built with Claude</p>
+						<p class="craft__lead">
+							Claude helped design the machine learning and build the
+							real-time engineering.
 						</p>
-						<div class="chart">
-							<div class="bar">
-								<span class="bar__value">98</span>
-								<div class="bar__fill" style="height: 82%"></div>
-								<span class="bar__label">Label A</span>
+						<div class="craft__arc">
+							<div class="craft__stage">
+								<p class="craft__stage-tag">
+									Started as &middot; Vibe coding
+								</p>
+								<p class="craft__stage-desc">
+									Conversational prompts, Claude writing the code,
+									fast to a working prototype. Loose and
+									unstructured.
+								</p>
 							</div>
-							<div class="bar">
-								<span class="bar__value">91</span>
-								<div class="bar__fill" style="height: 74%"></div>
-								<span class="bar__label">Label B</span>
+
+							<div class="craft__arrow-wrap">
+								<div class="craft__arrow">&rarr;</div>
+								<span class="craft__arrow-label"
+									>the workflow matured</span
+								>
 							</div>
-							<div class="bar">
-								<span class="bar__value">86</span>
-								<div class="bar__fill" style="height: 66%"></div>
-								<span class="bar__label">Label C</span>
-							</div>
-							<div class="bar">
-								<span class="bar__value">74</span>
-								<div class="bar__fill" style="height: 52%"></div>
-								<span class="bar__label">Label D</span>
-							</div>
-							<div class="bar">
-								<span class="bar__value">61</span>
-								<div class="bar__fill" style="height: 38%"></div>
-								<span class="bar__label">Label E</span>
+
+							<div class="craft__result">
+								<p class="craft__result-tag">
+									Grew into &middot; Spec-driven development
+								</p>
+								<ul class="craft__list">
+									<li>Plan mode before any big change</li>
+									<li>Specialized agents for focused tasks</li>
+									<li>
+										Hooks that auto-format and check style on
+										every edit
+									</li>
+									<li>Project specs Claude follows every session</li>
+									<li>Memory that persists across sessions</li>
+								</ul>
 							</div>
 						</div>
-						<p class="data__footnote">Placeholder figures.</p>
+						<p class="craft__note">
+							And the project doubled as where I learned to work with
+							it, from a quick prototype to a disciplined,
+							<strong>spec-driven workflow</strong>.
+						</p>
 					</div>
+					<aside class="notes">
+						<p>
+							Specific credit, not a vague mention of AI assistance:
+							Claude helped design the machine learning and build the
+							real-time engineering work throughout this project.
+						</p>
+						<p>
+							But there is a second thing worth saying. This started
+							the way a lot of personal projects do, basically vibe
+							coding: conversational prompts, Claude writing the code,
+							quickly getting to something that worked, without much
+							structure.
+						</p>
+						<p>
+							Over time it grew into something much closer to real
+							spec-driven development: plan mode before big changes,
+							focused work handed to specialized agents, hooks that
+							auto-format and check the style on every edit, project
+							specs that Claude follows every session, and memory that
+							persists across sessions.
+						</p>
+						<p>
+							That is the real takeaway for anyone starting out: an
+							independent project like this is the ideal, low-stakes
+							place to learn how to actually work with Claude, from a
+							quick prototype all the way to a disciplined workflow.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     §11 — Current Limitations and Roadmap (What's Next).
+				     Two equal content cards: honest "Today" scope on the left,
+				     the forward "Roadmap" on the right. Closing note bridges to
+				     the ask in §12 (more signers, not more code).
+				     ========================================================= -->
+				<section>
+					<div class="road">
+						<p class="eyebrow">Current Limitations and Roadmap</p>
+						<p class="road__lead">
+							Honest about where it is today, and where it goes next.
+						</p>
+						<div class="road__cols">
+							<div class="road__card">
+								<p class="road__card-tag">
+									Today &middot; Where it stands
+								</p>
+								<ul class="road__list">
+									<li>
+										Recognizes individual letters
+										(fingerspelling), not full words, phrases,
+										or continuous signing yet.
+									</li>
+									<li>
+										Trained on data from a single signer so far.
+									</li>
+								</ul>
+							</div>
+
+							<div class="road__card">
+								<p class="road__card-tag">
+									Next &middot; The roadmap
+								</p>
+								<ul class="road__list">
+									<li>
+										Broaden the dataset across many more
+										signers.
+									</li>
+									<li>
+										Validate accuracy with native LSM signers
+										and the Deaf community.
+									</li>
+									<li>
+										Move from letters toward complete words and
+										full-body gestures.
+									</li>
+								</ul>
+							</div>
+						</div>
+						<p class="road__note">
+							The biggest gains now come from
+							<strong>more signers and more data</strong>, not more
+							code.
+						</p>
+					</div>
+					<aside class="notes">
+						<p>A quick, honest word on scope before the ask.</p>
+						<p>
+							Today, Nahual recognizes individual letters,
+							fingerspelling, not full words, phrases, or continuous
+							natural signing yet. And the dataset so far comes from a
+							single signer.
+						</p>
+						<p>
+							The roadmap from here: broaden the dataset across many
+							more signers, validate accuracy with native LSM signers
+							and members of the Deaf community, and over time move
+							from single letters toward complete words and full-body
+							gestures, not just the hand.
+						</p>
+						<p>
+							The honest takeaway: the biggest gains now come from more
+							signers and more data, not more code. Which is exactly
+							what I am about to ask for.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     §12 — Call to Action (Close). VERBATIM beat. Scannable QR
+				     (encodes https://nahual-lsm.onrender.com) in a media frame
+				     over an orange-ruled link card, beside the three asks. The
+				     closing line is the one orange display accent and calls back
+				     to the opener. URL shown without the protocol (reads cleaner
+				     and keeps the style checker's URL rule happy).
+				     ========================================================= -->
+				<section>
+					<div class="cta">
+						<p class="eyebrow">Call to Action</p>
+						<p class="cta__lead">Try it yourself, right now.</p>
+						<div class="cta__body">
+							<div class="cta__scan">
+								<div class="cta__qr">
+									<svg class="cta__qr-svg" viewBox="0 0 29 29" shape-rendering="crispEdges" role="img" aria-label="QR code linking to the Nahual web demo"><rect width="29" height="29" fill="#ffffff"></rect><path d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM10 0h1v1h-1zM11 0h1v1h-1zM12 0h1v1h-1zM13 0h1v1h-1zM14 0h1v1h-1zM18 0h1v1h-1zM20 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM25 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM15 1h1v1h-1zM18 1h1v1h-1zM19 1h1v1h-1zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM10 2h1v1h-1zM13 2h1v1h-1zM15 2h1v1h-1zM18 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM25 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM12 3h1v1h-1zM16 3h1v1h-1zM17 3h1v1h-1zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM16 7h1v1h-1zM18 7h1v1h-1zM19 7h1v1h-1zM20 7h1v1h-1zM1 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM8 8h1v1h-1zM9 8h1v1h-1zM11 8h1v1h-1zM13 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM19 8h1v1h-1zM20 8h1v1h-1zM21 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM25 8h1v1h-1zM27 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM13 9h1v1h-1zM16 9h1v1h-1zM18 9h1v1h-1zM19 9h1v1h-1zM23 9h1v1h-1zM24 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM1 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM17 10h1v1h-1zM21 10h1v1h-1zM22 10h1v1h-1zM23 10h1v1h-1zM25 10h1v1h-1zM26 10h1v1h-1zM1 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1zM12 11h1v1h-1zM17 11h1v1h-1zM20 11h1v1h-1zM23 11h1v1h-1zM24 11h1v1h-1zM28 11h1v1h-1zM1 12h1v1h-1zM2 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM14 12h1v1h-1zM16 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM25 12h1v1h-1zM27 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM11 13h1v1h-1zM16 13h1v1h-1zM18 13h1v1h-1zM22 13h1v1h-1zM24 13h1v1h-1zM26 13h1v1h-1zM28 13h1v1h-1zM2 14h1v1h-1zM3 14h1v1h-1zM6 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM16 14h1v1h-1zM17 14h1v1h-1zM18 14h1v1h-1zM19 14h1v1h-1zM22 14h1v1h-1zM23 14h1v1h-1zM25 14h1v1h-1zM28 14h1v1h-1zM1 15h1v1h-1zM2 15h1v1h-1zM5 15h1v1h-1zM7 15h1v1h-1zM11 15h1v1h-1zM12 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1zM15 15h1v1h-1zM16 15h1v1h-1zM19 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM24 15h1v1h-1zM25 15h1v1h-1zM26 15h1v1h-1zM27 15h1v1h-1zM0 16h1v1h-1zM4 16h1v1h-1zM6 16h1v1h-1zM7 16h1v1h-1zM9 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM0 17h1v1h-1zM8 17h1v1h-1zM10 17h1v1h-1zM13 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM19 17h1v1h-1zM20 17h1v1h-1zM24 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM0 18h1v1h-1zM1 18h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM4 18h1v1h-1zM6 18h1v1h-1zM7 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM13 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM17 18h1v1h-1zM18 18h1v1h-1zM19 18h1v1h-1zM20 18h1v1h-1zM23 18h1v1h-1zM25 18h1v1h-1zM28 18h1v1h-1zM0 19h1v1h-1zM1 19h1v1h-1zM3 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM10 19h1v1h-1zM11 19h1v1h-1zM13 19h1v1h-1zM19 19h1v1h-1zM21 19h1v1h-1zM22 19h1v1h-1zM23 19h1v1h-1zM26 19h1v1h-1zM27 19h1v1h-1zM28 19h1v1h-1zM0 20h1v1h-1zM1 20h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM13 20h1v1h-1zM15 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM26 20h1v1h-1zM8 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM14 21h1v1h-1zM15 21h1v1h-1zM17 21h1v1h-1zM18 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM0 22h1v1h-1zM1 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM12 22h1v1h-1zM14 22h1v1h-1zM15 22h1v1h-1zM16 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h1v1h-1zM9 23h1v1h-1zM10 23h1v1h-1zM14 23h1v1h-1zM17 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM28 23h1v1h-1zM0 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM14 24h1v1h-1zM16 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM0 25h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM8 25h1v1h-1zM10 25h1v1h-1zM14 25h1v1h-1zM17 25h1v1h-1zM18 25h1v1h-1zM23 25h1v1h-1zM27 25h1v1h-1zM0 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM9 26h1v1h-1zM11 26h1v1h-1zM12 26h1v1h-1zM14 26h1v1h-1zM15 26h1v1h-1zM20 26h1v1h-1zM21 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM26 26h1v1h-1zM27 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM13 27h1v1h-1zM18 27h1v1h-1zM21 27h1v1h-1zM24 27h1v1h-1zM25 27h1v1h-1zM26 27h1v1h-1zM28 27h1v1h-1zM0 28h1v1h-1zM1 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM9 28h1v1h-1zM11 28h1v1h-1zM14 28h1v1h-1zM18 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM22 28h1v1h-1zM23 28h1v1h-1zM24 28h1v1h-1z" fill="#000000"></path></svg>
+								</div>
+								<div class="cta__link">
+									<span class="cta__link-url">nahual-lsm.onrender.com</span>
+									<span class="cta__link-note">No install, just a link</span>
+								</div>
+							</div>
+
+							<div class="cta__ask">
+								<p class="cta__ask-title">Three things I&rsquo;d ask</p>
+								<ul class="cta__list">
+									<li>Scan it and try it yourself, right now.</li>
+									<li>Tell me where it got a letter wrong.</li>
+									<li>
+										Connect me with LSM speakers, interpreters, or
+										anyone in the Deaf community here in M&eacute;xico.
+									</li>
+								</ul>
+								<p class="cta__close">
+									Now you can carry one in your pocket.
+								</p>
+							</div>
+						</div>
+					</div>
+					<aside class="notes">
+						<p>
+							So here is what I would ask. Open your phone right now,
+							scan this, and try it yourself. No install, nothing to
+							set up, just a link.
+						</p>
+						<p>
+							Tell me where it got a letter wrong. And if you know an
+							LSM speaker, an interpreter, or anyone connected to the
+							Deaf community here in M&eacute;xico, connect me with
+							them. This gets better with more hands and more signers
+							than one person collecting data alone can provide.
+						</p>
+						<p>
+							We started because the tools around us never learned to
+							see a sign. Now you can carry one in your pocket.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     §13 — Q&A (Close). The invite is the base slide (shown
+				     standalone so the audience asks first); each <li> is a
+				     reveal.js fragment, so a right-arrow reveals one more
+				     pre-loaded question and they accumulate into a growing
+				     numbered list. Hidden fragments keep their layout space, so
+				     items fade in place with no reflow.
+				     ========================================================= -->
+				<section>
+					<div class="qa">
+						<p class="eyebrow">Q&amp;A</p>
+						<p class="qa__lead">What would you like to know?</p>
+						<p class="qa__sub">
+							Your questions first. A few I hear often are queued up
+							too.
+						</p>
+						<ul class="qa__list">
+							<li class="qa__item fragment">
+								<span class="qa__num">1</span>
+								<div class="qa__body">
+									<p class="qa__q">
+										Could this work for other sign languages, like
+										ASL?
+									</p>
+									<p class="qa__a">
+										The pipeline generalizes. Only the labels and
+										training data are LSM-specific, so ASL needs its
+										own dataset and a retrain, not a rewrite.
+									</p>
+								</div>
+							</li>
+							<li class="qa__item fragment">
+								<span class="qa__num">2</span>
+								<div class="qa__body">
+									<p class="qa__q">Is my camera feed private?</p>
+									<p class="qa__a">
+										Yes. MediaPipe and both classifiers run in your
+										browser. No video and no landmarks ever leave
+										your device.
+									</p>
+								</div>
+							</li>
+							<li class="qa__item fragment">
+								<span class="qa__num">3</span>
+								<div class="qa__body">
+									<p class="qa__q">
+										Why Random Forest instead of a neural network?
+									</p>
+									<p class="qa__a">
+										Strong accuracy on a small dataset, no GPU, and
+										quick to retrain as data grows. A neural network
+										would want far more data than collected so far.
+									</p>
+								</div>
+							</li>
+							<li class="qa__item fragment">
+								<span class="qa__num">4</span>
+								<div class="qa__body">
+									<p class="qa__q">Is it overfitted to your hand?</p>
+									<p class="qa__a">
+										A fair worry. Closed testing with several
+										different users still recognized the gestures
+										across different hand sizes and shapes.
+									</p>
+								</div>
+							</li>
+							<li class="qa__item fragment">
+								<span class="qa__num">5</span>
+								<div class="qa__body">
+									<p class="qa__q">
+										What happens if the hand is lost mid-gesture?
+									</p>
+									<p class="qa__a">
+										A short grace period tolerates a few missing
+										frames, and any gap gets interpolated, so a brief
+										dropout does not kill recognition.
+									</p>
+								</div>
+							</li>
+						</ul>
+					</div>
+					<aside class="notes">
+						<p>
+							This is the open floor. Take the audience's questions
+							first.
+						</p>
+						<p>
+							When it goes quiet, press the right arrow to reveal the
+							pre-loaded questions one at a time. Each keystroke adds
+							the next one to the list, so they accumulate as you go.
+						</p>
+						<p>
+							Answers, in order: (1) the pipeline generalizes, ASL just
+							needs its own dataset and a retrain, not a rewrite; (2)
+							yes, everything runs in the browser, no video or landmarks
+							leave the device; (3) Random Forest gives strong accuracy
+							on a small dataset with no GPU and fast retraining; (4)
+							closed testing with several users still recognized
+							gestures across different hand sizes and shapes; (5) a
+							grace period plus interpolation covers a brief dropout
+							mid-gesture.
+						</p>
+					</aside>
+				</section>
+
+				<!-- ============================================================
+				     End — closing slide. White, centered: a thank-you line and
+				     an accessibility quote. Minimal by request, so the only
+				     orange is the period on "Thank you".
+				     ========================================================= -->
+				<section>
+					<div class="thanks">
+						<p class="thanks__main">
+							Thank you<span class="thanks__dot">.</span>
+						</p>
+						<p class="thanks__quote">
+							&ldquo;Alone we can do so little; together we can do so
+							much.&rdquo;
+							<span class="thanks__attrib">Helen Keller</span>
+						</p>
+					</div>
+					<aside class="notes">
+						<p>Close on gratitude and one line about accessibility.</p>
+					</aside>
 				</section>
 			</div>
 		</div>

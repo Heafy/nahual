@@ -133,8 +133,10 @@
 
 .cover {
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2em;
 	height: 100%;
 	box-sizing: border-box;
 	padding: 2em 2.6em;
@@ -145,6 +147,26 @@
 		var(--bg-white) 100%
 	);
 	border-left: 10px solid var(--orange);
+}
+
+.cover__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+/* The same landmark mark used on the Hand Detection slide, reused here as a
+   quiet brand accent rather than a diagram: it previews what the deck is
+   about before any slide explains it. */
+.cover__art {
+	flex: 0 0 auto;
+	width: 17em;
+}
+
+.cover__art svg {
+	width: 100%;
+	height: auto;
+	display: block;
 }
 
 .cover__title {
@@ -243,6 +265,12 @@
 	justify-content: center;
 	overflow: hidden;
 	min-height: 0;
+}
+
+.collage__item img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 /* Photo 1: the larger square anchor on top, sized as a share of the collage
@@ -383,7 +411,8 @@
 	grid-template-columns: 1fr 1.05fr;
 }
 
-.origin--reverse .origin__media {
+.origin--reverse .origin__media,
+.origin--reverse .origin__media-stack {
 	order: -1;
 }
 
@@ -428,7 +457,8 @@
 	max-width: 15em;
 }
 
-.origin__media {
+.origin__media,
+.origin__media-tile {
 	position: relative;
 	min-height: 0;
 	background: var(--bg-peach-200);
@@ -447,6 +477,40 @@
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--text-muted);
+}
+
+.origin__media img,
+.origin__media-tile img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+/* The alphabet legend must stay fully readable: letterbox instead of
+   cropping so no letter gets cut off at the frame edge. Reused for the
+   portrait Nahual carving below, which crops badly in a landscape tile. */
+.origin__media--contain img,
+.origin__media-tile--contain img {
+	object-fit: contain;
+}
+
+/* Two frames sharing the single reserved media column, stacked instead of
+   a carousel. Only the top tile keeps the orange top-rule, echoing the
+   collage's single-anchor accent; repeating it on both would be heavy. */
+.origin__media-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+	height: 100%;
+	min-height: 0;
+}
+
+.origin__media-stack .origin__media-tile {
+	flex: 1;
+}
+
+.origin__media-stack .origin__media-tile:last-child {
+	border-top: 1px solid var(--line-grey);
 }
 
 /* -------------------------------------------------------------------------
@@ -533,11 +597,19 @@
 	overflow: hidden;
 }
 
-.split-card__clip video,
 .split-card__clip img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
+	object-fit: contain;
+}
+
+/* Contain, not cover: these are recordings of a real sign, so cropping into
+   the hand is worse than the letterbox bars a 16:9 clip leaves in a ~4:3
+   frame. */
+.split-card__clip video {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .split-card__clip-tag {
@@ -649,6 +721,12 @@
 	width: 56%;
 	height: auto;
 	max-height: 82%;
+}
+
+.detect__panel img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .detect__panel-tag {
@@ -992,298 +1070,911 @@
 }
 
 /* -------------------------------------------------------------------------
-   Layout 2 — Media-dominant with an overlapping text card
+   Proof (down 1) — "Capture, Training, and Live Demo": the end-to-end
+   workflow as a backdrop for the live demo. Collect -> Train -> Recognize
+   live, the last step running in two places (desktop, then the website).
+   Reuses the detect pipeline pattern: content-tier step cards, orange arrows.
    ---------------------------------------------------------------------- */
 
-.feature {
-	position: relative;
-	height: 100%;
-}
-
-.feature__media {
-	position: absolute;
-	inset: 0 0 3.2em 6em;
-	background: var(--bg-peach-200);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	overflow: hidden;
-}
-
-.feature__media svg {
-	width: 40%;
-	height: auto;
-	max-height: 82%;
-}
-
-.feature__tag {
-	position: absolute;
-	top: 0.9em;
-	right: 1.1em;
-	font-family: var(--font-text);
-	font-size: 0.34em;
-	font-weight: 700;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--orange);
-}
-
-.feature__card {
-	position: absolute;
-	left: 0;
-	bottom: 0;
-	width: 54%;
-	background: var(--bg-white);
-	border-top: 5px solid var(--orange);
-	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
-	padding: 1em 1.2em;
-	box-sizing: border-box;
-}
-
-.feature__card h2 {
-	font-family: var(--font-display);
-	font-size: 0.95em;
-	margin: 0 0 0.35em;
-}
-
-.feature__card p {
-	font-family: var(--font-text);
-	font-size: 0.56em;
-	line-height: 1.6;
-	margin: 0;
-	color: var(--text-muted);
-}
-
-/* -------------------------------------------------------------------------
-   Layout 3 — Two-column comparison over a stat row
-   ---------------------------------------------------------------------- */
-
-.compare {
+.proof {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 	box-sizing: border-box;
-	gap: 0.8em;
-	padding: 1.2em 1.4em;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
 	background: var(--bg-peach-100);
 }
 
-.compare__heading {
+.proof__lead {
 	font-family: var(--font-display);
-	font-size: 1.05em;
+	font-size: 1.15em;
+	font-weight: 700;
 	margin: 0;
+	max-width: 22em;
 }
 
-.compare__grid {
+/* The row fills the middle band (flex:1) but the cards stay compact: a single
+   content-sized track, centered vertically (align-content), with the cards
+   stretched to equal height inside it so all three orange top-rules line up. */
+.proof__flow {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr auto 1fr auto 1fr;
 	gap: 1em;
 	flex: 1;
 	min-height: 0;
+	align-items: stretch;
+	align-content: center;
 }
 
-.card {
+/* Workflow step: content-tier card (orange top-rule, no surrounding border),
+   matching the detect pipeline panels. Content stays top-aligned so the step
+   tags line up across the row; step 3 fills the extra space with its two
+   demo targets. */
+.proof__step {
 	background: var(--bg-white);
 	border-top: 5px solid var(--orange);
-	padding: 0.9em 1.05em;
+	padding: 0.85em 1em;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
 }
 
-.card--alt {
-	border-top-color: var(--viz-3);
-}
-
-.card__label {
+/* Muted uppercase step label: orange already carries the top-rules and
+   arrows, so the tags stay calm (matching the detect panel tags). */
+.proof__step-tag {
 	font-family: var(--font-text);
-	font-size: 0.36em;
-	font-weight: 700;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--orange);
-	margin-bottom: 0.6em;
-}
-
-.card--alt .card__label {
-	color: var(--text-muted);
-}
-
-.card h3 {
-	font-family: var(--font-display);
-	font-size: 0.8em;
-	font-weight: 700;
-	margin: 0 0 0.4em;
-	text-transform: none;
-}
-
-.card p {
-	font-family: var(--font-text);
-	font-size: 0.52em;
-	line-height: 1.6;
-	margin: 0 0 0.9em;
-	color: var(--text-muted);
-}
-
-.card__media {
-	flex: 1;
-	min-height: 0;
-	background: var(--bg-peach-100);
-	border: 1px solid var(--line-grey);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-family: var(--font-text);
-	font-size: 0.34em;
+	font-size: 0.4em;
 	font-weight: 700;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--text-muted);
+	margin: 0 0 0.5em;
 }
 
-.stat-row {
+.proof__step-desc {
+	font-family: var(--font-text);
+	font-size: 0.52em;
+	line-height: 1.55;
+	color: var(--text-black);
+	margin: 0;
+}
+
+/* The two demo targets sit inside the live step, below its description. */
+.proof__targets {
 	display: flex;
-	gap: 2.4em;
-	padding-top: 0.7em;
-	border-top: 1px solid var(--line-grey);
+	flex-wrap: wrap;
+	gap: 0.4em;
+	padding-top: 0.8em;
+}
+
+.proof__target {
 	font-family: var(--font-text);
 	font-size: 0.42em;
-	color: var(--text-muted);
-}
-
-/* Large data numbers are Arial, per the type standard. */
-.stat-row strong {
-	font-family: var(--font-text);
-	color: var(--text-black);
 	font-weight: 700;
+	padding: 0.35em 0.6em;
+	background: var(--bg-peach-100);
+	color: var(--text-black);
+	border: 1px solid var(--line-grey);
+	border-radius: 5px;
 }
 
-/* -------------------------------------------------------------------------
-   Layout 4 — Pull quote
-   ---------------------------------------------------------------------- */
-
-.quote {
+.proof__arrow {
 	display: flex;
-	flex-direction: column;
+	align-items: center;
 	justify-content: center;
-	height: 100%;
-	box-sizing: border-box;
-	padding: 2em 3em;
-	background: var(--bg-peach-200);
-}
-
-.quote__mark {
-	font-family: var(--font-display);
-	font-size: 3em;
-	font-weight: 700;
-	line-height: 0.7;
-	color: var(--orange);
-	margin: 0 0 0.1em;
-}
-
-/* Georgia, regular or bold, never italic. */
-.quote__text {
-	font-family: var(--font-display);
-	font-size: 1.35em;
-	font-weight: 400;
-	font-style: normal;
-	line-height: 1.35;
-	margin: 0;
-	max-width: 16em;
-	color: var(--text-black);
-}
-
-.quote__attribution {
 	font-family: var(--font-text);
-	font-size: 0.44em;
+	font-size: 1.5em;
 	font-weight: 700;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
+	color: var(--orange);
+}
+
+.proof__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
 	color: var(--text-muted);
-	margin: 1.6em 0 0;
-	padding-left: 0.9em;
-	border-left: 4px solid var(--orange);
+	margin: 0;
+	max-width: 44em;
+}
+
+.proof__note strong {
+	color: var(--text-black);
+	font-weight: 700;
 }
 
 /* -------------------------------------------------------------------------
-   Layout 5 — Data slide
+   Arch (down 2) — architecture recap: the four entry scripts all share one
+   nahual/ package underneath. Mirrors the forest "many -> one" diagram:
+   plain bordered entry tiles, an orange down arrow, an orange-ruled core.
+   Filenames use <code> (monospace is reserved for literal code).
    ---------------------------------------------------------------------- */
 
-.data {
+.arch {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 	box-sizing: border-box;
-	padding: 1.2em 1.4em;
-	gap: 0.5em;
+	padding: 1.2em 1.6em;
+	gap: 0.9em;
+	background: var(--bg-peach-100);
 }
 
-.data__heading {
+.arch__lead {
 	font-family: var(--font-display);
-	font-size: 1.05em;
+	font-size: 1.15em;
+	font-weight: 700;
 	margin: 0;
+	max-width: 22em;
 }
 
-.data__sub {
-	font-family: var(--font-text);
-	font-size: 0.46em;
-	line-height: 1.5;
-	color: var(--text-muted);
-	margin: 0 0 0.4em;
-	max-width: 30em;
-}
-
-.chart {
+.arch__hub {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.8em;
 	flex: 1;
 	min-height: 0;
-	display: flex;
-	align-items: flex-end;
-	gap: 1.1em;
-	padding: 0.6em 0 0;
-	border-bottom: 1px solid var(--line-grey);
 }
 
-.bar {
-	flex: 1;
+.arch__entries {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.7em;
+	width: 100%;
+}
+
+/* Entry tile: the "many". Plain white bordered tile, like a forest tree. */
+.arch__entry {
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	border-radius: 6px;
+	padding: 0.8em 0.5em;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
 	align-items: center;
-	height: 100%;
-	gap: 0.35em;
+	gap: 0.3em;
+	text-align: center;
 }
 
-/* Every mark is directly labelled: the ramp's lighter steps sit below 3:1
-   against the surface, so labels are required, not optional. Direct labels
-   also beat a legend on a projected slide. */
-.bar__value {
+.arch__entry code {
+	font-family: var(--r-code-font);
+	font-size: 0.5em;
+	font-weight: 700;
+	color: var(--text-black);
+}
+
+.arch__entry-role {
 	font-family: var(--font-text);
-	font-size: 0.62em;
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.arch__arrow {
+	font-family: var(--font-text);
+	font-size: 1.2em;
+	font-weight: 700;
+	color: var(--orange);
+	line-height: 1;
+}
+
+/* Core: the "one" package they all share. Content-tier card like the forest
+   result, so the orange top-rule marks it as the payoff of the diagram. */
+.arch__core {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25em;
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.7em 1.8em;
+}
+
+.arch__core-name {
+	font-family: var(--r-code-font);
+	font-size: 0.95em;
 	font-weight: 700;
 	color: var(--text-black);
 	line-height: 1;
 }
 
-.bar__fill {
-	width: 100%;
-	background: var(--viz-1);
-	border-radius: 4px 4px 0 0;
-}
-
-.bar__label {
+.arch__core-caption {
 	font-family: var(--font-text);
-	font-size: 0.38em;
+	font-size: 0.36em;
 	font-weight: 700;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--text-muted);
-	line-height: 1.2;
+}
+
+.arch__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 44em;
+}
+
+.arch__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Trials (§9) — "Challenges Along the Way". Three content-tier cards in a
+   row, each a Problem/Fix pair, matching the proof step cards (orange
+   top-rule, no surrounding border). The two hand-detection challenges sit
+   first; the web challenge is the third. Card 2 carries the slide's single
+   orange accent: the 9 -> 3 dropped-frames before/after, pinned to the card
+   foot as a display-size number.
+   ---------------------------------------------------------------------- */
+
+.trials {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.trials__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 30em;
+}
+
+/* Content-sized row, centered vertically, cards stretched to equal height so
+   the three orange top-rules line up (same recipe as .proof__flow). */
+.trials__row {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1em;
+	flex: 1;
+	min-height: 0;
+	align-items: stretch;
+	align-content: center;
+}
+
+.trials__card {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.85em 1em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55em;
+	box-sizing: border-box;
+}
+
+.trials__tag {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.trials__line {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-black);
+	margin: 0;
+}
+
+/* Inline "Problem" / "Fix" lead-in: muted uppercase, so it labels the line
+   without competing with the body text or the orange metric. */
+.trials__line-label {
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-right: 0.6em;
+}
+
+/* The slide's one orange accent: the before/after metric, pushed to the card
+   foot (margin-top: auto) so it anchors challenge 2 as the payoff line. */
+.trials__metric {
+	margin: auto 0 0;
+	font-family: var(--font-display);
+	font-size: 0.95em;
+	font-weight: 700;
+	color: var(--orange);
+	line-height: 1;
+}
+
+.trials__metric-caption {
+	display: block;
+	font-family: var(--font-text);
+	font-size: 0.36em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-top: 0.45em;
+}
+
+.trials__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 48em;
+}
+
+.trials__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Craft (§10) — "Built with Claude". Option B: the specific credit leads
+   (the plain Georgia lead line), and the body is a before -> after arc:
+   a humble bordered "vibe coding" tile, an orange transition arrow (the
+   slide's one accent), and the matured spec-driven workflow as the
+   orange-ruled result, same neutral -> orange language as forest / arch.
+   ---------------------------------------------------------------------- */
+
+.craft {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.craft__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 26em;
+}
+
+/* Right column is wider to hold the practice list. */
+.craft__arc {
+	display: grid;
+	grid-template-columns: 1fr auto 1.5fr;
+	gap: 1.1em;
+	flex: 1;
+	min-height: 0;
+	align-items: center;
+	align-content: center;
+}
+
+/* "Started as": plain white bordered tile, the calm starting point. */
+.craft__stage {
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	border-radius: 6px;
+	padding: 0.85em 1em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+}
+
+.craft__stage-tag {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.craft__stage-desc {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-black);
+	margin: 0;
+}
+
+/* Orange transition: arrow stacked over its label. */
+.craft__arrow-wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3em;
+}
+
+.craft__arrow {
+	font-family: var(--font-text);
+	font-size: 1.6em;
+	font-weight: 700;
+	color: var(--orange);
+	line-height: 1;
+}
+
+.craft__arrow-label {
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
 	text-align: center;
 }
 
-.data__footnote {
+/* "Grew into": content-tier card, orange top-rule marks the matured payoff. */
+.craft__result {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.85em 1.1em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55em;
+}
+
+.craft__result-tag {
 	font-family: var(--font-text);
-	font-size: 0.36em;
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
 	color: var(--text-muted);
-	margin: 0.6em 0 0;
+	margin: 0;
+}
+
+.craft__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.45;
+	color: var(--text-black);
+}
+
+.craft__list li {
+	position: relative;
+	padding-left: 1.1em;
+	margin-bottom: 0.3em;
+}
+
+.craft__list li:last-child {
+	margin-bottom: 0;
+}
+
+/* Amber square marker: tertiary accent, non-text role (matches forest list). */
+.craft__list li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.45em;
+	width: 0.4em;
+	height: 0.4em;
+	background: var(--amber);
+}
+
+.craft__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 48em;
+}
+
+.craft__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Road (§11) — "Current Limitations and Roadmap". Two equal content cards,
+   honest "Today" scope beside the forward "Next" roadmap. Both orange
+   top-ruled (same tier as the §9 challenge cards) so the limitations read
+   as confident, not a lesser footnote. Amber square list markers match the
+   forest / craft lists.
+   ---------------------------------------------------------------------- */
+
+.road {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.road__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 26em;
+}
+
+/* Content-sized row, centered vertically, cards stretched to equal height so
+   the two orange top-rules line up (same recipe as .trials__row). */
+.road__cols {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.1em;
+	flex: 1;
+	min-height: 0;
+	align-items: stretch;
+	align-content: center;
+}
+
+.road__card {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.95em 1.2em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6em;
+	box-sizing: border-box;
+}
+
+.road__card-tag {
+	font-family: var(--font-text);
+	font-size: 0.4em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.road__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-black);
+}
+
+.road__list li {
+	position: relative;
+	padding-left: 1.1em;
+	margin-bottom: 0.45em;
+}
+
+.road__list li:last-child {
+	margin-bottom: 0;
+}
+
+/* Amber square marker: tertiary accent, non-text role (matches forest list). */
+.road__list li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.5em;
+	width: 0.4em;
+	height: 0.4em;
+	background: var(--amber);
+}
+
+.road__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.55;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 48em;
+}
+
+.road__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   CTA (§12) — "Call to Action". The closer: a large scannable QR in a media
+   frame with a noticeable orange-ruled link card beneath it, beside the
+   three asks. The closing line ("carry one in your pocket") is the slide's
+   one orange display accent and calls back to the opener. The tall QR column
+   fills the slide so the close reads as deliberate, not empty.
+   ---------------------------------------------------------------------- */
+
+.cta {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.7em;
+	background: var(--bg-peach-100);
+}
+
+.cta__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 26em;
+}
+
+.cta__body {
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: center;
+	gap: 3.5em;
+	flex: 1;
+	min-height: 0;
+	align-items: center;
+	align-content: center;
+}
+
+/* Left column: the QR frame stacked over its link card, centered in the band. */
+.cta__scan {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: center;
+	gap: 0.7em;
+}
+
+/* Media frame (bordered tile tier) holding the QR. */
+.cta__qr {
+	background: var(--bg-white);
+	border: 1px solid var(--line-grey);
+	padding: 0.55em;
+	line-height: 0;
+	align-self: center;
+}
+
+.cta__qr-svg {
+	display: block;
+	width: 12em;
+	height: 12em;
+}
+
+/* Link card: content tier (orange top-rule) so the URL stands out below the
+   QR, exactly the "more noticeable" treatment the deck reserves for copy. */
+.cta__link {
+	background: var(--bg-white);
+	border-top: 5px solid var(--orange);
+	padding: 0.6em 0.9em;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25em;
+}
+
+.cta__link-url {
+	font-family: var(--font-text);
+	font-size: 0.72em;
+	font-weight: 700;
+	color: var(--text-black);
+}
+
+.cta__link-note {
+	font-family: var(--font-text);
+	font-size: 0.34em;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* Right column: the three asks and the closing line, spread to the height of
+   the QR so the two columns read as one full block, not a floating island. */
+.cta__ask {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 1.1em;
+	max-width: 15em;
+}
+
+.cta__ask-title {
+	font-family: var(--font-text);
+	font-size: 0.44em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.cta__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.58em;
+	line-height: 1.5;
+	color: var(--text-black);
+}
+
+.cta__list li {
+	position: relative;
+	padding-left: 1.1em;
+	margin-bottom: 0.6em;
+}
+
+.cta__list li:last-child {
+	margin-bottom: 0;
+}
+
+/* Amber square marker: tertiary accent, non-text role (matches forest list). */
+.cta__list li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.5em;
+	width: 0.4em;
+	height: 0.4em;
+	background: var(--amber);
+}
+
+/* The one orange display accent: the closing line, a callback to the opener. */
+.cta__close {
+	font-family: var(--font-display);
+	font-size: 1.35em;
+	font-weight: 700;
+	color: var(--orange);
+	line-height: 1.15;
+	margin: 0.5em 0 0;
+	max-width: 11em;
+}
+
+/* -------------------------------------------------------------------------
+   Q&A (§13) — the close. A standalone invite ("what would you like to know?")
+   is the resting state; each right-arrow reveals one more pre-loaded Q&A as
+   a reveal.js fragment, so the anticipated questions accumulate into a
+   growing numbered list. Hidden fragments keep their layout space, so items
+   fade in place with no reflow. Numbered orange chips are the slide's accent.
+   ---------------------------------------------------------------------- */
+
+.qa {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 0.5em;
+	background: var(--bg-peach-100);
+}
+
+.qa__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	margin: 0;
+	max-width: 24em;
+}
+
+.qa__sub {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 40em;
+}
+
+.qa__list {
+	list-style: none;
+	margin: 0.5em 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7em;
+	flex: 1;
+	min-height: 0;
+}
+
+.qa__item {
+	display: flex;
+	gap: 0.7em;
+	align-items: flex-start;
+}
+
+/* Numbered orange chip: the queue position, the slide's accent motif. */
+.qa__num {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.7em;
+	height: 1.7em;
+	background: var(--orange);
+	color: var(--bg-white);
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	font-weight: 700;
+	border-radius: 5px;
+}
+
+.qa__body {
+	display: flex;
+	flex-direction: column;
+}
+
+.qa__q {
+	font-family: var(--font-display);
+	font-size: 0.62em;
+	font-weight: 700;
+	color: var(--text-black);
+	line-height: 1.25;
+	margin: 0;
+}
+
+.qa__a {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.45;
+	color: var(--text-muted);
+	margin: 0.3em 0 0;
+	max-width: 48em;
+}
+
+.qa__a strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Thanks (end) — the final slide. White, edge to edge, everything centered:
+   just the thank-you line and an accessibility quote. Minimal on purpose, so
+   the one orange accent is a single detail: the period on "Thank you".
+   ---------------------------------------------------------------------- */
+
+.thanks {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	gap: 1em;
+	background: var(--bg-white);
+	text-align: center;
+}
+
+.thanks__main {
+	font-family: var(--font-display);
+	font-size: 2.4em;
+	font-weight: 700;
+	color: var(--text-black);
+	line-height: 1;
+	margin: 0;
+}
+
+/* The slide's single orange accent, kept to one small detail. */
+.thanks__dot {
+	color: var(--orange);
+}
+
+.thanks__quote {
+	font-family: var(--font-display);
+	font-size: 0.85em;
+	font-weight: 400;
+	color: var(--text-black);
+	line-height: 1.4;
+	margin: 0;
+	max-width: 20em;
+}
+
+.thanks__attrib {
+	display: block;
+	font-family: var(--font-text);
+	font-size: 0.44em;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-top: 1.4em;
 }
