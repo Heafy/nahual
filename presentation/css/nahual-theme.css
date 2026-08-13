@@ -1303,10 +1303,11 @@
 .proof {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	height: 100%;
 	box-sizing: border-box;
 	padding: 1.2em 1.6em;
-	gap: 0.7em;
+	gap: 0.9em;
 	background: var(--bg-peach-100);
 }
 
@@ -1325,10 +1326,7 @@
 	display: grid;
 	grid-template-columns: 1fr auto 1fr auto 1fr;
 	gap: 1em;
-	flex: 1;
-	min-height: 0;
 	align-items: stretch;
-	align-content: center;
 }
 
 /* Workflow step: content-tier card (orange top-rule, no surrounding border),
@@ -1364,25 +1362,6 @@
 	margin: 0;
 }
 
-/* The two demo targets sit inside the live step, below its description. */
-.proof__targets {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4em;
-	padding-top: 0.8em;
-}
-
-.proof__target {
-	font-family: var(--font-text);
-	font-size: 0.42em;
-	font-weight: 700;
-	padding: 0.35em 0.6em;
-	background: var(--bg-peach-100);
-	color: var(--text-black);
-	border: 1px solid var(--line-grey);
-	border-radius: 5px;
-}
-
 .proof__arrow {
 	display: flex;
 	align-items: center;
@@ -1407,126 +1386,109 @@
 	font-weight: 700;
 }
 
-/* -------------------------------------------------------------------------
-   Arch (down 2) — architecture recap: the four entry scripts all share one
-   nahual/ package underneath. Mirrors the forest "many -> one" diagram:
-   plain bordered entry tiles, an orange down arrow, an orange-ruled core.
-   Filenames use <code> (monospace is reserved for literal code).
-   ---------------------------------------------------------------------- */
-
-.arch {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	box-sizing: border-box;
-	padding: 1.2em 1.6em;
-	gap: 0.9em;
-	background: var(--bg-peach-100);
-}
-
-.arch__lead {
-	font-family: var(--font-display);
-	font-size: 1.15em;
-	font-weight: 700;
-	margin: 0;
-	max-width: 22em;
-}
-
-.arch__hub {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 0.8em;
-	flex: 1;
-	min-height: 0;
-}
-
-.arch__entries {
+/* The real entry script for each step, directly underneath its card. Same
+   flat recipe as .proof__step (white, no border, no radius) but with a
+   muted top-rule instead of orange: these are supporting detail, not the
+   step itself. Reuses .proof__flow's five-column track (three 1fr slots,
+   two auto arrow gaps) via explicit grid-column placement so each tile
+   lines up under its matching step card without needing empty spacer
+   elements in the arrow gaps. */
+.proof__entries {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 0.7em;
-	width: 100%;
+	grid-template-columns: 1fr auto 1fr auto 1fr;
+	gap: 1em;
 }
 
-/* Entry tile: the "many". Plain white bordered tile, like a forest tree. */
-.arch__entry {
+.proof__entries > :nth-child(1) {
+	grid-column: 1;
+}
+
+.proof__entries > :nth-child(2) {
+	grid-column: 3;
+}
+
+.proof__entries > :nth-child(3) {
+	grid-column: 5;
+}
+
+.proof__entry {
 	background: var(--bg-white);
-	border: 1px solid var(--line-grey);
-	border-radius: 6px;
-	padding: 0.8em 0.5em;
+	border-top: 3px solid var(--line-grey);
+	padding: 0.5em 0.6em;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.3em;
+	gap: 0.2em;
 	text-align: center;
+	box-sizing: border-box;
 }
 
-.arch__entry code {
+.proof__entry code {
 	font-family: var(--r-code-font);
-	font-size: 0.6em;
+	font-size: 0.5em;
 	font-weight: 700;
 	color: var(--text-black);
 }
 
-.arch__entry-role {
+.proof__entry-role {
 	font-family: var(--font-text);
-	font-size: 0.34em;
+	font-size: 0.32em;
 	font-weight: 700;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--text-muted);
 }
 
-.arch__arrow {
+/* Step 3 has two scripts (main.py, inspect_data.py), so its column holds a
+   pair of entry tiles side by side instead of one. */
+.proof__entry-group {
+	display: flex;
+	gap: 0.5em;
+}
+
+.proof__entry-group .proof__entry {
+	flex: 1;
+}
+
+.proof__core-arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	font-family: var(--font-text);
-	font-size: 1.2em;
+	font-size: 1.1em;
 	font-weight: 700;
 	color: var(--orange);
 	line-height: 1;
 }
 
-/* Core: the "one" package they all share. Content-tier card like the forest
-   result, so the orange top-rule marks it as the payoff of the diagram. */
-.arch__core {
+/* The "one" package every entry script sits on. Same flat recipe, orange
+   top-rule marks it as the payoff, matching the forest result card. */
+.proof__core {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	align-self: center;
 	gap: 0.25em;
 	background: var(--bg-white);
 	border-top: 5px solid var(--orange);
-	padding: 0.7em 1.8em;
+	padding: 0.5em 1.6em;
 }
 
-.arch__core-name {
+.proof__core-name {
 	font-family: var(--r-code-font);
-	font-size: 0.95em;
+	font-size: 0.8em;
 	font-weight: 700;
 	color: var(--text-black);
 	line-height: 1;
 }
 
-.arch__core-caption {
+.proof__core-caption {
 	font-family: var(--font-text);
-	font-size: 0.36em;
+	font-size: 0.32em;
 	font-weight: 700;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--text-muted);
-}
-
-.arch__note {
-	font-family: var(--font-text);
-	font-size: 0.6em;
-	line-height: 1.55;
-	color: var(--text-muted);
-	margin: 0;
-	max-width: 44em;
-}
-
-.arch__note strong {
-	color: var(--text-black);
-	font-weight: 700;
 }
 
 /* -------------------------------------------------------------------------
@@ -1610,7 +1572,7 @@
    foot (margin-top: auto) so it anchors challenge 2 as the payoff line. */
 .trials__metric {
 	margin: auto 0 0;
-	font-family: var(--font-display);
+	font-family: var(--font-text);
 	font-size: 0.95em;
 	font-weight: 700;
 	color: var(--orange);
@@ -2077,15 +2039,6 @@
 	font-weight: 700;
 	margin: 0;
 	max-width: 24em;
-}
-
-.qa__sub {
-	font-family: var(--font-text);
-	font-size: 0.6em;
-	line-height: 1.5;
-	color: var(--text-muted);
-	margin: 0;
-	max-width: 40em;
 }
 
 .qa__list {
