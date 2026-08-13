@@ -78,12 +78,32 @@ reads a hand the way a microphone reads a voice.
 
 ### 6. Machine Learning and Random Forest (~2 min) — TALKING POINTS
 
-- Landmarks alone don't say which letter they are, something has to decide.
-- The algorithm: Random Forest, many decision trees voting together.
-- Why Random Forest: solid accuracy without needing a huge dataset, no GPU,
-  straightforward to retrain as more data comes in.
-- Two Random Forest models, not one, matching the static/dynamic split from
-  a moment ago: one for poses, one for motion.
+A decision tree is a supervised learning algorithm used for classification and regression tasks.
+Consists of a root node, branches and leaf nodes. 
+
+A decision tree split the dataset based on feature values to create pure subsets of the items in
+a group that belongs to the same class. Asking different questions. 
+For example:
+1. Root node: Is the index fingertip higher than this line?
+    Yes: Pass to internal node
+    No: Go to a different question
+2. Internal node:  Is the thumb touching the middle finger?
+   Yes: It's letter b
+
+The three builds itself during training, every questions thries thousand of possibilities and 
+keeps the ones that best separates the letters that still in play until it ends on a single answer and 
+it's how you would describe a hand sign: Thumb up, index and middle extended, that fingers are together. 
+A tree learns the same kind or rule just measured instead of described.
+
+But a single tree only memorize, give it 200 photos and it learn your hand, then fails on someone else.
+Fix it using 200 decision trees and make every one of them use random features on purpose. Each tree doesn't look all the features at once. It picks a few random on how to split the data. So the trees stay different from each other.
+
+Now each three making his own predition based on what it learned from its part of the data. And each 
+single vote create confidencence. The forest answer independently and the system averages their answers.
+If 190 trees saying "B" is high confidence around 95% of them. That confidence show how much the trees agree.I set the confidence threshold at 65% agreement for static letters, and 40% for the moving ones — motion is harder to pin down frame by frame, so I gave it more room.
+
+Why this model, because it trains on seconds on a Macbook, no GPU, no cloud resources, it can run fast
+enough for live video in with low device requirements and it's inspectable so when two letters get confused I can see exactly which pair and why.
 
 ---
 

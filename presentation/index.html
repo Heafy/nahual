@@ -75,6 +75,23 @@
 							</svg>
 						</div>
 					</div>
+					<aside class="notes">
+						<p>
+							Good morning, good afternoon, thank you for having me. My
+							name is Jorge, and I want to walk you through a personal
+							project I've been building for the past few months called
+							Nahual. It started as a way to combine two things I care
+							about: accessibility and hands-on machine learning, and
+							also this is my first Python project, so take it easy on
+							me.
+						</p>
+						<p>
+							Before we start, one disclaimer: this is not a gen AI
+							demo. No code generation for the output, no LLM involved,
+							yet. What I'll show you today is computer vision and
+							machine learning. Hope you'll find it interesting.
+						</p>
+					</aside>
 				</section>
 
 				<!-- ============================================================
@@ -113,11 +130,29 @@
 									/>
 								</div>
 								<div class="collage__item">
-									<span class="collage__tag">Photo 4</span>
+									<img
+										src="media/intro/photo-4.jpg"
+										alt="A wall covered in dozens of race medals hanging from ribbons"
+									/>
 								</div>
 							</div>
 						</div>
 					</div>
+					<aside class="notes">
+						<p>
+							I've been at Kunai for almost two years now. I started
+							out on a project with Capital One, and right now I'm on
+							the bench, which has given me the free time to build
+							things like this.
+						</p>
+						<p>
+							Outside of work, I'm a cars-and-coffee guy, I can talk
+							about either one for hours, for free. I've also got two
+							cats and a dog, and I'm into casual jogging and social
+							runs, which is where most of these medals on the wall
+							came from.
+						</p>
+					</aside>
 				</section>
 
 				<!-- ============================================================
@@ -126,12 +161,14 @@
 				<section>
 					<div class="statement">
 						<p class="eyebrow">Accessibility</p>
+						<p class="statement__sub">
+							Voice assistants listen. <br>
+							Captions transcribe. <br>
+							Dictation types.
+						</p>
 						<h2 class="statement__hero">
 							None of it understands a <span class="accent">sign</span>.
 						</h2>
-						<p class="statement__sub">
-							Voice assistants listen. Captions transcribe. Dictation types.
-						</p>
 					</div>
 					<aside class="notes">
 						<p>
@@ -141,14 +178,14 @@
 							daily by the Deaf community across the country.
 						</p>
 						<p>
-							And yet, look at the technology around us. Voice assistants
+							And look at the technology around us. Voice assistants
 							that listen. Captions that transcribe. Dictation that types
 							what we say. All of it was built to understand speech, or
 							text. None of it understands a sign.
 						</p>
 						<p>
-							That gap has been sitting there the whole time. This is
-							Nahual: a tool that reads a hand the way a microphone reads a
+							That gap has been sitting there the whole time and was the motivation
+							for creating Nahual, a tool that reads a hand the way a microphone reads a
 							voice.
 						</p>
 					</aside>
@@ -185,11 +222,11 @@
 						</div>
 						<aside class="notes">
 							<p>
-								Started from a 1:1 with my manager, Pau Rico. She was
+								Started from a 1:1 with my manager, shootout to Pau Rico. She is
 								learning LSM, and I'd always been curious about learning it
 								too, somewhere in that conversation the idea clicked: could
 								a machine actually recognize the gestures for a sign
-								language? And I took that personally.
+								language? And like the meme: I took that personally.
 							</p>
 						</aside>
 					</section>
@@ -227,6 +264,7 @@
 						</div>
 						<aside class="notes">
 							<p>
+								In case you are wondering why I decided to called it like this.
 								A Nahual, a figure from Mesoamerican folklore, a
 								shapeshifter entity to transform and shift between forms.
 								Fitting, since the whole job of this tool is translating one
@@ -234,8 +272,8 @@
 								(letters and text).
 							</p>
 							<p>
-								Quick path from first idea to a working prototype, no need
-								to dwell here, the "why" already landed in the opener.
+								My whole idea is to translate one for of communicating the hand shape
+								the motion into accesible communication.
 							</p>
 						</aside>
 					</section>
@@ -297,15 +335,18 @@
 						</p>
 					</div>
 					<aside class="notes">
-						<p>Not every letter in the LSM alphabet behaves the same way.</p>
+						<p>But first we have to understand the language, mot every letter in the LSM alphabet behaves the same way.</p>
 						<p>
 							Most letters are a held pose: show the hand, hold it, that's
-							the letter.
+							the letter. I classificate that as a static gestures.
 						</p>
-						<p>A handful only make sense as movement: J, K, Q, X, Z, Ñ.</p>
+						<p>On the other side what I called dynamic gestures. 
+							A handful only make sense as movement: J, K, Q, X, Z, Ñ.
+							This was the difficult part for the project.
+						</p>
 						<p>
-							This split is why there end up being two separate models later,
-							not one classifier stretched to cover both.
+							Ok, we have two sets, now what? Signs that we can understand and learn, 
+							but how do we teach a machine which gesture is which? 
 						</p>
 					</aside>
 				</section>
@@ -386,10 +427,22 @@
 						</p>
 					</div>
 					<aside class="notes">
-						<p>Before anything gets classified, the system has to see a hand at all.</p>
 						<p>
-							MediaPipe's HandLandmarker gives 21 points per hand, in 3D,
-							on every frame.
+							Before we go further, this is where the AI part begins.
+							Computer vision is the branch of AI that teaches a computer
+							how to understand images and video, turning pixels into
+							structured information, in this case, where a hand is and
+							how it's posed.
+						</p>
+						<p>
+							And for that I'm using Google MediaPipe, an open source
+							framework. It works for image classification, face
+							detection, full human body poses, but I'm using it for
+							detecting hand landmarks in an image. It takes in a
+							continuous stream of video and outputs the hand landmarks
+							and coordinates. As you can see, when we run it, it gives 21
+							hand landmark points per hand, in a 3D environment, per
+							frame.
 						</p>
 						<p>
 							Detection quality is tuned deliberately (tracking confidence),
@@ -402,117 +455,345 @@
 				</section>
 
 				<!-- ============================================================
-				     Machine Learning and Random Forest — decision trees vote,
-				     majority wins. Text left, voting diagram right.
+				     Machine Learning — vertical pair:
+				       down 1: Decision Trees (anatomy of a single tree)
+				       down 2: Random Forest (many trees voting)
 				     ========================================================= -->
 				<section>
-					<div class="forest">
-						<div class="forest__text">
-							<p class="eyebrow">Machine Learning &middot; Random Forest</p>
-							<p class="forest__lead">
-								Landmarks alone don't say which letter they are. Something
-								has to decide.
-							</p>
-							<ul class="forest__why">
-								<li>Solid accuracy on a modest dataset</li>
-								<li>No GPU needed</li>
-								<li>Quick to retrain as data grows</li>
-							</ul>
-							<p class="forest__note">
-								Two models, not one, matching the split from earlier: one
-								for <strong>static poses</strong>, one for
-								<strong>dynamic motion</strong>.
-							</p>
-						</div>
-						<div class="forest__vote">
-							<div class="forest__trees">
-								<div class="forest__tree">
-									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
-										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
-											<line x1="22" y1="10" x2="11" y2="30" />
-											<line x1="22" y1="10" x2="33" y2="30" />
-										</g>
-										<circle cx="22" cy="10" r="5" fill="#fd5108" />
-										<circle cx="11" cy="30" r="4.5" fill="#000000" />
-										<circle cx="33" cy="30" r="4.5" fill="#000000" />
+					<!-- Down 1: Decision Trees -->
+					<section>
+						<div class="dtree">
+							<div class="dtree__text">
+								<p class="eyebrow">Machine Learning &middot; Decision Trees</p>
+								<p class="dtree__lead">
+									Before the forest, a single tree: one yes/no question at a
+									time, until it lands on a letter.
+								</p>
+								<ul class="dtree__why">
+									<li>
+										Root and internal nodes each ask a yes/no question about
+										the hand
+									</li>
+									<li>Every answer narrows down which letters are still possible</li>
+									<li>A leaf node is the final answer</li>
+								</ul>
+								<p class="dtree__note">
+									Built during training: thousands of possible questions
+									tried, keeping whichever split separates the letters best.
+									But a single tree <strong>only memorizes</strong>. Show it
+									200 photos of one hand, and it fails on someone else's.
+								</p>
+							</div>
+							<div class="dtree__diagram">
+								<div class="dtree__canvas">
+									<svg class="dtree__lines" viewBox="0 0 300 150" aria-hidden="true">
+										<line x1="135" y1="18" x2="42" y2="67.5" />
+										<line x1="135" y1="18" x2="198" y2="67.5" />
+										<line x1="198" y1="67.5" x2="150" y2="123" />
+										<line x1="198" y1="67.5" x2="258" y2="123" />
 									</svg>
-									<span class="forest__tree-vote">A</span>
-								</div>
-								<div class="forest__tree">
-									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
-										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
-											<line x1="22" y1="10" x2="11" y2="30" />
-											<line x1="22" y1="10" x2="33" y2="30" />
-										</g>
-										<circle cx="22" cy="10" r="5" fill="#fd5108" />
-										<circle cx="11" cy="30" r="4.5" fill="#000000" />
-										<circle cx="33" cy="30" r="4.5" fill="#000000" />
-									</svg>
-									<span class="forest__tree-vote">A</span>
-								</div>
-								<div class="forest__tree">
-									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
-										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
-											<line x1="22" y1="10" x2="11" y2="30" />
-											<line x1="22" y1="10" x2="33" y2="30" />
-										</g>
-										<circle cx="22" cy="10" r="5" fill="#fd5108" />
-										<circle cx="11" cy="30" r="4.5" fill="#000000" />
-										<circle cx="33" cy="30" r="4.5" fill="#000000" />
-									</svg>
-									<span class="forest__tree-vote">S</span>
-								</div>
-								<div class="forest__tree">
-									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
-										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
-											<line x1="22" y1="10" x2="11" y2="30" />
-											<line x1="22" y1="10" x2="33" y2="30" />
-										</g>
-										<circle cx="22" cy="10" r="5" fill="#fd5108" />
-										<circle cx="11" cy="30" r="4.5" fill="#000000" />
-										<circle cx="33" cy="30" r="4.5" fill="#000000" />
-									</svg>
-									<span class="forest__tree-vote">A</span>
-								</div>
-								<div class="forest__tree">
-									<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
-										<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
-											<line x1="22" y1="10" x2="11" y2="30" />
-											<line x1="22" y1="10" x2="33" y2="30" />
-										</g>
-										<circle cx="22" cy="10" r="5" fill="#fd5108" />
-										<circle cx="11" cy="30" r="4.5" fill="#000000" />
-										<circle cx="33" cy="30" r="4.5" fill="#000000" />
-									</svg>
-									<span class="forest__tree-vote">A</span>
+									<div class="dtree__node dtree__node--root">
+										Index fingertip above this line?
+									</div>
+									<span class="dtree__edge-label dtree__edge-label--1">No</span>
+									<div class="dtree__leaf dtree__leaf--more dtree__leaf--no1">
+										&hellip; other questions
+									</div>
+									<span class="dtree__edge-label dtree__edge-label--2">Yes</span>
+									<div class="dtree__node dtree__node--internal">
+										Thumb touching middle finger?
+									</div>
+									<span class="dtree__edge-label dtree__edge-label--3">No</span>
+									<div class="dtree__leaf dtree__leaf--more dtree__leaf--no2">
+										&hellip; other questions
+									</div>
+									<span class="dtree__edge-label dtree__edge-label--4">Yes</span>
+									<div class="dtree__leaf dtree__leaf--answer">Letter B</div>
 								</div>
 							</div>
-							<div class="forest__arrow">&darr;</div>
-							<div class="forest__result">
-								<span class="forest__result-letter">A</span>
-								<span class="forest__result-caption">Majority vote</span>
+						</div>
+						<aside class="notes">
+							<p>
+								A decision tree is a supervised learning algorithm used for
+								classification and regression tasks, made of a root node,
+								branches, and leaf nodes.
+							</p>
+							<p>
+								It splits the dataset based on feature values, creating pure
+								subsets where every item belongs to the same class, by asking
+								different questions. For example: the root node asks, is the
+								index fingertip higher than this line? Yes passes to an
+								internal node, no goes to a different question. That internal
+								node asks, is the thumb touching the middle finger? Yes, it's
+								letter B.
+							</p>
+							<p>
+								The tree builds itself during training. Every question tries
+								thousands of possibilities and keeps whichever one best
+								separates the letters still in play, until it ends on a
+								single answer. It's the same kind of rule you'd use to
+								describe a hand sign yourself: thumb up, index and middle
+								extended, fingers together. A tree learns the same kind of
+								rule, just measured instead of described.
+							</p>
+							<p>
+								But a single tree only memorizes. Give it 200 photos and it
+								learns your hand, then fails on someone else's. The fix,
+								next: many decision trees, each judging on a random slice of
+								the data, a forest.
+							</p>
+						</aside>
+					</section>
+
+					<!-- Down 2: Random Forest -->
+					<section>
+						<div class="forest">
+							<div class="forest__text">
+								<p class="eyebrow">Machine Learning &middot; Random Forest</p>
+								<p class="forest__lead">
+									Fix it with many trees, each judging on a random slice of
+									the data.
+								</p>
+								<ul class="forest__why">
+									<li>
+										Solid accuracy on a modest, hand-labeled dataset, no need
+										for tens of thousands of examples per letter
+									</li>
+									<li>
+										Quick to retrain: add a few samples for a confused letter
+										and the whole model rebuilds in seconds
+									</li>
+									<li>
+										A simpler choice than a neural network on purpose, trading
+										a little peak accuracy for something fast to train and
+										easy to inspect when two letters get confused
+									</li>
+								</ul>
+								<p class="forest__note">
+									Two models, not one, matching the split from earlier: one
+									for <strong>static poses</strong>, one for
+									<strong>dynamic motion</strong>.
+								</p>
+							</div>
+							<div class="forest__vote">
+								<div class="forest__trees">
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">S</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">S</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">T</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+									<div class="forest__tree">
+										<svg viewBox="0 0 44 40" fill="none" aria-hidden="true">
+											<g stroke="#a1a8b3" stroke-width="2.5" stroke-linecap="round">
+												<line x1="22" y1="10" x2="11" y2="30" />
+												<line x1="22" y1="10" x2="33" y2="30" />
+											</g>
+											<circle cx="22" cy="10" r="5" fill="#fd5108" />
+											<circle cx="11" cy="30" r="4.5" fill="#000000" />
+											<circle cx="33" cy="30" r="4.5" fill="#000000" />
+										</svg>
+										<span class="forest__tree-vote">A</span>
+									</div>
+								</div>
+								<div class="forest__arrow">&darr;</div>
+								<div class="forest__result">
+									<span class="forest__result-letter">A</span>
+									<span class="forest__result-caption">Majority vote &middot; 80%</span>
+								</div>
 							</div>
 						</div>
-					</div>
-					<aside class="notes">
-						<p>
-							Landmarks alone don't say which letter they are, something has
-							to decide.
-						</p>
-						<p>
-							The algorithm is a Random Forest: many decision trees voting
-							together.
-						</p>
-						<p>
-							Why Random Forest: solid accuracy without needing a huge
-							dataset, no GPU, straightforward to retrain as more data comes
-							in.
-						</p>
-						<p>
-							Two Random Forest models, not one, matching the static/dynamic
-							split: one for poses, one for motion.
-						</p>
-					</aside>
+						<aside class="notes">
+							<p>
+								One tree memorizes. The fix is 200 decision trees, each one
+								using only a random subset of the features to decide how it
+								splits the data, on purpose. No tree ever sees the full
+								picture, so the trees stay different from each other.
+							</p>
+							<p>
+								Each tree makes its own prediction based on what it learned
+								from its part of the data, and the trees vote independently;
+								the system averages their answers. That agreement is the
+								confidence: if 190 out of 200 trees say "B", that's about 95%
+								confidence, showing how much the trees agree. The confidence
+								threshold is set at 65% agreement for static letters and 40%
+								for the moving ones, since motion is harder to pin down frame
+								by frame, so it gets more room.
+							</p>
+							<p>
+								Why Random Forest: it trains in seconds on a MacBook, no GPU,
+								no cloud resources, and runs fast enough for live video with
+								low device requirements. It's also inspectable, so when two
+								letters get confused, I can see exactly which pair and why.
+							</p>
+							<p>
+								Two Random Forest models, not one, matching the static/dynamic
+								split: one for poses, one for motion.
+							</p>
+						</aside>
+					</section>
 				</section>
 
 				<!-- ============================================================

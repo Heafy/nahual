@@ -113,7 +113,7 @@
 /* Small Arial label. Replaces the monospace eyebrow from the earlier draft. */
 .eyebrow {
 	font-family: var(--font-text);
-	font-size: 0.4em;
+	font-size: 0.48em;
 	font-weight: 700;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -383,7 +383,7 @@
 
 .statement__sub {
 	font-family: var(--font-text);
-	font-size: 0.56em;
+	font-size: 0.7em;
 	font-weight: 400;
 	line-height: 1.55;
 	color: var(--text-muted);
@@ -852,14 +852,14 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.7em;
+	gap: 0.5em;
 	min-height: 0;
 }
 
 .forest__trees {
 	display: grid;
 	grid-template-columns: repeat(5, 1fr);
-	gap: 0.4em;
+	gap: 0.3em;
 	width: 100%;
 }
 
@@ -867,21 +867,21 @@
 	background: var(--bg-white);
 	border: 1px solid var(--line-grey);
 	border-radius: 6px;
-	padding: 0.4em 0.2em;
+	padding: 0.3em 0.15em;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.25em;
+	gap: 0.2em;
 }
 
 .forest__tree svg {
-	width: 74%;
+	width: 66%;
 	height: auto;
 }
 
 .forest__tree-vote {
 	font-family: var(--font-text);
-	font-size: 0.44em;
+	font-size: 0.4em;
 	font-weight: 700;
 	color: var(--text-muted);
 }
@@ -919,6 +919,208 @@
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Decision Trees — anatomy of a single tree: root and internal nodes ask
+   yes/no questions, branches narrow the answer, a leaf ends it. Text left,
+   annotated tree diagram right. Nodes are rounded white cards, matching
+   .forest__tree; a single SVG behind them draws straight lines center to
+   center (the cards' opaque backgrounds cover the ends, same trick
+   .forest__tree uses with its dots). Card positions and line endpoints
+   share one 0-100 coordinate space so they line up: the SVG viewBox is
+   0 0 300 150 (10x the canvas's percentage grid) and each card's left/top
+   percent is that same point.
+   ---------------------------------------------------------------------- */
+
+.dtree {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.4em;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1.2em 1.6em;
+	align-items: stretch;
+	background: var(--bg-peach-100);
+}
+
+.dtree__text {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.dtree__lead {
+	font-family: var(--font-display);
+	font-size: 1.15em;
+	font-weight: 700;
+	line-height: 1.16;
+	margin: 0 0 0.7em;
+	max-width: 16em;
+}
+
+.dtree__why {
+	list-style: none;
+	margin: 0 0 0.9em;
+	padding: 0;
+	font-family: var(--font-text);
+	font-size: 0.52em;
+	line-height: 1.5;
+	color: var(--text-black);
+}
+
+.dtree__why li {
+	position: relative;
+	padding-left: 1.1em;
+	margin-bottom: 0.35em;
+}
+
+/* Amber square marker: tertiary accent, non-text role. */
+.dtree__why li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.5em;
+	width: 0.4em;
+	height: 0.4em;
+	background: var(--amber);
+}
+
+.dtree__note {
+	font-family: var(--font-text);
+	font-size: 0.5em;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0;
+	max-width: 24em;
+}
+
+.dtree__note strong {
+	color: var(--text-black);
+	font-weight: 700;
+}
+
+.dtree__diagram {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 0;
+}
+
+.dtree__canvas {
+	position: relative;
+	width: 30em;
+	height: 15em;
+}
+
+.dtree__lines {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.dtree__lines line {
+	stroke: var(--line-grey);
+	stroke-width: 1.5;
+}
+
+.dtree__node,
+.dtree__leaf {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	background: var(--bg-white);
+	border-radius: 8px;
+	text-align: center;
+	line-height: 1.3;
+}
+
+.dtree__node {
+	border: 1px solid var(--line-grey);
+	width: 9.5em;
+	padding: 0.5em 0.6em;
+	font-family: var(--font-text);
+	font-size: 0.42em;
+	font-weight: 700;
+	color: var(--text-black);
+}
+
+.dtree__node--root {
+	left: 45%;
+	top: 12%;
+}
+
+.dtree__node--internal {
+	left: 66%;
+	top: 45%;
+}
+
+.dtree__leaf {
+	font-family: var(--font-text);
+	padding: 0.5em 0.6em;
+}
+
+.dtree__leaf--more {
+	width: 8.5em;
+	border: 1px dashed var(--line-grey);
+	font-size: 0.36em;
+	font-weight: 700;
+	color: var(--text-muted);
+}
+
+.dtree__leaf--no1 {
+	left: 14%;
+	top: 45%;
+}
+
+.dtree__leaf--no2 {
+	left: 50%;
+	top: 82%;
+}
+
+.dtree__leaf--answer {
+	left: 86%;
+	top: 82%;
+	border-top: 4px solid var(--orange);
+	font-family: var(--font-display);
+	font-size: 0.6em;
+	font-weight: 700;
+	color: var(--text-black);
+	padding: 0.55em 1em;
+}
+
+.dtree__edge-label {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	background: var(--bg-peach-100);
+	padding: 0 0.35em;
+	font-family: var(--font-text);
+	font-size: 0.32em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.dtree__edge-label--1 {
+	left: 29.5%;
+	top: 28.5%;
+}
+
+.dtree__edge-label--2 {
+	left: 55.5%;
+	top: 28.5%;
+}
+
+.dtree__edge-label--3 {
+	left: 58%;
+	top: 63.5%;
+}
+
+.dtree__edge-label--4 {
+	left: 76%;
+	top: 63.5%;
 }
 
 /* -------------------------------------------------------------------------
