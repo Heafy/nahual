@@ -222,3 +222,6 @@ __marimo__/
 # The trained classifiers are committed so the Render/Docker web deploy can
 # bake them into the image (the server clones this repo and loads them at
 # startup). Retrain deliberately and commit the regenerated .pkl files.
+
+# macOS
+.DS_Store
