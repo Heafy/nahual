@@ -79,7 +79,7 @@
 	--r-main-font: var(--font-text);
 	--r-heading-font: var(--font-display);
 	--r-code-font: monospace;
-	--r-main-font-size: 30px;
+	--r-main-font-size: 22px;
 	--r-heading-text-transform: none;
 	--r-heading-font-weight: 700;
 	--r-heading-letter-spacing: -0.015em;
@@ -89,6 +89,17 @@
 	--r-link-color-dark: var(--orange);
 	--r-selection-background-color: var(--orange);
 	--r-selection-color: var(--bg-white);
+}
+
+/* The deck's master type scale. Every font-size below is an em relative to
+   this one value, so it is the single knob that resizes all the deck's text.
+   It has to be applied here: --r-main-font-size is a convention of the stock
+   reveal themes, and this deck loads reveal.css only (no stock theme), so
+   nothing else consumes the variable and .reveal would otherwise fall back to
+   the browser default of 16px. Raising it past ~22px overflows the tightest
+   slide (Decision Trees). */
+.reveal {
+	font-size: var(--r-main-font-size);
 }
 
 .reveal .slides section {
@@ -240,7 +251,7 @@
 
 .intro__text p {
 	font-family: var(--font-text);
-	font-size: 0.56em;
+	font-size: 0.672em;
 	line-height: 1.65;
 	color: var(--text-black);
 	margin: 0;
@@ -338,7 +349,7 @@
 	margin: 0 0 1.1em;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.62em;
+	font-size: 0.744em;
 	line-height: 1.7;
 	color: var(--text-black);
 	max-width: 28em;
@@ -435,7 +446,7 @@
 /* Arial supporting copy: setup or rationale, kept muted and secondary. */
 .origin__body {
 	font-family: var(--font-text);
-	font-size: 0.56em;
+	font-size: 0.672em;
 	line-height: 1.7;
 	color: var(--text-muted);
 	margin: 0 0 0.7em;
@@ -574,7 +585,7 @@
 
 .split-card__desc {
 	font-family: var(--font-text);
-	font-size: 0.52em;
+	font-size: 0.624em;
 	line-height: 1.55;
 	color: var(--text-black);
 	margin: 0;
@@ -632,7 +643,7 @@
 .chip {
 	font-family: var(--font-text);
 	font-weight: 700;
-	font-size: 0.5em;
+	font-size: 0.6em;
 	min-width: 2.1em;
 	padding: 0.3em 0.25em;
 	text-align: center;
@@ -648,7 +659,7 @@
 
 .split__footer {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-muted);
 	margin: 0;
@@ -763,7 +774,7 @@
 
 .detect__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -811,7 +822,7 @@
 	margin: 0 0 0.9em;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.52em;
+	font-size: 0.624em;
 	line-height: 1.5;
 	color: var(--text-black);
 }
@@ -835,7 +846,7 @@
 
 .forest__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-muted);
 	margin: 0;
@@ -964,7 +975,7 @@
 	margin: 0 0 0.9em;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.52em;
+	font-size: 0.624em;
 	line-height: 1.5;
 	color: var(--text-black);
 }
@@ -988,7 +999,7 @@
 
 .dtree__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-muted);
 	margin: 0;
@@ -1083,7 +1094,7 @@
 	top: 82%;
 	border-top: 4px solid var(--orange);
 	font-family: var(--font-display);
-	font-size: 0.6em;
+	font-size: 0.72em;
 	font-weight: 700;
 	color: var(--text-black);
 	padding: 0.55em 1em;
@@ -1270,7 +1281,7 @@
 
 .heur__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-muted);
 	margin: 0;
@@ -1347,7 +1358,7 @@
 
 .proof__step-desc {
 	font-family: var(--font-text);
-	font-size: 0.52em;
+	font-size: 0.624em;
 	line-height: 1.55;
 	color: var(--text-black);
 	margin: 0;
@@ -1384,7 +1395,7 @@
 
 .proof__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -1453,7 +1464,7 @@
 
 .arch__entry code {
 	font-family: var(--r-code-font);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	font-weight: 700;
 	color: var(--text-black);
 }
@@ -1506,7 +1517,7 @@
 
 .arch__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -1579,7 +1590,7 @@
 
 .trials__line {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-black);
 	margin: 0;
@@ -1619,7 +1630,7 @@
 
 .trials__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -1691,7 +1702,7 @@
 
 .craft__stage-desc {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-black);
 	margin: 0;
@@ -1748,7 +1759,7 @@
 	margin: 0;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.45;
 	color: var(--text-black);
 }
@@ -1776,7 +1787,7 @@
 
 .craft__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -1851,7 +1862,7 @@
 	margin: 0;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-black);
 }
@@ -1879,7 +1890,7 @@
 
 .road__note {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.55;
 	color: var(--text-muted);
 	margin: 0;
@@ -2005,7 +2016,7 @@
 	margin: 0;
 	padding: 0;
 	font-family: var(--font-text);
-	font-size: 0.58em;
+	font-size: 0.696em;
 	line-height: 1.5;
 	color: var(--text-black);
 }
@@ -2070,7 +2081,7 @@
 
 .qa__sub {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.5;
 	color: var(--text-muted);
 	margin: 0;
@@ -2105,7 +2116,7 @@
 	background: var(--orange);
 	color: var(--bg-white);
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	font-weight: 700;
 	border-radius: 5px;
 }
@@ -2117,7 +2128,7 @@
 
 .qa__q {
 	font-family: var(--font-display);
-	font-size: 0.62em;
+	font-size: 0.744em;
 	font-weight: 700;
 	color: var(--text-black);
 	line-height: 1.25;
@@ -2126,7 +2137,7 @@
 
 .qa__a {
 	font-family: var(--font-text);
-	font-size: 0.5em;
+	font-size: 0.6em;
 	line-height: 1.45;
 	color: var(--text-muted);
 	margin: 0.3em 0 0;
