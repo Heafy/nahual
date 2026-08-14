@@ -218,8 +218,8 @@
 
 .intro {
 	display: grid;
-	grid-template-columns: 1fr 4fr;
-	gap: 1.5em;
+	grid-template-columns: 17em 1fr;
+	gap: 0.7em;
 	height: 100%;
 	box-sizing: border-box;
 	padding: 1.2em 1.4em;
@@ -253,9 +253,13 @@
 	font-family: var(--font-text);
 	font-size: 0.672em;
 	line-height: 1.65;
-	color: var(--text-black);
-	margin: 0;
-	max-width: 18em;
+	color: var(--text-muted);
+	margin: 0 0 0.6em;
+	max-width: 24em;
+}
+
+.intro__text p:last-child {
+	margin-bottom: 0;
 }
 
 .collage {
@@ -1160,7 +1164,7 @@
 
 .heur__flow {
 	display: grid;
-	grid-template-columns: 1.15fr auto 1fr;
+	grid-template-columns: 0.85fr auto 1.35fr;
 	gap: 1em;
 	flex: 1;
 	min-height: 0;
@@ -1251,32 +1255,40 @@
 	color: var(--text-muted);
 }
 
-.heur-group__list {
-	list-style: none;
+/* Numbered feature-vector build: each row adds a piece and shows the
+   running total, so the count assembles in front of the audience. */
+.heur-group__build {
+	list-style: decimal;
 	margin: 0;
-	padding: 0;
+	padding-left: 1.1em;
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0.35em 0.9em;
+	flex-direction: column;
+	gap: 0.28em;
 	font-family: var(--font-text);
-	font-size: 0.46em;
+	font-size: 0.42em;
 	color: var(--text-black);
 }
 
-.heur-group__list li {
-	position: relative;
-	padding-left: 0.9em;
+.heur-group__build li {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.7em;
 }
 
-/* Amber square marker: tertiary accent, non-text role. */
-.heur-group__list li::before {
-	content: "";
-	position: absolute;
-	left: 0;
-	top: 0.45em;
-	width: 0.35em;
-	height: 0.35em;
-	background: var(--amber);
+.heur-group__build li::marker {
+	color: var(--text-muted);
+	font-weight: 700;
+}
+
+.heur-build__desc {
+	flex: 1;
+}
+
+.heur-build__total {
+	font-weight: 700;
+	color: var(--orange);
+	white-space: nowrap;
 }
 
 .heur__note {
@@ -2024,13 +2036,39 @@
    ---------------------------------------------------------------------- */
 
 .qa {
-	display: flex;
-	flex-direction: column;
+	position: relative;
 	height: 100%;
 	box-sizing: border-box;
 	padding: 1.2em 1.6em;
-	gap: 0.5em;
 	background: var(--bg-peach-100);
+}
+
+/* Eyebrow + lead move as one unit: centered on the slide before any question
+   is asked, docked to the slide's normal top-left position (matching this
+   deck's usual eyebrow/lead spot) once the first fragment appears. Always
+   absolutely positioned (in both states) so top/left/transform can actually
+   transition; position itself cannot be animated. See the qa--started script
+   below, wired to Reveal's fragmentshown/fragmenthidden/slidechanged events. */
+.qa__intro {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	width: max-content;
+	max-width: calc(100% - 3.2em);
+	transition: top 0.6s ease, left 0.6s ease, transform 0.6s ease;
+}
+
+.qa--started .qa__intro {
+	top: 1.2em;
+	left: 1.6em;
+	transform: translate(0, 0);
+	align-items: flex-start;
+	text-align: left;
 }
 
 .qa__lead {
@@ -2043,13 +2081,13 @@
 
 .qa__list {
 	list-style: none;
-	margin: 0.5em 0 0;
-	padding: 0;
+	margin: 0;
+	padding: 4.6em 0 0;
 	display: flex;
 	flex-direction: column;
 	gap: 0.7em;
-	flex: 1;
-	min-height: 0;
+	height: 100%;
+	box-sizing: border-box;
 }
 
 .qa__item {

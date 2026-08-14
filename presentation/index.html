@@ -24,8 +24,9 @@
 						<div class="cover__text">
 							<p class="eyebrow">Nahual</p>
 							<h1 class="cover__title">
-								Teaching a machine to read a hand the way a microphone reads a
-								<span class="accent">voice</span>
+								Accessibility is not a nice to have, it&rsquo;s a
+								<span class="accent">must</span>. <br>
+								I taught software to read Mexican Sign Language.
 							</h1>
 							<div class="cover__underline"></div>
 							<div class="cover__meta">
@@ -101,11 +102,14 @@
 					<div class="intro">
 						<div class="intro__text">
 							<h2>Who Am I?</h2>
+							<p>Jorge Martinez.</p>
 							<p>
-								Jorge Martinez. <br>
-								Used to develop iOS apps, now eager to develop anything related to AI.<br>
-								Cars-and-coffee guy, always up for a race, running or driving.
+								Used to develop iOS apps in Swift, now on the bench and using the time to pivot toward Python, FastAPI, Agentic AI, and MCPs.
 							</p>
+							<p>
+								Courses and small side builds have always been how I learn, but this is the first one where I actually saw real potential.
+							</p>
+							<p>Cars-and-coffee guy, always up for a race, running or driving.</p>
 						</div>
 						<div class="collage">
 							<div class="collage__top">
@@ -141,9 +145,15 @@
 					<aside class="notes">
 						<p>
 							I've been at Kunai for almost two years now. I started
-							out on a project with Capital One, and right now I'm on
-							the bench, which has given me the free time to build
-							things like this.
+							out on a project with Capital One doing iOS development
+							in Swift, and right now I'm on the bench. I've been using
+							that time to pivot toward Python: FastAPI, Agentic AI,
+							MCPs, that whole world.
+						</p>
+						<p>
+							Courses and small side builds have always been how I
+							learn something new, but this is the first one where I
+							actually saw real potential in what I was building.
 						</p>
 						<p>
 							Outside of work, I'm a cars-and-coffee guy, I can talk
@@ -161,6 +171,9 @@
 				<section>
 					<div class="statement">
 						<p class="eyebrow">Accessibility</p>
+						<h2 class="statement__head">
+							Sign language is how millions of Deaf people communicate every day, in México and everywhere else. It has its own grammar, it isn&rsquo;t a translation of anything.
+						</h2>
 						<p class="statement__sub">
 							Voice assistants listen. <br>
 							Captions transcribe. <br>
@@ -169,24 +182,28 @@
 						<h2 class="statement__hero">
 							None of it understands a <span class="accent">sign</span>.
 						</h2>
+						<p class="statement__sub">
+							If software can listen, transcribe, and type, it can learn to see a sign too.
+						</p>
 					</div>
 					<aside class="notes">
 						<p>
-							Right now, in México, millions of people communicate every
-							day in LSM, Lengua de Señas Mexicana. It isn't a translation
-							of Spanish. It's its own language, with its own grammar, used
-							daily by the Deaf community across the country.
+							Here in México specifically, that language has a name: LSM,
+							Lengua de Señas Mexicana. It's used daily by the Deaf
+							community across the country, and I'll get into how I
+							personally got involved with it in a moment.
 						</p>
 						<p>
-							And look at the technology around us. Voice assistants
-							that listen. Captions that transcribe. Dictation that types
-							what we say. All of it was built to understand speech, or
-							text. None of it understands a sign.
+							Voice assistants, captions, dictation, all of that is
+							software already solving a communication problem, just for
+							speech and text. None of it was ever built for a sign.
 						</p>
 						<p>
-							That gap has been sitting there the whole time and was the motivation
-							for creating Nahual, a tool that reads a hand the way a microphone reads a
-							voice.
+							And that's the case for why this belongs in software
+							specifically. Not a hearing aid, not a translator service.
+							Software already does this kind of work, it just never
+							learned to see a sign. That's the gap Nahual is built to
+							close.
 						</p>
 					</aside>
 				</section>
@@ -420,7 +437,8 @@
 							</figure>
 						</div>
 						<p class="detect__note">
-							MediaPipe's HandLandmarker does the detection. The
+							Powered by Google MediaPipe &amp; OpenCV. MediaPipe's
+							HandLandmarker does the detection, and the
 							<strong>exact same settings</strong> run when collecting
 							training data and when recognizing live, so the model never
 							sees a different kind of input.
@@ -573,6 +591,9 @@
 									Two models, not one, matching the split from earlier: one
 									for <strong>static poses</strong>, one for
 									<strong>dynamic motion</strong>.
+								</p>
+								<p class="forest__note">
+									Powered by scikit-learn.
 								</p>
 							</div>
 							<div class="forest__vote">
@@ -911,42 +932,114 @@
 
 							<div class="heur__out">
 								<div class="heur-group">
-									<p class="heur-group__label">Static poses</p>
-									<ul class="heur-group__list">
-										<li>Normalized distances</li>
-										<li>Angles between fingers</li>
-									</ul>
+									<p class="heur-group__label">Static poses &middot; 81 features</p>
+									<ol class="heur-group__build">
+										<li>
+											<span class="heur-build__desc">21 points, 3 axes each</span>
+											<span class="heur-build__total">63</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 10 joint angles</span>
+											<span class="heur-build__total">73</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 8 key distances</span>
+											<span class="heur-build__total">81</span>
+										</li>
+									</ol>
 								</div>
 								<div class="heur-group heur-group--dynamic">
-									<p class="heur-group__label">Dynamic motion</p>
-									<ul class="heur-group__list">
-										<li>Speed</li>
-										<li>Direction</li>
-										<li>Trajectory shape</li>
-									</ul>
+									<p class="heur-group__label">Dynamic motion &middot; 521 features</p>
+									<ol class="heur-group__build">
+										<li>
+											<span class="heur-build__desc">20 points (wrist dropped), 3 axes</span>
+											<span class="heur-build__total">60</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 8 stats per channel</span>
+											<span class="heur-build__total">480</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 5 fingertip path lengths</span>
+											<span class="heur-build__total">485</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 20 first/last joint angles</span>
+											<span class="heur-build__total">505</span>
+										</li>
+										<li>
+											<span class="heur-build__desc">+ 16 first/last distances</span>
+											<span class="heur-build__total">521</span>
+										</li>
+									</ol>
 								</div>
 							</div>
 						</div>
 						<p class="heur__note">
-							The <strong>same feature-extraction code</strong> runs during
+							Powered by numpy. The <strong>same feature-extraction code</strong> runs during
 							data collection and during live use, so training and live
 							recognition always speak the same language.
 						</p>
 					</div>
 					<aside class="notes">
 						<p>
-							Random Forest doesn't take raw landmark points directly, it
-							needs meaningful features.
+							By the time the model runs, the camera image is gone.
+							MediaPipe reduces the hand to 21 points, and before any of
+							it reaches the classifier, every frame gets normalized: the
+							wrist moves to zero, and every point gets divided by palm
+							width. Same letter, same numbers, no matter who's signing or
+							how close they are to the camera.
 						</p>
 						<p>
-							This is the translation step: 21 raw points become normalized
-							distances and angles between fingers for static poses, and
-							speed, direction, and trajectory shape for dynamic motion.
+							Watch the static vector build, step by step, starting from
+							those 21 normalized points. <br>
+							1. Flatten the 21 points, three axes each, that's 63
+							numbers, the raw shape of the hand. Running total: 63. <br>
+							2. Add 10 finger joint angles, how bent each knuckle is. A
+							tree can ask, is this joint past 90 degrees, in one
+							question, instead of working it out from raw coordinates.
+							63 + 10 = 73. <br>
+							3. Add 8 key distances: thumb to each fingertip, wrist to
+							each fingertip. Catches pinches and extension directly. 73
+							+ 8 = 81.
 						</p>
 						<p>
-							Same feature-extraction code runs during data collection and
-							during live use, so training and the real world are always
-							speaking the same language.
+							One pose, 81 numbers. Now the dynamic vector, same idea,
+							spread across a whole clip instead of one instant. <br>
+							1. Drop the wrist, it's always zero after centering. That
+							leaves 20 points, three axes each, 60 channels to track
+							over the whole clip. <br>
+							2. For every one of those 60 channels, measure eight
+							things: its typical value, how much it swings, its lowest
+							and highest point, how fast it moves on average, how much
+							that speed varies, how far it ended up from where it
+							started, and how many times it changed direction. 60 times
+							8 is 480. <br>
+							3. Add 5 numbers, the total distance each fingertip
+							travelled. 480 + 5 = 485. <br>
+							4. Add the 10 joint angles from the very first frame and
+							the 10 from the very last frame, 20 numbers, so the model
+							knows the hand's exact shape at both ends. 485 + 20 = 505.
+							<br>
+							5. Add the same 8 key distances, first frame and last
+							frame, 16 numbers. 505 + 16 = 521.
+						</p>
+						<p>
+							One function builds both vectors, whether you're recording
+							training data or standing in front of the camera live, so
+							training and recognition are always speaking the exact same
+							language.
+						</p>
+						<p>
+							This is exactly what the Random Forest sees, nothing more.
+							Every tree question from the previous slide is just a check
+							against one column in this list. Thumb touching the middle
+							finger is feature 74. Index finger straight is feature 65.
+							For a moving letter, a zigzag versus a straight swipe comes
+							down to feature 442, the reversal count for the index
+							fingertip. The tree never sees a hand, only columns of
+							numbers, and it searches them for whichever threshold best
+							tells the letters apart.
 						</p>
 					</aside>
 				</section>
@@ -1408,8 +1501,10 @@
 				     ========================================================= -->
 				<section>
 					<div class="qa">
-						<p class="eyebrow">Q&amp;A</p>
-						<p class="qa__lead">What would you like to know?</p>
+						<div class="qa__intro">
+							<p class="eyebrow">Q&amp;A</p>
+							<p class="qa__lead">What would you like to know?</p>
+						</div>
 						<ul class="qa__list">
 							<li class="qa__item fragment">
 								<span class="qa__num">1</span>
@@ -1458,9 +1553,10 @@
 								<div class="qa__body">
 									<p class="qa__q">Is it overfitted to your hand?</p>
 									<p class="qa__a">
-										The features are normalized distances and angles, 
-										not raw hand size, so the model isn't tied to one person's 
-										proportions. Closed testing with several different
+										A fair worry, but the features are normalized
+										distances and angles, not raw hand size, so the
+										model isn't tied to one person's proportions to
+										begin with. Closed testing with several different
 										users still recognized the gestures across
 										different hand sizes and shapes.
 									</p>
@@ -1488,11 +1584,11 @@
 									</p>
 									<p class="qa__a">
 										A short grace period tolerates a few missing
-										frames. Interpolation fills the gap estimating
+										frames. Interpolation fills the gap by estimating
 										the hand's position between the last frame it saw
 										and the next one, so the motion sequence stays
-										smooth instead of jumping, and a small dropout
-										does not kill the hand recognition.
+										smooth instead of jumping, and a brief dropout
+										does not kill recognition.
 									</p>
 								</div>
 							</li>
@@ -1545,7 +1641,17 @@
 						</p>
 					</div>
 					<aside class="notes">
-						<p>Close on gratitude and one line about accessibility.</p>
+						<p>
+							Thank you for the time, the questions, and for thinking
+							about accessibility for a few minutes today.
+						</p>
+						<p>
+							The quote is Helen Keller's on purpose: she was
+							deaf-blind, so she lived the exact gap this project is
+							trying to close. Alone, I can label a few thousand
+							samples from one hand. Together, with more signers and
+							more data, this goes a lot further.
+						</p>
 					</aside>
 				</section>
 			</div>
@@ -1561,6 +1667,21 @@
 				margin: 0.08,
 				plugins: [RevealMarkdown, RevealNotes],
 			});
+
+			// Q&A slide: the eyebrow + lead sit centered on the slide until the
+			// first question is asked, then dock to their normal top-left spot.
+			// See .qa__intro / .qa--started in nahual-theme.css for the two
+			// positions; this just decides which one applies.
+			function updateQaIntroState() {
+				var qa = document.querySelector(".qa");
+				if (!qa) return;
+				var started = qa.querySelectorAll(".qa__item.fragment.visible").length > 0;
+				qa.classList.toggle("qa--started", started);
+			}
+			Reveal.on("fragmentshown", updateQaIntroState);
+			Reveal.on("fragmenthidden", updateQaIntroState);
+			Reveal.on("slidechanged", updateQaIntroState);
+			Reveal.on("ready", updateQaIntroState);
 		</script>
 	</body>
 </html>
