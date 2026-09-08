@@ -154,10 +154,11 @@ class GestureTrainer:
             config: TrainingConfig instance.  Defaults are used if None.
         """
         self.config = config or TrainingConfig()
-        self._model: Optional[Any] = None
-        self._label_encoder: Optional[LabelEncoder] = None
-        self._dynamic_model: Optional[Any] = None
-        self._dynamic_label_encoder: Optional[LabelEncoder] = None
+        self._models: Dict[str, Optional[Any]] = {"static": None, "dynamic": None}
+        self._label_encoders: Dict[str, Optional[LabelEncoder]] = {
+            "static": None,
+            "dynamic": None,
+        }
 
     # ------------------------------------------------------------------
     # Data loading
@@ -392,21 +393,32 @@ class GestureTrainer:
         )
         return x_train, x_test, y_train, y_test
 
-    def train(
+    def train(self, feature_matrix: np.ndarray, labels: List[str]) -> TrainingResult:
+        """Fit the static model on (feature_matrix, labels) and evaluate it. See _train."""
+        return self._train("static", feature_matrix, labels)
+
+    def train_dynamic(
+        self, feature_matrix: np.ndarray, labels: List[str]
+    ) -> TrainingResult:
+        """Fit the dynamic model on (feature_matrix, labels) and evaluate it. See _train."""
+        return self._train("dynamic", feature_matrix, labels)
+
+    def _train(
         self,
+        kind: str,
         feature_matrix: np.ndarray,
         labels: List[str],
     ) -> TrainingResult:
-        """Fit the model on training data and evaluate on the test split.
+        """Shared fit/evaluate/persist routine for the static and dynamic models.
 
         Internally calls split_train_test, fits a RandomForestClassifier on
         the training partition, evaluates on the test partition, and persists
-        the model to disk via save_model.
-
-        The Random Forest is configured with DEFAULT_RF_HYPERPARAMETERS merged
-        with any user-provided overrides in config.model_hyperparameters.
+        the model to disk.  The Random Forest is configured with
+        DEFAULT_RF_HYPERPARAMETERS merged with any user-provided overrides in
+        config.model_hyperparameters.
 
         Args:
+            kind: "static" or "dynamic" — selects which model slot to train.
             feature_matrix: numpy array of shape (N, F).
             labels: List of string labels, length N.
 
@@ -415,8 +427,9 @@ class GestureTrainer:
             confusion matrix, and the path of the saved model artifact.
         """
         # Fit the label encoder on the full label set so all classes are known.
-        self._label_encoder = LabelEncoder()
-        self._label_encoder.fit(labels)
+        label_encoder = LabelEncoder()
+        label_encoder.fit(labels)
+        self._label_encoders[kind] = label_encoder
 
         # Build the Random Forest with sensible defaults, allowing user overrides.
         hyperparameters = {
@@ -424,38 +437,43 @@ class GestureTrainer:
             **self.config.model_hyperparameters,
         }
         hyperparameters["random_state"] = self.config.random_seed
-        self._model = RandomForestClassifier(**hyperparameters)
+        model = RandomForestClassifier(**hyperparameters)
+        self._models[kind] = model
 
         logger.info(
-            "Training RandomForestClassifier with hyperparameters: %s",
+            "Training %s RandomForestClassifier with hyperparameters: %s",
+            kind,
             hyperparameters,
         )
 
         # Split, fit, evaluate.
         x_train, x_test, y_train, y_test = self.split_train_test(feature_matrix, labels)
-        self._model.fit(x_train, y_train)
+        model.fit(x_train, y_train)
 
-        # Evaluate on the held-out test set.
-        result = self.evaluate(x_test, y_test)
+        result = self._evaluate(kind, x_test, y_test)
+        result.model_output_path = self._save(kind)
 
-        # Persist the trained model.
-        saved_path = self.save_model()
-        result.model_output_path = saved_path
-
-        logger.info("Training complete.  Test accuracy: %.2f%%", result.accuracy * 100)
+        logger.info(
+            "%s training complete.  Test accuracy: %.2f%%",
+            kind.capitalize(),
+            result.accuracy * 100,
+        )
         return result
 
-    def evaluate(
+    def evaluate(self, feature_matrix: np.ndarray, labels: List[str]) -> TrainingResult:
+        """Evaluate the previously loaded static model on labelled data. See _evaluate."""
+        return self._evaluate("static", feature_matrix, labels)
+
+    def _evaluate(
         self,
+        kind: str,
         feature_matrix: np.ndarray,
         labels: List[str],
     ) -> TrainingResult:
-        """Evaluate a previously loaded model on arbitrary labelled data.
-
-        Computes accuracy, per-class precision / recall / f1, and a confusion
-        matrix against the provided ground-truth labels.
+        """Shared evaluation routine for the static and dynamic models.
 
         Args:
+            kind: "static" or "dynamic" — selects which model slot to evaluate.
             feature_matrix: numpy array of shape (N, F).
             labels: List of string labels, length N.
 
@@ -463,14 +481,15 @@ class GestureTrainer:
             TrainingResult dataclass with evaluation statistics.
 
         Raises:
-            RuntimeError: If no model has been loaded or trained yet.
+            RuntimeError: If the selected model has not been loaded or trained.
         """
-        if self._model is None:
+        model = self._models[kind]
+        if model is None:
             raise RuntimeError(
-                "No model available.  Train a model or load one from disk first."
+                f"No {kind} model available.  Train a model or load one from disk first."
             )
 
-        predictions = self._model.predict(feature_matrix)
+        predictions = model.predict(feature_matrix)
 
         accuracy = accuracy_score(labels, predictions)
 
@@ -478,9 +497,10 @@ class GestureTrainer:
         full_report = classification_report(
             labels, predictions, output_dict=True, zero_division=0
         )
+        label_encoder = self._label_encoders[kind]
         known_labels = (
-            list(self._label_encoder.classes_)
-            if self._label_encoder is not None
+            list(label_encoder.classes_)
+            if label_encoder is not None
             else sorted(set(labels))
         )
         per_class_report = {
@@ -498,115 +518,74 @@ class GestureTrainer:
         )
 
     # ------------------------------------------------------------------
-    # Dynamic gesture training
-    # ------------------------------------------------------------------
-
-    def train_dynamic(
-        self,
-        feature_matrix: np.ndarray,
-        labels: List[str],
-    ) -> TrainingResult:
-        """Fit a dynamic gesture model and evaluate on the test split.
-
-        Mirrors train() but operates on the dynamic model attributes
-        (_dynamic_model, _dynamic_label_encoder) so both static and
-        dynamic models can coexist within the same GestureTrainer instance.
-
-        Args:
-            feature_matrix: numpy array of shape
-                (N, DYNAMIC_STATISTICAL_FEATURE_LENGTH).
-            labels: List of string labels, length N.
-
-        Returns:
-            TrainingResult containing accuracy, per-class metrics,
-            confusion matrix, and the path of the saved model artifact.
-        """
-        self._dynamic_label_encoder = LabelEncoder()
-        self._dynamic_label_encoder.fit(labels)
-
-        hyperparameters = {
-            **DEFAULT_RF_HYPERPARAMETERS,
-            **self.config.model_hyperparameters,
-        }
-        hyperparameters["random_state"] = self.config.random_seed
-        self._dynamic_model = RandomForestClassifier(**hyperparameters)
-
-        logger.info(
-            "Training dynamic RandomForestClassifier with hyperparameters: %s",
-            hyperparameters,
-        )
-
-        x_train, x_test, y_train, y_test = self.split_train_test(feature_matrix, labels)
-        self._dynamic_model.fit(x_train, y_train)
-
-        # Evaluate using the dynamic model temporarily swapped into _model
-        # so that the existing evaluate() method works unchanged.
-        original_model = self._model
-        original_encoder = self._label_encoder
-        self._model = self._dynamic_model
-        self._label_encoder = self._dynamic_label_encoder
-
-        result = self.evaluate(x_test, y_test)
-
-        # Restore the static model references.
-        self._model = original_model
-        self._label_encoder = original_encoder
-
-        saved_path = self.save_dynamic_model()
-        result.model_output_path = saved_path
-
-        logger.info(
-            "Dynamic training complete.  Test accuracy: %.2f%%",
-            result.accuracy * 100,
-        )
-        return result
-
-    # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
 
     def save_model(self, output_path: Optional[Path] = None) -> Path:
-        """Persist the trained model to disk using joblib.
+        """Persist the trained static model to models/gesture_classifier.pkl. See _save."""
+        return self._save("static", output_path)
+
+    def save_dynamic_model(self, output_path: Optional[Path] = None) -> Path:
+        """Persist the trained dynamic model to models/dynamic_gesture_classifier.pkl. See _save."""
+        return self._save("dynamic", output_path)
+
+    def _save(self, kind: str, output_path: Optional[Path] = None) -> Path:
+        """Shared persistence routine for the static and dynamic models.
 
         Serialises a dictionary containing the model, label encoder, and
-        metadata so that load_model can fully restore the trainer state.
+        metadata so that _load can fully restore the trainer state.
 
         Args:
-            output_path: Override the default output path.  If None,
-                the path is derived from config.model_output_directory
-                as ``models/gesture_classifier.pkl``.
+            kind: "static" or "dynamic" — selects which model slot to save.
+            output_path: Override the default output path.
 
         Returns:
             The path the model was saved to.
 
         Raises:
-            RuntimeError: If no model has been trained yet.
+            RuntimeError: If the selected model has not been trained yet.
         """
-        if self._model is None:
-            raise RuntimeError("No model to save.  Train a model first.")
+        model = self._models[kind]
+        if model is None:
+            raise RuntimeError(f"No {kind} model to save.  Train a model first.")
+
+        if kind == "static":
+            default_filename = "gesture_classifier.pkl"
+            feature_length = STATIC_FEATURE_LENGTH
+            model_type = self.config.model_type
+        else:
+            default_filename = "dynamic_gesture_classifier.pkl"
+            feature_length = DYNAMIC_STATISTICAL_FEATURE_LENGTH
+            model_type = "random_forest_dynamic"
 
         if output_path is None:
-            output_path = self.config.model_output_directory / "gesture_classifier.pkl"
+            output_path = self.config.model_output_directory / default_filename
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         artifact = {
-            "model": self._model,
-            "label_encoder": self._label_encoder,
-            "feature_length": STATIC_FEATURE_LENGTH,
-            "model_type": self.config.model_type,
+            "model": model,
+            "label_encoder": self._label_encoders[kind],
+            "feature_length": feature_length,
+            "model_type": model_type,
         }
         joblib.dump(artifact, output_path)
-        logger.info("Model saved to %s", output_path)
+        logger.info("%s model saved to %s", kind.capitalize(), output_path)
         return output_path
 
     def load_model(self, model_path: Path) -> None:
-        """Deserialise a previously saved model into self._model.
+        """Deserialise a previously saved static model from model_path. See _load."""
+        self._load("static", model_path)
 
-        Restores both the trained estimator and the label encoder from a
-        joblib artifact produced by save_model.
+    def load_dynamic_model(self, model_path: Path) -> None:
+        """Deserialise a previously saved dynamic model from model_path. See _load."""
+        self._load("dynamic", model_path)
+
+    def _load(self, kind: str, model_path: Path) -> None:
+        """Shared deserialisation routine for the static and dynamic models.
 
         Args:
+            kind: "static" or "dynamic" — selects which model slot to restore.
             model_path: Path to the serialised model file (.pkl).
 
         Raises:
@@ -616,83 +595,15 @@ class GestureTrainer:
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
         artifact = joblib.load(model_path)
-        self._model = artifact["model"]
-        self._label_encoder = artifact["label_encoder"]
+        self._models[kind] = artifact["model"]
+        self._label_encoders[kind] = artifact["label_encoder"]
 
+        label_encoder = self._label_encoders[kind]
         logger.info(
             "Loaded %s model from %s with %d classes.",
             artifact.get("model_type", "unknown"),
             model_path,
-            len(self._label_encoder.classes_) if self._label_encoder else 0,
-        )
-
-    def save_dynamic_model(self, output_path: Optional[Path] = None) -> Path:
-        """Persist the trained dynamic gesture model to disk using joblib.
-
-        Serialises a dictionary containing the dynamic model, label encoder,
-        and metadata so that load_dynamic_model can restore the state.
-
-        Args:
-            output_path: Override the default output path.  If None,
-                the path is derived from config.model_output_directory
-                as ``models/dynamic_gesture_classifier.pkl``.
-
-        Returns:
-            The path the model was saved to.
-
-        Raises:
-            RuntimeError: If no dynamic model has been trained yet.
-        """
-        if self._dynamic_model is None:
-            raise RuntimeError(
-                "No dynamic model to save.  Train a dynamic model first."
-            )
-
-        if output_path is None:
-            output_path = (
-                self.config.model_output_directory / "dynamic_gesture_classifier.pkl"
-            )
-
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        artifact = {
-            "model": self._dynamic_model,
-            "label_encoder": self._dynamic_label_encoder,
-            "feature_length": DYNAMIC_STATISTICAL_FEATURE_LENGTH,
-            "model_type": "random_forest_dynamic",
-        }
-        joblib.dump(artifact, output_path)
-        logger.info("Dynamic model saved to %s", output_path)
-        return output_path
-
-    def load_dynamic_model(self, model_path: Path) -> None:
-        """Deserialise a previously saved dynamic model.
-
-        Restores the dynamic estimator and label encoder from a joblib
-        artifact produced by save_dynamic_model.
-
-        Args:
-            model_path: Path to the serialised dynamic model file (.pkl).
-
-        Raises:
-            FileNotFoundError: If model_path does not exist.
-        """
-        if not model_path.exists():
-            raise FileNotFoundError(f"Dynamic model file not found: {model_path}")
-
-        artifact = joblib.load(model_path)
-        self._dynamic_model = artifact["model"]
-        self._dynamic_label_encoder = artifact["label_encoder"]
-
-        logger.info(
-            "Loaded %s model from %s with %d classes.",
-            artifact.get("model_type", "unknown"),
-            model_path,
-            (
-                len(self._dynamic_label_encoder.classes_)
-                if self._dynamic_label_encoder
-                else 0
-            ),
+            len(label_encoder.classes_) if label_encoder else 0,
         )
 
     # ------------------------------------------------------------------
@@ -700,62 +611,40 @@ class GestureTrainer:
     # ------------------------------------------------------------------
 
     def predict_with_confidence(self, feature_vector: np.ndarray) -> tuple[str, float]:
-        """Run inference and return the predicted label together with its confidence.
+        """Run static inference on a (81,) feature vector. See _predict_with_confidence."""
+        return self._predict_with_confidence("static", feature_vector)
 
-        Uses the classifier's class probability estimates (predict_proba) to
-        derive a confidence score: the probability assigned to the winning class.
+    def predict_dynamic_with_confidence(
+        self, feature_vector: np.ndarray
+    ) -> tuple[str, float]:
+        """Run dynamic inference on a statistical feature vector. See _predict_with_confidence."""
+        return self._predict_with_confidence("dynamic", feature_vector)
+
+    def _predict_with_confidence(
+        self, kind: str, feature_vector: np.ndarray
+    ) -> tuple[str, float]:
+        """Shared inference routine for the static and dynamic models.
 
         Args:
-            feature_vector: numpy array of shape (81,) for static gestures.
+            kind: "static" or "dynamic" — selects which model slot to run.
+            feature_vector: numpy array of the shape the selected model expects.
 
         Returns:
             A tuple of (label, confidence) where label is the predicted class
             string and confidence is a float in [0, 1].
 
         Raises:
-            RuntimeError: If no model has been loaded or trained.
+            RuntimeError: If the selected model has not been loaded or trained.
         """
-        if self._model is None:
+        model = self._models[kind]
+        if model is None:
             raise RuntimeError(
-                "No model available.  Train a model or load one from disk first."
+                f"No {kind} model available.  Train a model or load one from disk first."
             )
 
         reshaped_vector = feature_vector.reshape(1, -1)
-        probabilities = self._model.predict_proba(reshaped_vector)[0]
+        probabilities = model.predict_proba(reshaped_vector)[0]
         predicted_index = int(probabilities.argmax())
-        label = self._model.classes_[predicted_index]
-        confidence = float(probabilities[predicted_index])
-        return label, confidence
-
-    def predict_dynamic_with_confidence(
-        self, feature_vector: np.ndarray
-    ) -> tuple[str, float]:
-        """Run inference on a dynamic gesture statistical feature vector.
-
-        Uses the dynamic model's class probability estimates to predict
-        the gesture label and associated confidence score.
-
-        Args:
-            feature_vector: numpy array of shape
-                (DYNAMIC_STATISTICAL_FEATURE_LENGTH,) produced by
-                GestureHeuristics.extract_statistical_features_dynamic().
-
-        Returns:
-            A tuple of (label, confidence) where label is the predicted
-            class string and confidence is a float in [0, 1].
-
-        Raises:
-            RuntimeError: If no dynamic model has been loaded or trained.
-        """
-        if self._dynamic_model is None:
-            raise RuntimeError(
-                "No dynamic model available.  "
-                "Train a dynamic model or load one from disk first."
-            )
-
-        reshaped_vector = feature_vector.reshape(1, -1)
-        probabilities = self._dynamic_model.predict_proba(reshaped_vector)[0]
-        predicted_index = int(probabilities.argmax())
-        label = self._dynamic_model.classes_[predicted_index]
+        label = model.classes_[predicted_index]
         confidence = float(probabilities[predicted_index])
         return label, confidence
