@@ -24,7 +24,7 @@ Data layout expected on disk (produced by GestureCollector):
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -88,19 +88,12 @@ class TrainingConfig:
             test set.  Must be in (0, 1).
         random_seed: Integer seed for reproducibility across splits and
             model initialisation.
-        model_type: String key that selects the algorithm.  Currently
-            supported: "random_forest".
-        model_hyperparameters: Algorithm-specific keyword arguments passed to
-            the model constructor.  Empty dict uses defaults defined in
-            DEFAULT_RF_HYPERPARAMETERS.
     """
 
     data_root_directory: Path = Path("data")
     model_output_directory: Path = Path("models")
     test_split_fraction: float = 0.2
     random_seed: int = 42
-    model_type: str = "random_forest"
-    model_hyperparameters: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -414,8 +407,7 @@ class GestureTrainer:
         Internally calls split_train_test, fits a RandomForestClassifier on
         the training partition, evaluates on the test partition, and persists
         the model to disk.  The Random Forest is configured with
-        DEFAULT_RF_HYPERPARAMETERS merged with any user-provided overrides in
-        config.model_hyperparameters.
+        DEFAULT_RF_HYPERPARAMETERS.
 
         Args:
             kind: "static" or "dynamic" — selects which model slot to train.
@@ -431,12 +423,10 @@ class GestureTrainer:
         label_encoder.fit(labels)
         self._label_encoders[kind] = label_encoder
 
-        # Build the Random Forest with sensible defaults, allowing user overrides.
         hyperparameters = {
             **DEFAULT_RF_HYPERPARAMETERS,
-            **self.config.model_hyperparameters,
+            "random_state": self.config.random_seed,
         }
-        hyperparameters["random_state"] = self.config.random_seed
         model = RandomForestClassifier(**hyperparameters)
         self._models[kind] = model
 
@@ -552,7 +542,7 @@ class GestureTrainer:
         if kind == "static":
             default_filename = "gesture_classifier.pkl"
             feature_length = STATIC_FEATURE_LENGTH
-            model_type = self.config.model_type
+            model_type = "random_forest"
         else:
             default_filename = "dynamic_gesture_classifier.pkl"
             feature_length = DYNAMIC_STATISTICAL_FEATURE_LENGTH
