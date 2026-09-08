@@ -6,8 +6,6 @@ These functions are shared between main.py and gesture_collector.py
 to avoid code duplication.
 """
 
-from typing import Optional
-
 import cv2
 import numpy as np
 from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
@@ -116,149 +114,6 @@ def draw_hand_connections(frame, hand_landmarker_result):
         )
 
 
-def draw_prediction_overlay(
-    frame,
-    label: str,
-    confidence=None,
-    handedness: Optional[str] = None,
-    y_offset: int = 0,
-    prefix: Optional[str] = None,
-) -> int:
-    """Draw the predicted gesture label as a full-width bar on the frame.
-
-    Renders a dark background bar with up to three stacked lines: the
-    predicted label (prominent, white), an optional confidence percentage,
-    and an optional detected handedness ("Left" / "Right").  The bar height
-    is returned so callers can stack further bars beneath it.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        label: Predicted gesture label string (e.g., "A", "B").
-        confidence: Optional float in [0, 1] for the model prediction
-            confidence, displayed as a percentage on a second line.
-        handedness: Optional string indicating which hand was detected
-            (e.g., "Left" or "Right"), displayed on a third line.
-        y_offset: Vertical pixel offset from the top of the frame at
-            which the bar should be drawn.  Defaults to 0 (top of frame).
-        prefix: Optional short prefix prepended to the main label line
-            (e.g., "S" or "D" to mark static vs. dynamic predictions).
-
-    Returns:
-        The pixel height of the drawn bar so the next bar can use it as
-        its own y_offset.
-    """
-    # Label line style — larger, more prominent.
-    label_font = cv2.FONT_HERSHEY_DUPLEX
-    label_font_scale = 1.4
-    label_thickness = 2
-    padding = 12
-    line_gap = padding  # vertical space between label and secondary line
-
-    # Secondary line style — handedness + confidence on one line.
-    secondary_font = cv2.FONT_HERSHEY_SIMPLEX
-    secondary_font_scale = 0.8
-    secondary_thickness = 1
-
-    background_color = (30, 30, 30)
-    label_text_color = (255, 255, 255)
-    secondary_text_color = (220, 220, 220)
-    low_confidence_threshold = 0.65
-    low_confidence_color = (40, 80, 255)  # Bright red in BGR
-
-    (label_w, label_h), _ = cv2.getTextSize(
-        label, label_font, label_font_scale, label_thickness
-    )
-
-    # Build the single secondary line combining handedness and confidence.
-    if confidence is not None and handedness is not None:
-        confidence_text = f"Hand: {handedness} | Confidence: {confidence * 100:.0f}%"
-    elif confidence is not None:
-        confidence_text = f"{confidence * 100:.0f}%"
-    elif handedness is not None:
-        confidence_text = f"Hand: {handedness}"
-    else:
-        confidence_text = None
-
-    confidence_h = 0
-    if confidence_text is not None:
-        (confidence_w, confidence_h), _ = cv2.getTextSize(
-            confidence_text, secondary_font, secondary_font_scale, secondary_thickness
-        )
-
-    # Determine whether a "Low confidence" warning line must be rendered.
-    low_confidence_text = None
-    low_confidence_h = 0
-    if confidence is not None and confidence < low_confidence_threshold:
-        low_confidence_text = "Low confidence"
-        (low_confidence_w, low_confidence_h), _ = cv2.getTextSize(
-            low_confidence_text,
-            secondary_font,
-            secondary_font_scale,
-            secondary_thickness,
-        )
-
-    # Bar height grows to accommodate the optional secondary line and the
-    # optional low-confidence warning line.
-    bar_height = padding + label_h
-    if confidence_text is not None:
-        bar_height += line_gap + confidence_h
-    if low_confidence_text is not None:
-        bar_height += line_gap + low_confidence_h
-    bar_height += padding
-
-    cv2.rectangle(
-        frame,
-        (0, y_offset),
-        (frame.shape[1], bar_height + y_offset),
-        background_color,
-        -1,
-    )
-
-    # Draw the main prediction label on the first line.
-    display_label = "Letter: " + label.removeprefix("letter_")
-    if prefix:
-        display_label = f"{prefix} {display_label}"
-    cv2.putText(
-        frame,
-        display_label,
-        (padding, y_offset + padding + label_h),
-        label_font,
-        label_font_scale,
-        label_text_color,
-        label_thickness,
-        cv2.LINE_AA,
-    )
-
-    # Draw the combined handedness / confidence on the second line if available.
-    if confidence_text is not None:
-        cv2.putText(
-            frame,
-            confidence_text,
-            (padding, y_offset + padding + label_h + line_gap + confidence_h),
-            secondary_font,
-            secondary_font_scale,
-            secondary_text_color,
-            secondary_thickness,
-            cv2.LINE_AA,
-        )
-
-    # Draw the low-confidence warning beneath all other lines when the
-    # prediction confidence falls below the defined threshold.
-    if low_confidence_text is not None:
-        cv2.putText(
-            frame,
-            low_confidence_text,
-            (padding, y_offset + bar_height - padding),
-            secondary_font,
-            secondary_font_scale,
-            low_confidence_color,
-            secondary_thickness,
-            cv2.LINE_AA,
-        )
-
-    return bar_height
-
-
 def draw_status_bar(
     frame,
     label,
@@ -287,14 +142,14 @@ def draw_status_bar(
         The pixel height of the drawn bar so the next bar can use it as its
         own y_offset.
     """
-    # Status text — label tier, matches draw_prediction_overlay label line.
+    # Status text — label tier, matches draw_prediction_columns label line.
     label_font = cv2.FONT_HERSHEY_SIMPLEX
     label_font_scale = 0.8
     label_thickness = 1
     padding = 8
     label_text_color = (220, 220, 220)
 
-    # Message badge — secondary tier, matches draw_prediction_overlay secondary line.
+    # Message badge — secondary tier, matches draw_prediction_columns secondary line.
     secondary_font = cv2.FONT_HERSHEY_DUPLEX
     secondary_font_scale = 1.4
     secondary_thickness = 1
