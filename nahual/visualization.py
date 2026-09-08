@@ -38,17 +38,16 @@ LANDMARK_NAMES = (
 )
 
 
-def draw_landmark_debug(frame, hand_landmarker_result, hand_indices=None):
+def draw_landmark_debug(frame, hand_landmarker_result):
     """Put landmark coordinate text on the OpenCV frame.
 
     Renders each landmark's world-coordinate values as colored text lines
     at the bottom of the frame, with a white background for readability.
+    Draws all detected hands.
 
     Args:
         frame: OpenCV BGR frame to draw on.
         hand_landmarker_result: Result from HandLandmarker.detect_for_video.
-        hand_indices: Optional list of indices into hand_world_landmarks to draw;
-            if None, all detected hands are drawn.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.4
@@ -58,8 +57,6 @@ def draw_landmark_debug(frame, hand_landmarker_result, hand_indices=None):
 
     lines = []
     for i, hand_landmarks in enumerate(hand_landmarker_result.hand_world_landmarks):
-        if hand_indices is not None and i not in hand_indices:
-            continue
         handedness = hand_landmarker_result.handedness[i][0].display_name
         lines.append((f"--- {handedness} Hand ---", (0, 0, 0)))
         for (name, color), landmark in zip(LANDMARK_NAMES, hand_landmarks):

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -179,30 +179,27 @@ class GestureHeuristics:
         self,
         hand_landmarker_result,
         timestamp_ms: int,
-        hand_index: int = 0,
     ) -> Optional[LandmarkFrame]:
         """Convert a MediaPipe result into a LandmarkFrame.
 
         Reads hand_world_landmarks (metric, hand-relative) rather than
         image-space hand_landmarks, providing scale invariance across
-        different distances from the camera.
+        different distances from the camera. Always reads the first
+        detected hand, per the single-hand constraint.
 
         Args:
             hand_landmarker_result: Result from HandLandmarker.detect_for_video.
             timestamp_ms: Frame timestamp in milliseconds.
-            hand_index: Index of the hand to extract within the result.
-                Always 0 under the single-hand constraint, but explicit for
-                clarity and future flexibility.
 
         Returns:
             LandmarkFrame with a (21, 3) float32 coordinates array, or None
             if no hand was detected in the result.
         """
         world_landmarks = hand_landmarker_result.hand_world_landmarks
-        if not world_landmarks or hand_index >= len(world_landmarks):
+        if not world_landmarks:
             return None
 
-        hand = world_landmarks[hand_index]
+        hand = world_landmarks[0]
         coordinates = np.array(
             [[landmark.x, landmark.y, landmark.z] for landmark in hand],
             dtype=np.float32,
@@ -289,29 +286,25 @@ class GestureHeuristics:
     def compute_inter_landmark_distances(
         self,
         normalized_coordinates: np.ndarray,
-        landmark_pairs: Optional[Sequence[Tuple[int, int]]] = None,
     ) -> np.ndarray:
-        """Compute Euclidean distances between specified landmark pairs.
+        """Compute Euclidean distances between DEFAULT_LANDMARK_PAIRS.
 
         Useful for detecting pinch gestures (thumb-to-fingertip distances)
         and finger extension (wrist-to-fingertip distances).
 
         Args:
             normalized_coordinates: numpy array of shape (21, 3).
-            landmark_pairs: List of (index_a, index_b) tuples.  If None,
-                DEFAULT_LANDMARK_PAIRS is used.
 
         Returns:
-            1-D numpy array of dtype float32, length = len(landmark_pairs).
+            1-D numpy array of dtype float32, length = len(DEFAULT_LANDMARK_PAIRS).
         """
-        pairs = landmark_pairs if landmark_pairs is not None else DEFAULT_LANDMARK_PAIRS
         distances = [
             float(
                 np.linalg.norm(
                     normalized_coordinates[index_a] - normalized_coordinates[index_b]
                 )
             )
-            for index_a, index_b in pairs
+            for index_a, index_b in DEFAULT_LANDMARK_PAIRS
         ]
         return np.array(distances, dtype=np.float32)
 
