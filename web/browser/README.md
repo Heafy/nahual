@@ -22,8 +22,10 @@ is what fixes the lag/frame-loss of the old FastAPI server demo.
 | `build.py` | Assembles a deployable `web/dist/` bundle |
 
 At runtime the page also needs the real `nahual/*.py` source and the trained
-`models/*` — `build.py` copies those in so `nahual/` stays the single source of
-truth.
+LSM models (`models/lsm/*.pkl` plus the shared `models/hand_landmarker.task`)
+— `build.py` copies those into a flat `dist/models/` so `nahual/` stays the
+single source of truth. The desktop tools support ASL too, but this demo
+bundles LSM only.
 
 ## Run it locally
 

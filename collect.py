@@ -1,14 +1,16 @@
 """
 collect.py
 
-Entrypoint for the LSM gesture data collection tool.
+Entrypoint for the Nahual gesture data collection tool.
 
 Opens an interactive webcam window where you can label and capture
-gesture samples to build the training dataset.
+gesture samples for the selected sign language, to build its training
+dataset.
 
 Usage::
 
     uv run python collect.py
+    uv run python collect.py -asl
 
 Keyboard controls (also shown in the window):
     l  -- Enter a gesture label (uses terminal input)
@@ -18,12 +20,15 @@ Keyboard controls (also shown in the window):
 """
 
 from nahual.gesture_collector import CollectorConfig, GestureCollector
+from nahual.sign_language import data_directory, parse_sign_language_argument
 
 
 def main() -> None:
-    """Run the interactive gesture data collector."""
+    """Run the interactive gesture data collector for the selected language."""
+    language = parse_sign_language_argument("Collect Nahual gesture training samples.")
     config = CollectorConfig(
         model_asset_path="models/hand_landmarker.task",
+        data_root_directory=data_directory(language),
         show_landmark_debug=False,
     )
     collector = GestureCollector(config)

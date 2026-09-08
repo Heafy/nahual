@@ -5,10 +5,12 @@ with an agent please follow the guidelines below so that the development experie
 continues to work smoothly.
 
 This application's purpose is to detect custom gestures with machine learning.
-The custom gestures are LSM (Lengua de Señas Mexicana), a sign language for
-México. The scope is to recognize every letter of the LSM alphabet, split
-across two classifiers (static poses and dynamic motion gestures), usable from
-a desktop OpenCV demo.
+It supports multiple sign languages — currently LSM (Lengua de Señas
+Mexicana) and ASL (American Sign Language) — each with its own dataset and
+trained classifiers, selected at runtime with the `-lsm` / `-asl` flag
+(default `-lsm`). For each language, the scope is to recognize every letter of its
+alphabet, split across two classifiers (static poses and dynamic motion
+gestures), usable from a desktop OpenCV demo.
 
 # Project Structure
 
@@ -19,25 +21,34 @@ a desktop OpenCV demo.
     `detect_landmarks`) shared by the desktop tools.
   * `gesture_heuristics.py` – Landmark preprocessing and feature extraction.
   * `gesture_trainer.py` – Model training and inference (static + dynamic).
+  * `sign_language.py` – Supported language codes (`SIGN_LANGUAGES`), the
+    shared `-lsm` / `-asl` argparse helper (`parse_sign_language_argument`),
+    and the per-language path helpers (`data_directory`, `models_directory`)
+    used by all four root scripts. Not imported by any module bundled into
+    the browser demo (see `web/browser/build.py`'s `NAHUAL_RUNTIME_MODULES`).
   * `visualization.py` – OpenCV drawing helpers (landmarks, overlays).
   * `data_inspector.py` – Dataset inspection utilities (sample counts per label).
-* Root entry scripts:
+* Root entry scripts (each accepts `-lsm` or `-asl`, default `-lsm`):
   * `main.py` – Real-time desktop demo (webcam + OpenCV window).
   * `collect.py` – Run the interactive data collector.
   * `train.py` – Train the static and dynamic classifiers.
   * `inspect_data.py` – Print a table of sample counts per label.
-* `data/` – Collected `.npy` samples grouped by label (see gesture types below).
-* `models/` – Trained artifacts: `gesture_classifier.pkl` (static),
-  `dynamic_gesture_classifier.pkl` (dynamic), and the MediaPipe
-  `hand_landmarker.task` model asset.
+* `data/<language>/` – Collected `.npy` samples grouped by label, under a
+  per-language directory (`data/lsm/`, `data/asl/`); see gesture types below.
+* `models/` – Trained artifacts. `hand_landmarker.task` (the MediaPipe model
+  asset) is language-independent and lives at this top level.
+  `<language>/gesture_classifier.pkl` (static) and
+  `<language>/dynamic_gesture_classifier.pkl` (dynamic) are per-language
+  (e.g. `models/lsm/gesture_classifier.pkl`).
 
 ## Running the Project
 
-All scripts are launched through `uv`:
+All scripts are launched through `uv` and default to LSM; pass `-asl` to
+operate on the ASL dataset/models instead.
 
 * `uv run python main.py` – Desktop real-time recognition demo.
 * `uv run python collect.py` – Collect labeled gesture samples.
-* `uv run python train.py` – Train the classifiers from `data/`.
+* `uv run python train.py` – Train the classifiers from `data/<language>/`.
 * `uv run python inspect_data.py` – Inspect dataset sample counts.
 
 # Architecture Notes
@@ -62,19 +73,38 @@ All scripts are launched through `uv`:
 
 # Static vs. Dynamic Gestures
 
-The LSM alphabet is split into two gesture types, each with its own dataset
-folder and its own trained model:
+Each sign language's alphabet is split into two gesture types, each with its
+own dataset folder and its own trained model. Labels use a `<category>_<value>`
+naming scheme (currently only the `letter_` category exists); the language
+itself is **not** encoded in the label, since the `data/<language>/` and
+`models/<language>/` directory level already carries it.
+
+## LSM (Lengua de Señas Mexicana)
 
 * **Static gestures** – Held hand poses with no motion. Stored in
-  `data/static/`, trained into `models/gesture_classifier.pkl`.
-  Labels: `letra_a`, `letra_b`, `letra_c`, `letra_d`, `letra_e`, `letra_f`,
-  `letra_g`, `letra_h`, `letra_i`, `letra_l`, `letra_m`, `letra_n`, `letra_o`,
-  `letra_p`, `letra_r`, `letra_s`, `letra_t`, `letra_u`, `letra_v`, `letra_w`,
-  `letra_y`.
+  `data/lsm/static/`, trained into `models/lsm/gesture_classifier.pkl`.
+  Labels: `letter_a`, `letter_b`, `letter_c`, `letter_d`, `letter_e`,
+  `letter_f`, `letter_g`, `letter_h`, `letter_i`, `letter_l`, `letter_m`,
+  `letter_n`, `letter_o`, `letter_p`, `letter_r`, `letter_s`, `letter_t`,
+  `letter_u`, `letter_v`, `letter_w`, `letter_y`.
 * **Dynamic gestures** – Letters that require hand movement, captured as short
-  sequences. Stored in `data/dynamic/`, trained into
-  `models/dynamic_gesture_classifier.pkl`.
-  Labels: `letra_j`, `letra_k`, `letra_q`, `letra_x`, `letra_z`, `letra_ñ`.
+  sequences. Stored in `data/lsm/dynamic/`, trained into
+  `models/lsm/dynamic_gesture_classifier.pkl`.
+  Labels: `letter_j`, `letter_k`, `letter_q`, `letter_x`, `letter_z`, `letter_ñ`.
+
+## ASL (American Sign Language)
+
+* **Static gestures** – Stored in `data/asl/static/`, trained into
+  `models/asl/gesture_classifier.pkl`. Planned labels: every letter except J
+  and Z (`letter_a`–`letter_y`, excluding `letter_j` and `letter_z`). ASL has
+  no Ñ.
+* **Dynamic gestures** – Stored in `data/asl/dynamic/`, trained into
+  `models/asl/dynamic_gesture_classifier.pkl`. Planned labels: `letter_j`,
+  `letter_z`.
+
+As of this writing the ASL directories and models do not yet exist — they are
+created on first `uv run python collect.py -asl` /
+`uv run python train.py -asl`.
 
 # Keep Dependencies in Sync
 

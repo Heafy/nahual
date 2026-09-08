@@ -1,27 +1,29 @@
 """
 train.py
 
-Entrypoint for the LSM gesture model trainer.
+Entrypoint for the Nahual gesture model trainer.
 
-Loads collected samples from the data/ directory and trains the static and
-dynamic gesture classifiers, saving each trained model to the models/
-directory.
+Loads collected samples for the selected sign language and trains its static
+and dynamic gesture classifiers, saving each trained model under that
+language's models/<language>/ directory.
 
 Usage::
 
     uv run python train.py
+    uv run python train.py -asl
 """
 
-from pathlib import Path
-
 from nahual.gesture_trainer import GestureTrainer, TrainingConfig
+from nahual.sign_language import (data_directory, models_directory,
+                                  parse_sign_language_argument)
 
 
 def main() -> None:
-    """Train the LSM gesture classifier."""
+    """Train the gesture classifiers for the selected sign language."""
+    language = parse_sign_language_argument("Train the Nahual gesture classifiers.")
     config = TrainingConfig(
-        data_root_directory=Path("data"),
-        model_output_directory=Path("models"),
+        data_root_directory=data_directory(language),
+        model_output_directory=models_directory(language),
     )
     trainer = GestureTrainer(config)
 
@@ -40,7 +42,7 @@ def main() -> None:
     except FileNotFoundError:
         print(
             "No static data found.  Collect training data with:\n"
-            "    uv run python collect.py"
+            f"    uv run python collect.py -{language}"
         )
     except ValueError as error:
         print(f"Static training skipped: {error}")
@@ -63,7 +65,7 @@ def main() -> None:
         print(
             "No dynamic data found — skipping dynamic model training.\n"
             "Collect dynamic samples with:\n"
-            "    uv run python collect.py  (press 'd' to record)"
+            f"    uv run python collect.py -{language}  (press 'd' to record)"
         )
     except ValueError as error:
         print(f"Dynamic training skipped: {error}")

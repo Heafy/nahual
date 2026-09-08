@@ -1,7 +1,7 @@
 """
 main.py
 
-Real-time LSM gesture recognition demo (desktop / OpenCV driver).
+Real-time gesture recognition demo (desktop / OpenCV driver).
 
 Opens a webcam window with MediaPipe hand landmarks overlaid.
 Static and dynamic gesture predictions are produced continuously and
@@ -30,10 +30,10 @@ thresholds.
 Usage::
 
     uv run python main.py
+    uv run python main.py -asl
 """
 
 import time
-from pathlib import Path
 
 import cv2
 
@@ -44,11 +44,10 @@ from nahual.hand_landmarker import (HandLandmarkerConfig,
 from nahual.realtime_session import (MOTION_START_THRESHOLD,
                                      MOTION_STOP_THRESHOLD,
                                      RealtimeGestureSession)
+from nahual.sign_language import models_directory, parse_sign_language_argument
 from nahual.visualization import draw_hand_connections, draw_prediction_columns
 
 MODEL_ASSET_PATH = "models/hand_landmarker.task"
-TRAINED_MODEL_PATH = Path("models/gesture_classifier.pkl")
-TRAINED_DYNAMIC_MODEL_PATH = Path("models/dynamic_gesture_classifier.pkl")
 
 # EMA smoothing factor for the effective-FPS readout in the motion-debug
 # overlay. Heavier smoothing than the motion signal so the displayed rate is
@@ -148,24 +147,33 @@ def draw_motion_debug(
 
 
 def main() -> None:
-    """Run the real-time LSM gesture recognition demo."""
+    """Run the real-time gesture recognition demo for the selected language."""
+    language = parse_sign_language_argument(
+        "Run the real-time Nahual gesture recognition demo."
+    )
+    model_output_directory = models_directory(language)
+    trained_model_path = model_output_directory / "gesture_classifier.pkl"
+    trained_dynamic_model_path = (
+        model_output_directory / "dynamic_gesture_classifier.pkl"
+    )
+
     heuristics = GestureHeuristics()
 
     # Load the trained classifiers if they exist.
     trainer = GestureTrainer(
-        TrainingConfig(model_output_directory=TRAINED_MODEL_PATH.parent)
+        TrainingConfig(model_output_directory=model_output_directory)
     )
-    model_available = TRAINED_MODEL_PATH.exists()
+    model_available = trained_model_path.exists()
     if model_available:
         try:
-            trainer.load_model(TRAINED_MODEL_PATH)
+            trainer.load_model(trained_model_path)
         except Exception:
             model_available = False
 
-    dynamic_model_available = TRAINED_DYNAMIC_MODEL_PATH.exists()
+    dynamic_model_available = trained_dynamic_model_path.exists()
     if dynamic_model_available:
         try:
-            trainer.load_dynamic_model(TRAINED_DYNAMIC_MODEL_PATH)
+            trainer.load_dynamic_model(trained_dynamic_model_path)
         except Exception:
             dynamic_model_available = False
 

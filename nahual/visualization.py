@@ -215,7 +215,7 @@ def draw_prediction_overlay(
     )
 
     # Draw the main prediction label on the first line.
-    display_label = "Letter: " + label.removeprefix("letra_")
+    display_label = "Letter: " + label.removeprefix("letter_")
     if prefix:
         display_label = f"{prefix} {display_label}"
     cv2.putText(
@@ -621,7 +621,7 @@ def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.
     static_secondary = None
     static_warning = None
     if overlay["static_label"] is not None:
-        static_letter = str(overlay["static_label"]).removeprefix("letra_")
+        static_letter = str(overlay["static_label"]).removeprefix("letter_")
         confidence_percent = f"{overlay['static_confidence'] * 100:.0f}"
         handedness = overlay["handedness"]
         if handedness:
@@ -638,7 +638,7 @@ def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.
     dynamic_letter = None
     dynamic_secondary = None
     if overlay["dynamic_label"] is not None:
-        dynamic_letter = str(overlay["dynamic_label"]).removeprefix("letra_")
+        dynamic_letter = str(overlay["dynamic_label"]).removeprefix("letter_")
         confidence_percent = f"{overlay['dynamic_confidence'] * 100:.0f}"
         dynamic_secondary = (
             f"Confidence: {confidence_percent}%  |  "

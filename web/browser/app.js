@@ -127,12 +127,12 @@ function setLoading(message) {
 }
 
 /**
- * Strip the "letra_" prefix from a label for display.
- * @param {string} label Raw model label (e.g. "letra_a").
+ * Strip the "letter_" prefix from a label for display.
+ * @param {string} label Raw model label (e.g. "letter_a").
  * @returns {string} Display letter (e.g. "a").
  */
 function displayLetter(label) {
-  return label.startsWith("letra_") ? label.slice("letra_".length) : label;
+  return label.startsWith("letter_") ? label.slice("letter_".length) : label;
 }
 
 /**

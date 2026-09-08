@@ -32,6 +32,7 @@ BROWSER_DIRECTORY = Path(__file__).resolve().parent
 PROJECT_ROOT = BROWSER_DIRECTORY.parent.parent
 NAHUAL_DIRECTORY = PROJECT_ROOT / "nahual"
 MODELS_DIRECTORY = PROJECT_ROOT / "models"
+LSM_MODELS_DIRECTORY = MODELS_DIRECTORY / "lsm"
 DIST_DIRECTORY = PROJECT_ROOT / "web" / "dist"
 
 # Page assets served at the bundle root.
@@ -53,11 +54,19 @@ NAHUAL_RUNTIME_MODULES = [
     "realtime_session.py",
 ]
 
-# Model artifacts: the two trained classifiers plus the MediaPipe hand model.
+# Model artifacts: the two trained LSM classifiers plus the shared MediaPipe
+# hand model. Pairs of (source_path, destination_filename) because the
+# classifiers live under models/lsm/ while hand_landmarker.task is
+# language-independent and stays at the models/ top level. dist/models/
+# stays flat regardless of the source layout, so app.js and
+# session_bootstrap.py need no changes when this list changes.
 MODEL_ASSETS = [
-    "gesture_classifier.pkl",
-    "dynamic_gesture_classifier.pkl",
-    "hand_landmarker.task",
+    (LSM_MODELS_DIRECTORY / "gesture_classifier.pkl", "gesture_classifier.pkl"),
+    (
+        LSM_MODELS_DIRECTORY / "dynamic_gesture_classifier.pkl",
+        "dynamic_gesture_classifier.pkl",
+    ),
+    (MODELS_DIRECTORY / "hand_landmarker.task", "hand_landmarker.task"),
 ]
 
 
@@ -76,10 +85,8 @@ def build() -> None:
             NAHUAL_DIRECTORY / module_name, DIST_DIRECTORY / "nahual" / module_name
         )
 
-    for model_name in MODEL_ASSETS:
-        shutil.copy2(
-            MODELS_DIRECTORY / model_name, DIST_DIRECTORY / "models" / model_name
-        )
+    for source_path, destination_name in MODEL_ASSETS:
+        shutil.copy2(source_path, DIST_DIRECTORY / "models" / destination_name)
 
     total_bytes = sum(
         path.stat().st_size for path in DIST_DIRECTORY.rglob("*") if path.is_file()
