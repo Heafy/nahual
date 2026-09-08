@@ -41,7 +41,7 @@ import cv2
 import numpy as np
 
 from nahual.gesture_heuristics import (MAX_DYNAMIC_FRAMES, GestureHeuristics,
-                                       GestureType, LandmarkFrame)
+                                       LandmarkFrame)
 from nahual.hand_landmarker import (HandLandmarkerConfig,
                                     build_hand_landmarker, detect_landmarks)
 from nahual.visualization import (draw_hand_connections, draw_hint_bar,
@@ -252,12 +252,12 @@ class GestureCollector:
         fa_end = nc_end + len(features.finger_angles)
         ild_end = fa_end + len(features.inter_landmark_distances)
 
-        output_path = self._build_output_path(GestureType.STATIC)
+        output_path = self._build_output_path("static")
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "gesture_type": GestureType.STATIC.name.lower(),
+            "gesture_type": "static",
             "feature_layout": {
                 "normalized_coordinates": [0, nc_end],
                 "finger_angles": [nc_end, fa_end],
@@ -305,12 +305,12 @@ class GestureCollector:
 
         self._require_label()
         features = self.heuristics.extract_features_dynamic(self._dynamic_frame_buffer)
-        output_path = self._build_output_path(GestureType.DYNAMIC)
+        output_path = self._build_output_path("dynamic")
         metadata = {
             "file": output_path.name,
             "session_id": self.session.session_id,
             "captured_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "gesture_type": GestureType.DYNAMIC.name.lower(),
+            "gesture_type": "dynamic",
             "frame_count": len(self._dynamic_frame_buffer),
         }
         self._write_sample(features.frame_sequence, output_path, metadata)
@@ -351,18 +351,17 @@ class GestureCollector:
         if len(self._dynamic_frame_buffer) < MAX_DYNAMIC_FRAMES:
             self._dynamic_frame_buffer.append(landmark_frame)
 
-    def _build_output_path(self, gesture_type: GestureType) -> Path:
+    def _build_output_path(self, gesture_type: str) -> Path:
         """Construct a unique output path for a new sample file.
 
         Args:
-            gesture_type: STATIC or DYNAMIC, determines the subdirectory.
+            gesture_type: "static" or "dynamic", determines the subdirectory.
 
         Returns:
             Path: data/<type>/<label>/<uuid4>.npy
         """
-        type_directory = "static" if gesture_type == GestureType.STATIC else "dynamic"
         label_directory = (
-            self.config.data_root_directory / type_directory / self.session.label
+            self.config.data_root_directory / gesture_type / self.session.label
         )
         label_directory.mkdir(parents=True, exist_ok=True)
         return label_directory / f"{uuid.uuid4()}.npy"

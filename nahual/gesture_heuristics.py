@@ -16,7 +16,6 @@ provides built-in scale invariance relative to the camera distance.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, auto
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -104,13 +103,6 @@ DYNAMIC_STATISTICAL_FEATURE_LENGTH: int = 521
 # ---------------------------------------------------------------------------
 
 
-class GestureType(Enum):
-    """Discriminates between shape-only and motion-dependent gestures."""
-
-    STATIC = auto()
-    DYNAMIC = auto()
-
-
 @dataclass
 class LandmarkFrame:
     """One frame of hand landmark data.
@@ -138,7 +130,6 @@ class ExtractedFeatures:
         inter_landmark_distances: Euclidean distances between the landmark
             pairs defined in DEFAULT_LANDMARK_PAIRS (or a custom list).
             Shape (N_pairs,), dtype float32.
-        gesture_type: Whether features represent a static or dynamic gesture.
         frame_sequence: For dynamic gestures, the full stacked sequence of
             normalized coordinates. Shape (N_frames, 21, 3), or None for
             static gestures.
@@ -147,7 +138,6 @@ class ExtractedFeatures:
     normalized_coordinates: np.ndarray
     finger_angles: np.ndarray
     inter_landmark_distances: np.ndarray
-    gesture_type: GestureType
     frame_sequence: Optional[np.ndarray] = None  # shape (N, 21, 3) or None
 
 
@@ -314,13 +304,13 @@ class GestureHeuristics:
         """Build an ExtractedFeatures object from a single static frame.
 
         Normalizes coordinates, computes finger angles and inter-landmark
-        distances.  Sets gesture_type to STATIC and frame_sequence to None.
+        distances.  Sets frame_sequence to None.
 
         Args:
             landmark_frame: A LandmarkFrame produced by extract_landmark_frame.
 
         Returns:
-            ExtractedFeatures with gesture_type=GestureType.STATIC.
+            ExtractedFeatures for a static gesture.
         """
         normalized = self.normalize_coordinates(landmark_frame.coordinates)
         angles = self.compute_finger_angles(normalized)
@@ -330,7 +320,6 @@ class GestureHeuristics:
             normalized_coordinates=normalized,
             finger_angles=angles,
             inter_landmark_distances=distances,
-            gesture_type=GestureType.STATIC,
             frame_sequence=None,
         )
 
@@ -459,8 +448,8 @@ class GestureHeuristics:
             landmark_frames: Ordered list of LandmarkFrame objects (oldest first).
 
         Returns:
-            ExtractedFeatures with gesture_type=GestureType.DYNAMIC and
-            frame_sequence populated.
+            ExtractedFeatures for a dynamic gesture, with frame_sequence
+            populated.
 
         Raises:
             ValueError: If landmark_frames is empty.
@@ -488,7 +477,6 @@ class GestureHeuristics:
             normalized_coordinates=last_normalized,
             finger_angles=angles,
             inter_landmark_distances=distances,
-            gesture_type=GestureType.DYNAMIC,
             frame_sequence=normalized_sequence,
         )
 
