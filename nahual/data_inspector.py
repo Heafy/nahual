@@ -25,10 +25,6 @@ from pathlib import Path
 import numpy as np
 from prettytable import PrettyTable
 
-# Expected shape for a valid static gesture feature vector:
-# 63 normalized coordinates + 10 finger angles + 8 inter-landmark distances.
-STATIC_SAMPLE_SHAPE: tuple = (81,)
-
 
 @dataclass
 class LabelSummary:

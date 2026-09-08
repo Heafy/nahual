@@ -123,7 +123,6 @@ class GestureCollector:
         self._is_capturing_dynamic: bool = False
         self._dynamic_start_time: float = 0.0
         self._dynamic_frame_buffer: List[LandmarkFrame] = []
-        self._current_gesture_type: GestureType = GestureType.STATIC
 
     # ------------------------------------------------------------------
     # Public interface

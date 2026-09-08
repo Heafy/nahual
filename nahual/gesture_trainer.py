@@ -51,12 +51,6 @@ logger = logging.getLogger(__name__)
 #   + 8 inter-landmark distances
 STATIC_FEATURE_LENGTH: int = 81
 
-# Maximum number of frames per dynamic sample (mirrors gesture_heuristics.py).
-MAX_DYNAMIC_FRAMES: int = 90
-
-# Feature vector length for one frame in a dynamic sequence.
-DYNAMIC_FRAME_FEATURE_LENGTH: int = STATIC_FEATURE_LENGTH
-
 # Minimum number of samples per class before a warning is logged.
 MINIMUM_SAMPLES_PER_CLASS_WARNING: int = 10
 
