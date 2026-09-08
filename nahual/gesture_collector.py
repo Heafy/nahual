@@ -221,7 +221,6 @@ class GestureCollector:
 
         self.session.label = label
         self.session.samples_captured = 0
-        self._ensure_label_directories(label)
         print(f"[collector] Label set to '{label}'.")
 
     def capture_static_sample(self, landmark_frame: LandmarkFrame) -> Path:
@@ -412,16 +411,6 @@ class GestureCollector:
         manifest["samples"].append(entry)
         with open(manifest_path, "w", encoding="utf-8") as manifest_file:
             json.dump(manifest, manifest_file, indent=2)
-
-    def _ensure_label_directories(self, label: str) -> None:
-        """Create static and dynamic directories for the given label.
-
-        Args:
-            label: Gesture label string.
-        """
-        for gesture_type_name in ("static", "dynamic"):
-            directory = self.config.data_root_directory / gesture_type_name / label
-            directory.mkdir(parents=True, exist_ok=True)
 
     def _require_label(self) -> None:
         """Raise RuntimeError if no label has been set.
