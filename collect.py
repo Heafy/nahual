@@ -15,7 +15,7 @@ Usage::
 Keyboard controls (also shown in the window):
     l  -- Enter a gesture label (uses terminal input)
     s  -- Capture one static sample
-    d  -- Start / stop dynamic capture (auto-stops after 3 seconds)
+    d  -- Start / stop dynamic capture (auto-stops after 2 seconds)
     q  -- Quit
 """
 
