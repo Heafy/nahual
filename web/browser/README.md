@@ -68,9 +68,6 @@ hosts do).
   `nahual/realtime_session.py` is currently `0.0` (a diagnostic that latches
   every prediction). For the build you share with partners, set it back to
   `0.65` so idle hand-drift doesn't surface as random letters.
-- **Debug hook.** `window.__nahual` (in `app.js`) exposes `processFrame`,
-  `toggleManual`, `status`, `runPython`, and `diagnostics` for testing without a
-  camera. Harmless (client-side only); remove it if you want a leaner page.
 - **No retrain needed.** Pyodide ships newer scikit-learn (1.7.x) than the models
   were pickled with (1.6.1); predictions were verified bit-identical to the
   desktop build, so the existing `.pkl` files work as-is.

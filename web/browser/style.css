@@ -136,12 +136,6 @@ main {
   min-height: 1.15em;
 }
 
-.prediction-warning {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #ff5028;
-}
-
 .debug-toggle {
   position: absolute;
   bottom: 0;

@@ -41,8 +41,6 @@ const MODEL_PICKLES = [
   "dynamic_gesture_classifier.pkl",
 ];
 
-const LOW_CONFIDENCE_THRESHOLD = 0.65; // Mirrors visualization.py.
-
 // Standard MediaPipe hand skeleton topology (landmark index pairs).
 const HAND_CONNECTIONS = [
   [0, 1], [1, 2], [2, 3], [3, 4], // thumb
@@ -70,9 +68,6 @@ const overlayContext = overlayCanvas.getContext("2d");
 const staticBar = document.getElementById("static-bar");
 const staticLabel = document.getElementById("static-label");
 const staticSecondary = document.getElementById("static-secondary");
-// Low-confidence warning disabled for now (kept for later re-enable); see the
-// commented span in index.html and the commented line in updateStaticBar.
-// const staticWarning = document.getElementById("static-warning");
 const recordingBar = document.getElementById("recording-bar");
 const recordingInfo = document.getElementById("recording-info");
 const dynamicBar = document.getElementById("dynamic-bar");
@@ -208,18 +203,6 @@ async function initialisePyodide() {
     setStatus("Warning: no trained models were loaded.");
   }
   pyodideReady = true;
-
-  // Validation/debug hook: lets the recognition path be exercised without a
-  // live camera (synthetic landmark payloads) and exposes the in-browser
-  // Python for parity checks against the desktop build.
-  window.__nahual = {
-    ready: () => pyodideReady,
-    status: () => JSON.parse(pyodide.globals.get("status_js")()),
-    processFrame: (payload) => JSON.parse(processFrameFn(JSON.stringify(payload))),
-    toggleManual: () => toggleManualFn && toggleManualFn(),
-    runPython: (code) => pyodide.runPython(code),
-    diagnostics: () => window.__nahualDiagnostics || null,
-  };
 }
 
 // Local dev wants fresh files on every reload; production wants the browser and
@@ -368,8 +351,6 @@ function updateStaticBar(overlay) {
   staticSecondary.textContent = overlay.handedness
     ? `Hand: ${overlay.handedness} | Confidence: ${confidencePercent}%`
     : `Confidence: ${confidencePercent}%`;
-  // Low-confidence warning disabled for now (kept for later re-enable):
-  // staticWarning.hidden = overlay.static_confidence >= LOW_CONFIDENCE_THRESHOLD;
 }
 
 /**
@@ -406,8 +387,6 @@ function updateDynamicBar(overlay) {
   dynamicLabel.textContent = `Dynamic: ${displayLetter(overlay.dynamic_label)}`;
   dynamicSecondary.textContent =
     `Confidence: ${(overlay.dynamic_confidence * 100).toFixed(0)}%`;
-  // Frame count disabled for now (kept for later re-enable):
-  //   + `  |  ${overlay.dynamic_frame_count} frames`;
 }
 
 /**
@@ -517,12 +496,6 @@ function updateTimings(frameTime, detectMs, recogniseMs) {
   smoothedRecogniseMs =
     FPS_SMOOTHING_ALPHA * recogniseMs +
     (1 - FPS_SMOOTHING_ALPHA) * smoothedRecogniseMs;
-  // Expose for automated validation.
-  window.__nahualDiagnostics = {
-    fps: smoothedFps,
-    detectMs: smoothedDetectMs,
-    recogniseMs: smoothedRecogniseMs,
-  };
 }
 
 /**
