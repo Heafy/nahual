@@ -177,13 +177,9 @@ class GestureHeuristics:
         different distances from the camera. Always reads the first
         detected hand, per the single-hand constraint.
 
-        Args:
-            hand_landmarker_result: Result from HandLandmarker.detect_for_video.
-            timestamp_ms: Frame timestamp in milliseconds.
-
         Returns:
             LandmarkFrame with a (21, 3) float32 coordinates array, or None
-            if no hand was detected in the result.
+            if no hand was detected.
         """
         world_landmarks = hand_landmarker_result.hand_world_landmarks
         if not world_landmarks:
@@ -209,12 +205,7 @@ class GestureHeuristics:
         This makes the resulting feature vectors invariant to hand position
         in 3-D space and to hand size.
 
-        Args:
-            raw_coordinates: numpy array of shape (21, 3), raw world coordinates.
-
-        Returns:
-            numpy array of shape (21, 3), dtype float32, with the wrist at the
-            origin and landmarks scaled to palm-width units.
+        Takes and returns (21, 3); the result is float32 in palm-width units.
         """
         wrist_position = raw_coordinates[WRIST_INDEX]
         centred = raw_coordinates - wrist_position
@@ -239,12 +230,8 @@ class GestureHeuristics:
         This angle encodes how bent each finger joint is, regardless of
         the overall orientation of the hand.
 
-        Args:
-            normalized_coordinates: numpy array of shape (21, 3).
-
         Returns:
-            numpy array of shape (N_joints,), dtype float32, containing angles
-            in radians.  N_joints equals len(FINGER_JOINT_TRIPLETS).
+            float32 angles in radians, one per FINGER_JOINT_TRIPLETS entry.
         """
         angles = []
         for parent_index, pivot_index, child_index in FINGER_JOINT_TRIPLETS:
@@ -282,11 +269,8 @@ class GestureHeuristics:
         Useful for detecting pinch gestures (thumb-to-fingertip distances)
         and finger extension (wrist-to-fingertip distances).
 
-        Args:
-            normalized_coordinates: numpy array of shape (21, 3).
-
         Returns:
-            1-D numpy array of dtype float32, length = len(DEFAULT_LANDMARK_PAIRS).
+            One float32 distance per DEFAULT_LANDMARK_PAIRS entry.
         """
         distances = [
             float(
@@ -303,14 +287,7 @@ class GestureHeuristics:
     ) -> ExtractedFeatures:
         """Build an ExtractedFeatures object from a single static frame.
 
-        Normalizes coordinates, computes finger angles and inter-landmark
-        distances.  Sets frame_sequence to None.
-
-        Args:
-            landmark_frame: A LandmarkFrame produced by extract_landmark_frame.
-
-        Returns:
-            ExtractedFeatures for a static gesture.
+        frame_sequence is None, which is what marks the result as static.
         """
         normalized = self.normalize_coordinates(landmark_frame.coordinates)
         angles = self.compute_finger_angles(normalized)
@@ -332,12 +309,6 @@ class GestureHeuristics:
         (data collection) and real-time inference.  This method is the single
         source of truth for the static feature layout, so the collector and the
         demo cannot silently drift apart.
-
-        Args:
-            features: ExtractedFeatures produced by extract_features_static.
-
-        Returns:
-            numpy array of shape (81,), dtype float32.
         """
         return np.concatenate(
             [
@@ -366,17 +337,13 @@ class GestureHeuristics:
         ``MAX_INTERPOLATED_FRAMES_PER_GAP`` evenly spaced frames. Evenly sampled
         sequences (no gaps) are returned with their frames unchanged.
 
-        Args:
-            landmark_frames: Ordered list of LandmarkFrame objects (oldest
-                first). Coordinates are the raw (un-normalized) metric world
-                landmarks of shape (21, 3).
+        Frames must be ordered oldest first, holding raw (un-normalized) metric
+        world landmarks.
 
         Returns:
-            A list of LandmarkFrame objects with interpolated frames inserted
-            into detected gaps. The original frames are preserved in order;
-            interpolation only inserts frames between them. Returned unchanged
-            when there are fewer than two frames or the timestamps are
-            non-increasing/degenerate.
+            The original frames in order with interpolated frames inserted into
+            detected gaps, or the input unchanged when there are fewer than two
+            frames or the timestamps are non-increasing/degenerate.
         """
         if len(landmark_frames) < 2:
             return landmark_frames
@@ -436,20 +403,13 @@ class GestureHeuristics:
     ) -> ExtractedFeatures:
         """Build an ExtractedFeatures object from a sequence of frames.
 
-        Normalizes each frame independently, then stacks them into a 3-D
-        array of shape (N_frames, 21, 3).  Frame count is capped at
-        MAX_DYNAMIC_FRAMES to enforce the 2-second limit.
+        Frames must be ordered oldest first. Each is normalized independently
+        and the count is capped at MAX_DYNAMIC_FRAMES to enforce the 2-second
+        limit.
 
         The normalized_coordinates, finger_angles, and inter_landmark_distances
         fields reflect the *last* frame of the sequence (most recent hand
         position), which is the natural choice for single-frame inference.
-
-        Args:
-            landmark_frames: Ordered list of LandmarkFrame objects (oldest first).
-
-        Returns:
-            ExtractedFeatures for a dynamic gesture, with frame_sequence
-            populated.
 
         Raises:
             ValueError: If landmark_frames is empty.
@@ -518,12 +478,8 @@ class GestureHeuristics:
             505 - 512       8  First frame inter-landmark distances
             513 - 520       8  Last frame inter-landmark distances
 
-        Args:
-            frame_sequence: numpy array of shape (N_frames, 21, 3), dtype
-                float32.  Already normalized coordinates for each frame.
-
         Returns:
-            Flat numpy array of shape (521,), dtype float32.
+            Flat float32 array of shape (521,).
 
         Raises:
             ValueError: If frame_sequence has unexpected shape or is empty.
@@ -614,16 +570,8 @@ class GestureHeuristics:
     ) -> np.ndarray:
         """Compute the total path length traced by each fingertip.
 
-        For each fingertip landmark, sums the Euclidean distance between
-        consecutive frames to measure how far the fingertip travelled
-        during the gesture.
-
-        Args:
-            frame_sequence: numpy array of shape (N_frames, 21, 3).
-
         Returns:
-            numpy array of shape (5,), dtype float32, one path length
-            per fingertip in FINGERTIP_INDICES order.
+            One float32 path length per fingertip, in FINGERTIP_INDICES order.
         """
         path_lengths = np.zeros(len(FINGERTIP_INDICES), dtype=np.float32)
 

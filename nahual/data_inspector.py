@@ -49,16 +49,9 @@ class LabelSummary:
 def _is_valid_label_name(directory_name: str) -> bool:
     """Return True if a directory name is a valid, printable gesture label.
 
-    Rejects names that are empty or that begin with a non-printable character
-    (ordinal < 32), which guards against filesystem artifacts created by
-    ANSI escape sequences or other terminal control characters accidentally
-    being interpreted as directory names.
-
-    Args:
-        directory_name: The bare directory name string (not a full path).
-
-    Returns:
-        True if the name is non-empty and starts with a printable character.
+    Guards against filesystem artifacts created when ANSI escape sequences or
+    other terminal control characters are accidentally interpreted as
+    directory names.
     """
     return bool(directory_name) and ord(directory_name[0]) >= 32
 
@@ -66,16 +59,8 @@ def _is_valid_label_name(directory_name: str) -> bool:
 def collect_static_label_summary(label_directory: Path) -> LabelSummary:
     """Build a LabelSummary for one directory under data/static/.
 
-    Counts .npy files. Shape is always "(81,)" for valid static samples —
-    no file loading is needed because the shape is fixed by the feature
-    extractor (63 coordinates + 10 angles + 8 distances = 81).
-
-    Args:
-        label_directory: Path object pointing to data/static/<label>/.
-
-    Returns:
-        LabelSummary with gesture_type="Static", shape_description="(81,)",
-        and sample_count equal to the number of .npy files found.
+    No file is opened: the shape is fixed by the feature extractor at
+    63 coordinates + 10 angles + 8 distances = 81.
     """
     sample_count = len(list(label_directory.glob("*.npy")))
     return LabelSummary(
@@ -89,18 +74,9 @@ def collect_static_label_summary(label_directory: Path) -> LabelSummary:
 def collect_dynamic_label_summary(label_directory: Path) -> LabelSummary:
     """Build a LabelSummary for one directory under data/dynamic/.
 
-    Counts .npy files and reads each file's shape[0] (frame count) using
-    memory-mapped mode so only the numpy header is loaded — the full float
-    array is not read into RAM. shape[1:] is always (21, 3) by construction
-    (21 hand landmarks, each with x/y/z coordinates).
-
-    Args:
-        label_directory: Path object pointing to data/dynamic/<label>/.
-
-    Returns:
-        LabelSummary with gesture_type="Dynamic", a shape_description showing
-        the frame-count range (e.g. "(32-73, 21, 3)"), and sample_count equal
-        to the number of .npy files found.
+    Frame counts vary per sample, so each file is opened memory-mapped to read
+    only the numpy header rather than the full float array. shape[1:] is always
+    (21, 3) by construction.
     """
     npy_files = sorted(label_directory.glob("*.npy"))
     sample_count = len(npy_files)
@@ -130,19 +106,13 @@ def collect_dynamic_label_summary(label_directory: Path) -> LabelSummary:
 def collect_dataset_summary(data_root_directory: Path) -> list[LabelSummary]:
     """Scan the data/ directory tree and return one LabelSummary per label.
 
-    Walks data/static/ and data/dynamic/ independently. Labels that appear
-    in both subtrees produce two adjacent rows in the output (one Static,
-    one Dynamic), sorted by label_name alphabetically. Labels with zero
-    samples are omitted entirely to avoid cluttering the table with empty rows.
-
-    Args:
-        data_root_directory: Path to the project's data/ directory,
-            typically Path("data") relative to the project root.
+    A label present in both subtrees yields two adjacent rows (one Static, one
+    Dynamic). Labels with zero samples are omitted so the table stays free of
+    empty rows.
 
     Returns:
-        List of LabelSummary objects sorted globally by label_name
-        alphabetically. Returns an empty list if data_root_directory
-        does not exist or contains no label subdirectories with samples.
+        Summaries sorted by label_name, or an empty list if the directory does
+        not exist or holds no labels with samples.
     """
     summaries: list[LabelSummary] = []
 
@@ -175,17 +145,9 @@ def collect_dataset_summary(data_root_directory: Path) -> list[LabelSummary]:
 def format_dataset_table(summaries: list[LabelSummary]) -> str:
     """Render a list of LabelSummary objects as a formatted PrettyTable.
 
-    Builds a four-column table (Label, Type, Shape, Count) using PrettyTable.
-    Label, Type and Shape are left-aligned; Count is right-aligned to make
-    numbers easy to scan. A totals summary is appended below the table.
-
-    Args:
-        summaries: List of LabelSummary objects as returned by
-            collect_dataset_summary().
-
     Returns:
-        A multi-line string ready to be passed to print(). Returns an
-        actionable message if summaries is empty.
+        A multi-line string ready to print, or an actionable message telling
+        the user how to collect samples if there are none.
     """
     if not summaries:
         return "No data found. Collect samples with:\n" "    uv run python collect.py"

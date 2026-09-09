@@ -24,14 +24,8 @@ def parse_sign_language_argument(description: str) -> str:
 
     Used by all four root scripts (collect.py, inspect_data.py, main.py,
     train.py) so the flag behaves identically everywhere. The flags are
-    mutually exclusive; passing both is rejected by argparse.
-
-    Args:
-        description: Text shown in the script's --help output, identifying
-            which entry point is running.
-
-    Returns:
-        The selected language code, defaulting to "lsm" when no flag is given.
+    mutually exclusive; passing both is rejected by argparse. Defaults to the
+    first entry in SIGN_LANGUAGES when no flag is given.
     """
     parser = argparse.ArgumentParser(description=description)
     group = parser.add_mutually_exclusive_group()
@@ -48,25 +42,8 @@ def parse_sign_language_argument(description: str) -> str:
 
 
 def data_directory(language: str) -> Path:
-    """Return the dataset root for a language (e.g. data/lsm).
-
-    Args:
-        language: Language code from SIGN_LANGUAGES.
-
-    Returns:
-        Path to the directory holding that language's static/ and dynamic/
-        sample subdirectories.
-    """
     return Path("data") / language
 
 
 def models_directory(language: str) -> Path:
-    """Return the trained-model directory for a language (e.g. models/lsm).
-
-    Args:
-        language: Language code from SIGN_LANGUAGES.
-
-    Returns:
-        Path to the directory holding that language's .pkl classifiers.
-    """
     return Path("models") / language

@@ -111,11 +111,7 @@ class GestureCollector:
     """
 
     def __init__(self, config: Optional[CollectorConfig] = None) -> None:
-        """Initialize the collector with optional configuration.
-
-        Args:
-            config: CollectorConfig dataclass.  Defaults are used if None.
-        """
+        """Initialize the collector, applying CollectorConfig defaults if None."""
         self.config = config or CollectorConfig()
         self.heuristics = GestureHeuristics()
         self.session = CollectionSession()
@@ -171,7 +167,6 @@ class GestureCollector:
                         draw_landmark_debug(frame, result)
                     draw_hand_connections(frame, result)
 
-                # Buffer frames during dynamic capture.
                 if self._is_capturing_dynamic and current_landmark_frame is not None:
                     self._buffer_dynamic_frame(current_landmark_frame)
                     elapsed = time.time() - self._dynamic_start_time
@@ -209,10 +204,10 @@ class GestureCollector:
         )
 
     def set_label(self, label: str) -> None:
-        """Set the active gesture label and create its output directory.
+        """Set the active gesture label and reset the per-label sample counter.
 
-        Args:
-            label: Non-empty alphanumeric label string (e.g., "A", "espacio").
+        An empty or whitespace-only label is rejected with a message and leaves
+        the current label untouched.
         """
         label = label.strip()
         if not label:
@@ -226,9 +221,6 @@ class GestureCollector:
     def capture_static_sample(self, landmark_frame: LandmarkFrame) -> Path:
         """Extract features from one frame and write to disk.
 
-        Args:
-            landmark_frame: The LandmarkFrame to save.
-
         Returns:
             Path of the written .npy file.
 
@@ -238,14 +230,6 @@ class GestureCollector:
         self._require_label()
         features = self.heuristics.extract_features_static(landmark_frame)
 
-        # Concatenate all heuristic outputs into a single flat feature vector:
-        #   - normalized_coordinates: wrist-centred, palm-scale-invariant positions
-        #     (21 landmarks × 3 axes = 63 values)
-        #   - finger_angles: per-joint flexion angles derived from FINGER_JOINT_TRIPLETS
-        #     (10 values, one per joint pair)
-        #   - inter_landmark_distances: Euclidean distances between DEFAULT_LANDMARK_PAIRS
-        #     (8 values)
-        # Total: 81 float32 features saved as a 1-D array of shape (81,).
         feature_vector = self.heuristics.flatten_static_features(features)
 
         nc_end = len(features.normalized_coordinates.flatten())
@@ -272,8 +256,8 @@ class GestureCollector:
     def start_dynamic_capture(self) -> None:
         """Begin buffering frames for a dynamic gesture sample.
 
-        Clears any existing buffer and sets the recording flag so that
-        subsequent frames are accumulated.
+        Discards any half-recorded buffer from a previous attempt. A no-op with
+        a message when no label has been set.
         """
         if self.session.label is None:
             print("[collector] Set a label first (press 'l').")
@@ -288,9 +272,6 @@ class GestureCollector:
 
     def stop_dynamic_capture_and_save(self) -> Optional[Path]:
         """Stop buffering, process accumulated frames, and save to disk.
-
-        Applies GestureHeuristics.extract_features_dynamic to the buffer,
-        then saves the resulting frame_sequence array.
 
         Returns:
             Path of the written .npy file, or None if the buffer was empty.
@@ -324,29 +305,15 @@ class GestureCollector:
     # ------------------------------------------------------------------
 
     def _detect_landmarks(self, landmarker, frame: np.ndarray, timestamp_ms: int):
-        """Run the hand landmarker on one BGR frame.
-
-        Delegates to the shared nahual.hand_landmarker.detect_landmarks helper so
-        the collector and the real-time demo use identical detection boilerplate.
-
-        Args:
-            landmarker: MediaPipe HandLandmarker context object.
-            frame: OpenCV BGR frame.
-            timestamp_ms: Frame timestamp in milliseconds.
-
-        Returns:
-            HandLandmarkerResult, or None if detection fails.
-        """
+        """Delegate to the shared helper so the collector and the demo detect
+        through identical boilerplate."""
         return detect_landmarks(landmarker, frame, timestamp_ms)
 
     def _buffer_dynamic_frame(self, landmark_frame: LandmarkFrame) -> None:
         """Append a frame to the dynamic capture buffer.
 
-        Silently discards frames beyond MAX_DYNAMIC_FRAMES to honour
-        the hard cap.
-
-        Args:
-            landmark_frame: LandmarkFrame to append.
+        Frames beyond MAX_DYNAMIC_FRAMES are silently discarded to honour the
+        hard cap.
         """
         if len(self._dynamic_frame_buffer) < MAX_DYNAMIC_FRAMES:
             self._dynamic_frame_buffer.append(landmark_frame)
@@ -354,11 +321,8 @@ class GestureCollector:
     def _build_output_path(self, gesture_type: str) -> Path:
         """Construct a unique output path for a new sample file.
 
-        Args:
-            gesture_type: "static" or "dynamic", determines the subdirectory.
-
-        Returns:
-            Path: data/<type>/<label>/<uuid4>.npy
+        Creates the label directory if needed and returns
+        data/<gesture_type>/<label>/<uuid4>.npy.
         """
         label_directory = (
             self.config.data_root_directory / gesture_type / self.session.label
@@ -375,12 +339,8 @@ class GestureCollector:
         """Atomically write a numpy array and append to the manifest.
 
         Uses a temporary file + os.replace to avoid partial writes if the
-        process is interrupted mid-write.
-
-        Args:
-            array: The numpy array to save in .npy format.
-            output_path: Destination path for the .npy file.
-            metadata: Dict appended to the label's manifest.json.
+        process is interrupted mid-write. ``metadata`` is appended to the
+        label's manifest.json.
         """
         temp_path = output_path.with_suffix(".tmp")
         np.save(str(temp_path), array)
@@ -390,12 +350,8 @@ class GestureCollector:
     def _update_manifest(self, label_directory: Path, entry: Dict) -> None:
         """Append one entry to the manifest.json in the label directory.
 
-        The manifest is created if it does not exist.  It stores an array
-        of sample metadata objects under the "samples" key.
-
-        Args:
-            label_directory: Directory containing the .npy samples.
-            entry: Dict with file name, session ID, timestamp, etc.
+        The manifest is created if it does not exist. It stores an array of
+        sample metadata objects under the "samples" key.
         """
         manifest_path = label_directory / "manifest.json"
         if manifest_path.exists():
@@ -412,11 +368,6 @@ class GestureCollector:
             json.dump(manifest, manifest_file, indent=2)
 
     def _require_label(self) -> None:
-        """Raise RuntimeError if no label has been set.
-
-        Raises:
-            RuntimeError: If self.session.label is None.
-        """
         if self.session.label is None:
             raise RuntimeError(
                 "No label set.  Press 'l' and enter a label before capturing."
@@ -448,13 +399,7 @@ class GestureCollector:
         which handles all OpenCV drawing.  Keeping the string logic here also
         makes it independently testable without an OpenCV frame.
 
-        Args:
-            current_landmark_frame: The latest landmark frame, or None when no
-                hand is currently detected.
-            hand_confidence: Detection confidence score in [0, 1] from MediaPipe
-                handedness, or None when no hand is detected.
-            handedness: Detected hand side ("Left" or "Right") from MediaPipe,
-                or None when no hand is detected.
+        Every argument is None when no hand is detected this frame.
 
         Returns:
             A single-line string combining the hand-detection status prefix and
@@ -490,18 +435,9 @@ class GestureCollector:
 
         Draws two stacked bars at the top of the frame: the hint bar (hand
         detection state + keyboard shortcuts) followed immediately by the
-        status bar (label, gesture type, sample count).
-
-        Args:
-            frame: BGR frame to annotate in-place.
-            current_landmark_frame: The latest landmark frame, or None if
-                no hand is detected (used to show a "no hand" warning).
-            hand_confidence: Detection confidence in [0, 1] from MediaPipe
-                handedness, or None when no hand is detected.
-            handedness: Detected hand side ("Left" or "Right") from MediaPipe,
-                or None when no hand is detected.
+        status bar (label, gesture type, sample count). The frame is annotated
+        in place.
         """
-        # Determine recording message.
         recording_message: Optional[str] = None
         if self._is_capturing_dynamic:
             elapsed = time.time() - self._dynamic_start_time
@@ -523,7 +459,6 @@ class GestureCollector:
 
     @staticmethod
     def _print_instructions() -> None:
-        """Print keyboard shortcut instructions to the terminal."""
         print(
             "\n=== Nahual Collector ===\n"
             "  l  -- Enter label\n"

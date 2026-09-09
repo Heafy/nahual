@@ -17,11 +17,7 @@ from nahual.sign_language import data_directory, parse_sign_language_argument
 
 
 def main() -> None:
-    """Load dataset summaries and print the inspection table.
-
-    Scans the selected sign language's data directory and prints a
-    formatted table with label, gesture type, shape, and sample count.
-    """
+    """Load dataset summaries and print the inspection table."""
     language = parse_sign_language_argument("Inspect the Nahual gesture dataset.")
     summaries = collect_dataset_summary(data_directory(language))
     print(format_dataset_table(summaries))

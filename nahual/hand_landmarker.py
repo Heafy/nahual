@@ -37,26 +37,19 @@ class HandLandmarkerConfig:
 
     This is the single source of truth for the hand-detection settings shared by
     ``main.py`` and ``nahual/gesture_collector.py``. The same values are mirrored
-    in ``web/browser/app.js`` for the browser demo and must be changed together.
+    in ``web/browser/app.js`` for the browser demo and must be changed together,
+    or the desktop and browser front-ends will detect differently.
 
     Attributes:
-        model_asset_path: Filesystem path to the ``hand_landmarker.task`` model
-            asset.
-        num_hands: Maximum number of hands to detect per frame.
-        min_hand_detection_confidence: Minimum confidence for the initial palm
-            detection to be considered successful.
-        min_hand_presence_confidence: Minimum confidence for the hand-presence
-            score in the landmark model.
-        min_tracking_confidence: Minimum confidence for the hand-tracking to be
-            considered successful between frames.
+        min_hand_detection_confidence: Gates the initial palm detection.
+        min_hand_presence_confidence: Gates the hand-presence score inside the
+            landmark model, which is a separate stage from palm detection.
 
     Tuning note:
         The three confidence values gate *detection* only (whether MediaPipe
         emits a hand), not the landmark geometry the classifiers consume, so
         they can be changed and tested in ``main.py`` without retraining.
-        While these differ from the ``web/browser/app.js`` mirror the desktop
-        and browser demos detect differently — re-sync app.js (and
-        recollect/retrain if the change is kept) before shipping.
+        Re-sync ``web/browser/app.js`` before shipping any change.
     """
 
     model_asset_path: str = "models/hand_landmarker.task"
@@ -74,18 +67,10 @@ def build_hand_landmarker(
 ) -> vision.HandLandmarker:
     """Construct a HandLandmarker configured for VIDEO mode from a config.
 
-    Builds the MediaPipe options object from the given configuration and returns
-    a ready-to-use landmarker. VIDEO running mode expects monotonically
-    increasing timestamps and is what both desktop tools use for a live webcam
-    stream. The returned object is a context manager, so callers can use it with
+    VIDEO running mode expects monotonically increasing timestamps and is what
+    both desktop tools use for a live webcam stream. The returned object is a
+    context manager, so callers can use it with
     ``with build_hand_landmarker(...) as landmarker:``.
-
-    Args:
-        config: The detection parameters to apply. Defaults to
-            :class:`HandLandmarkerConfig` with the project's canonical values.
-
-    Returns:
-        A HandLandmarker configured for single-stream VIDEO detection.
     """
     base_options = python.BaseOptions(model_asset_path=config.model_asset_path)
     options = vision.HandLandmarkerOptions(
@@ -106,17 +91,9 @@ def detect_landmarks(
 ) -> vision.HandLandmarkerResult:
     """Run the hand landmarker on one OpenCV BGR frame.
 
-    Wraps the boilerplate shared by every desktop caller: convert the OpenCV BGR
-    frame to the RGB layout MediaPipe expects, wrap it in an ``mp.Image``, and
-    run VIDEO-mode detection at the given timestamp.
-
-    Args:
-        landmarker: A HandLandmarker created by :func:`build_hand_landmarker`.
-        frame_bgr: The OpenCV frame in BGR channel order.
-        timestamp_ms: Monotonically increasing frame timestamp in milliseconds.
-
-    Returns:
-        The HandLandmarkerResult for this frame.
+    Wraps the boilerplate shared by every desktop caller: OpenCV hands back BGR
+    but MediaPipe expects RGB, so the frame is converted before detection.
+    ``timestamp_ms`` must increase monotonically, as VIDEO mode requires.
     """
     rgb_frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)

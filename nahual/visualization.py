@@ -39,15 +39,10 @@ LANDMARK_NAMES = (
 
 
 def draw_landmark_debug(frame, hand_landmarker_result):
-    """Put landmark coordinate text on the OpenCV frame.
+    """Put landmark coordinate text for every detected hand on the frame.
 
-    Renders each landmark's world-coordinate values as colored text lines
-    at the bottom of the frame, with a white background for readability.
-    Draws all detected hands.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        hand_landmarker_result: Result from HandLandmarker.detect_for_video.
+    Lines are drawn bottom-up over a white background so the values stay
+    readable against arbitrary camera input.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.4
@@ -92,15 +87,7 @@ def draw_landmark_debug(frame, hand_landmarker_result):
 
 
 def draw_hand_connections(frame, hand_landmarker_result):
-    """Draw MediaPipe hand skeleton connections on the frame.
-
-    Uses MediaPipe's built-in drawing utilities to render the hand graph
-    (bones between landmarks) with the default color style.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        hand_landmarker_result: Result from HandLandmarker.detect_for_video.
-    """
+    """Draw MediaPipe hand skeleton connections on the frame."""
     for hand_landmarks in hand_landmarker_result.hand_landmarks:
         drawing_utils.draw_landmarks(
             frame,
@@ -121,23 +108,11 @@ def draw_status_bar(
 ) -> int:
     """Draw a status bar on the collector frame at a given vertical offset.
 
-    Shows the current label, gesture type, sample count, and an optional
-    message (e.g., countdown, recording indicator).  The bar height is
-    returned so callers can stack multiple bars without hard-coding pixel
-    positions.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        label: Current label string, or "(none)" if not set.
-        gesture_type_name: String name of the gesture type ("STATIC" or "DYNAMIC").
-        samples_captured: Integer count of samples captured this session.
-        message: Optional string shown in a highlighted box (e.g., "RECORDING").
-        y_offset: Vertical pixel offset from the top of the frame at which the
-            bar should be drawn.  Defaults to 0 (top of frame).
+    ``message`` is shown in a highlighted box (e.g. a countdown or "RECORDING").
 
     Returns:
-        The pixel height of the drawn bar so the next bar can use it as its
-        own y_offset.
+        The pixel height of the drawn bar, so callers can stack bars by passing
+        it as the next bar's y_offset instead of hard-coding positions.
     """
     # Status text — label tier, matches draw_prediction_columns label line.
     label_font = cv2.FONT_HERSHEY_SIMPLEX
@@ -212,20 +187,12 @@ def draw_status_bar(
 def draw_hint_bar(frame, hint_text: str, y_offset: int = 0) -> int:
     """Draw a keyboard-hint and hand-detection status bar on the frame.
 
-    Renders a full-width background bar with the hint text using the same
-    visual style as draw_status_bar (font, colors, padding).  The bar is
-    positioned at y_offset from the top, so multiple bars can be stacked by
-    passing the return value of a previous bar call as the next y_offset.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        hint_text: Full hint string to display (e.g., "HAND: 95%  |  [l] label ...").
-        y_offset: Vertical pixel offset from the top of the frame at which the
-            bar should be drawn.  Defaults to 0 (top of frame).
+    Deliberately mirrors draw_status_bar's font, colors and padding so stacked
+    bars read as one panel.
 
     Returns:
-        The pixel height of the drawn bar so the next bar can use it as its
-        own y_offset.
+        The pixel height of the drawn bar, so callers can stack bars by passing
+        it as the next bar's y_offset instead of hard-coding positions.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.6
@@ -317,24 +284,14 @@ def _draw_translucent_rect(frame, top_left, bottom_right, color, alpha):
 def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.65):
     """Draw the fixed two-column prediction overlay on the desktop frame.
 
-    Renders a stable panel that never shifts as signs come and go: two
-    equal-height columns (static on the left, dynamic on the right) and a
-    recording row beneath them. All three backgrounds are drawn every frame with
-    a lightly-opaque black fill, and only the *text* inside appears or clears —
-    the same design as the browser demo (``web/browser/``).
+    The panel deliberately never shifts as signs come and go: backgrounds are
+    drawn every frame and only the text inside appears or clears, and each
+    column reserves a third line for the low-confidence warning so its height
+    is fixed even when that line is absent. This matches the browser demo
+    (``web/browser/``).
 
-    The ``Static:`` / ``Dynamic:`` headers are always shown; the detected letter,
-    the secondary confidence line, and the low-confidence warning appear only
-    when there is a result. Each column reserves three text lines (label +
-    secondary + warning slot) so the box height is fixed even when the warning
-    line is absent. Long lines are auto-fit to their column width.
-
-    Args:
-        frame: OpenCV BGR frame to draw on (modified in place).
-        overlay: The dict returned by
-            :meth:`nahual.realtime_session.RealtimeGestureSession.process_frame`.
-        low_confidence_threshold: Static confidence below which the red
-            "Low confidence" warning line is shown.
+    ``overlay`` is the dict returned by
+    :meth:`nahual.realtime_session.RealtimeGestureSession.process_frame`.
     """
     frame_width = frame.shape[1]
 

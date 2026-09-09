@@ -154,20 +154,12 @@ class GestureTrainer:
     def load_static_data(self) -> Tuple[np.ndarray, List[str]]:
         """Load all static gesture samples into a flat numpy matrix.
 
-        Walks ``data/static/<label>/`` directories and loads each .npy file
-        (shape (81,), dtype float32).  The label is inferred from the parent
-        directory name.
-
-        Each feature vector contains 63 normalised landmark coordinates,
-        10 finger joint angles, and 8 inter-landmark distances concatenated
-        into a single flat array.
+        Walks ``data/static/<label>/`` directories and loads each .npy file,
+        inferring the label from the parent directory name. The (81,) vector
+        layout is defined by GestureHeuristics.flatten_static_features.
 
         Returns:
-            Tuple of:
-                feature_matrix: numpy array of shape (N_samples, 81),
-                    dtype float32.
-                labels: List of string labels, length N_samples, aligned
-                    row-for-row with feature_matrix.
+            A (N_samples, 81) float32 matrix and the labels aligned to its rows.
 
         Raises:
             FileNotFoundError: If the static data directory does not exist.
@@ -242,20 +234,14 @@ class GestureTrainer:
     def load_dynamic_data(self) -> Tuple[np.ndarray, List[str]]:
         """Load all dynamic gesture samples and extract statistical features.
 
-        Walks ``data/dynamic/<label>/`` directories, loads each .npy file
-        (shape (N_frames, 21, 3)), and computes temporal statistical features
-        via GestureHeuristics.extract_statistical_features_dynamic() to produce
-        a fixed-length feature vector per sample.
-
-        No padding is needed because the statistical feature extraction
-        inherently handles variable-length sequences.
+        Walks ``data/dynamic/<label>/`` directories, inferring the label from
+        the parent directory name. Samples have variable frame counts, but no
+        padding is needed: extract_statistical_features_dynamic collapses each
+        one to a fixed-length vector.
 
         Returns:
-            Tuple of:
-                feature_matrix: numpy array of shape
-                    (N_samples, DYNAMIC_STATISTICAL_FEATURE_LENGTH),
-                    dtype float32.
-                labels: List of string labels, length N_samples.
+            A (N_samples, DYNAMIC_STATISTICAL_FEATURE_LENGTH) float32 matrix and
+            the labels aligned to its rows.
 
         Raises:
             FileNotFoundError: If the dynamic data directory does not exist.
@@ -345,13 +331,8 @@ class GestureTrainer:
         to a non-stratified split if any class has too few samples for
         stratification.
 
-        Args:
-            feature_matrix: numpy array of shape (N, F).
-            labels: List of string labels, length N.
-
         Returns:
-            Tuple of (X_train, X_test, y_train, y_test) where X values are
-            numpy arrays and y values are lists of string labels.
+            (X_train, X_test, y_train, y_test).
         """
         try:
             x_train, x_test, y_train, y_test = train_test_split(
@@ -381,13 +362,11 @@ class GestureTrainer:
         return x_train, x_test, y_train, y_test
 
     def train(self, feature_matrix: np.ndarray, labels: List[str]) -> TrainingResult:
-        """Fit the static model on (feature_matrix, labels) and evaluate it. See _train."""
         return self._train("static", feature_matrix, labels)
 
     def train_dynamic(
         self, feature_matrix: np.ndarray, labels: List[str]
     ) -> TrainingResult:
-        """Fit the dynamic model on (feature_matrix, labels) and evaluate it. See _train."""
         return self._train("dynamic", feature_matrix, labels)
 
     def _train(
@@ -398,19 +377,13 @@ class GestureTrainer:
     ) -> TrainingResult:
         """Shared fit/evaluate/persist routine for the static and dynamic models.
 
-        Internally calls split_train_test, fits a RandomForestClassifier on
-        the training partition, evaluates on the test partition, and persists
-        the model to disk.  The Random Forest is configured with
-        DEFAULT_RF_HYPERPARAMETERS.
-
-        Args:
-            kind: "static" or "dynamic" — selects which model slot to train.
-            feature_matrix: numpy array of shape (N, F).
-            labels: List of string labels, length N.
+        ``kind`` is "static" or "dynamic" and selects the model slot. The
+        Random Forest is configured with DEFAULT_RF_HYPERPARAMETERS. The model
+        is persisted to disk before returning.
 
         Returns:
-            TrainingResult containing accuracy, per-class metrics,
-            confusion matrix, and the path of the saved model artifact.
+            TrainingResult containing accuracy, per-class metrics, confusion
+            matrix, and the path of the saved model artifact.
         """
         # Fit the label encoder on the full label set so all classes are known.
         label_encoder = LabelEncoder()
@@ -445,7 +418,6 @@ class GestureTrainer:
         return result
 
     def evaluate(self, feature_matrix: np.ndarray, labels: List[str]) -> TrainingResult:
-        """Evaluate the previously loaded static model on labelled data. See _evaluate."""
         return self._evaluate("static", feature_matrix, labels)
 
     def _evaluate(
@@ -456,13 +428,7 @@ class GestureTrainer:
     ) -> TrainingResult:
         """Shared evaluation routine for the static and dynamic models.
 
-        Args:
-            kind: "static" or "dynamic" — selects which model slot to evaluate.
-            feature_matrix: numpy array of shape (N, F).
-            labels: List of string labels, length N.
-
-        Returns:
-            TrainingResult dataclass with evaluation statistics.
+        ``kind`` is "static" or "dynamic" and selects the model slot.
 
         Raises:
             RuntimeError: If the selected model has not been loaded or trained.
@@ -516,12 +482,9 @@ class GestureTrainer:
     def _save(self, kind: str, output_path: Optional[Path] = None) -> Path:
         """Shared persistence routine for the static and dynamic models.
 
+        ``kind`` is "static" or "dynamic" and selects the model slot.
         Serialises a dictionary containing the model, label encoder, and
         metadata so that _load can fully restore the trainer state.
-
-        Args:
-            kind: "static" or "dynamic" — selects which model slot to save.
-            output_path: Override the default output path.
 
         Returns:
             The path the model was saved to.
@@ -558,19 +521,15 @@ class GestureTrainer:
         return output_path
 
     def load_model(self, model_path: Path) -> None:
-        """Deserialise a previously saved static model from model_path. See _load."""
         self._load("static", model_path)
 
     def load_dynamic_model(self, model_path: Path) -> None:
-        """Deserialise a previously saved dynamic model from model_path. See _load."""
         self._load("dynamic", model_path)
 
     def _load(self, kind: str, model_path: Path) -> None:
         """Shared deserialisation routine for the static and dynamic models.
 
-        Args:
-            kind: "static" or "dynamic" — selects which model slot to restore.
-            model_path: Path to the serialised model file (.pkl).
+        ``kind`` is "static" or "dynamic" and selects the model slot.
 
         Raises:
             FileNotFoundError: If model_path does not exist.
@@ -601,7 +560,6 @@ class GestureTrainer:
     def predict_dynamic_with_confidence(
         self, feature_vector: np.ndarray
     ) -> tuple[str, float]:
-        """Run dynamic inference on a statistical feature vector. See _predict_with_confidence."""
         return self._predict_with_confidence("dynamic", feature_vector)
 
     def _predict_with_confidence(
@@ -609,13 +567,11 @@ class GestureTrainer:
     ) -> tuple[str, float]:
         """Shared inference routine for the static and dynamic models.
 
-        Args:
-            kind: "static" or "dynamic" — selects which model slot to run.
-            feature_vector: numpy array of the shape the selected model expects.
+        ``kind`` is "static" or "dynamic" and selects the model slot;
+        ``feature_vector`` must match the shape that model expects.
 
         Returns:
-            A tuple of (label, confidence) where label is the predicted class
-            string and confidence is a float in [0, 1].
+            (label, confidence), with confidence in [0, 1].
 
         Raises:
             RuntimeError: If the selected model has not been loaded or trained.
