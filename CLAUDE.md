@@ -102,9 +102,9 @@ itself is **not** encoded in the label, since the `data/<language>/` and
   `models/asl/dynamic_gesture_classifier.pkl`. Planned labels: `letter_j`,
   `letter_z`.
 
-As of this writing the ASL directories and models do not yet exist — they are
-created on first `uv run python collect.py -asl` /
-`uv run python train.py -asl`.
+ASL data collection is still in progress, so its dataset does not yet cover
+every planned label; both ASL classifiers are trained from whatever labels are
+present.
 
 # Keep Dependencies in Sync
 

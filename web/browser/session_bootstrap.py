@@ -10,14 +10,20 @@ running client-side under Pyodide. This is the same Python that ``main.py`` and
 the old FastAPI server used; nothing about the feature extraction, motion state
 machine, or classification is reimplemented in JavaScript.
 
-The nahual package source and the trained ``.pkl`` models are written into the
-Pyodide virtual filesystem by ``app.js`` before this script runs. This module
-loads the models, creates one session, and exposes three JavaScript-callable
-functions:
+The nahual package source is written into the Pyodide virtual filesystem by
+``app.js`` before this script runs; the trained ``.pkl`` models are written
+under ``/session/models/<language>/`` as each language is first selected. This
+module exposes three JavaScript-callable functions:
 
+    set_language_js(language)     -> configuration JSON string
     process_frame_js(payload_json) -> overlay JSON string
     toggle_manual_js()            -> None (mirrors the desktop 'd' key)
-    status_js()                   -> configuration JSON string
+
+``set_language_js`` loads that language's classifiers and replaces the session,
+which is how the LSM/ASL switch in the UI works. It must be called once before
+the first frame; ``app.js`` calls it with the default language at startup.
+Rebuilding the session on every switch also resets the capture state machine,
+so a recording in progress cannot leak across alphabets.
 
 Payloads cross the JS/Python boundary as JSON strings so no proxy objects need
 manual lifetime management on the hot per-frame path.
@@ -42,54 +48,93 @@ from nahual.realtime_session import (MOTION_START_THRESHOLD,
                                      MOTION_STOP_THRESHOLD,
                                      RealtimeGestureSession)
 
-# Locations in the Pyodide virtual filesystem that app.js populates before
-# importing this module.
-MODELS_DIRECTORY = Path("/session/models")
-STATIC_MODEL_PATH = MODELS_DIRECTORY / "gesture_classifier.pkl"
-DYNAMIC_MODEL_PATH = MODELS_DIRECTORY / "dynamic_gesture_classifier.pkl"
+# Root of the model tree in the Pyodide virtual filesystem, populated by
+# app.js. Mirrors the repository layout: one subdirectory per sign language,
+# each holding the two classifier pickles.
+MODELS_ROOT = Path("/session/models")
+STATIC_MODEL_FILENAME = "gesture_classifier.pkl"
+DYNAMIC_MODEL_FILENAME = "dynamic_gesture_classifier.pkl"
 
 # Number of MediaPipe hand landmarks expected per frame.
 EXPECTED_LANDMARK_COUNT = 21
 
+# The active recognition session, replaced by set_language_js. None until the
+# front-end selects a language.
+_SESSION = None
 
-def _load_trainer():
-    """Load the static and dynamic classifiers if their files exist.
+
+def _load_trainer(models_directory):
+    """Load the static and dynamic classifiers from one language's directory.
 
     Mirrors the graceful loading used by the desktop demo and the old FastAPI
     server: each model is loaded inside a try/except so a missing or broken
     artifact disables that prediction path instead of aborting startup.
 
+    Args:
+        models_directory: Directory holding that language's two .pkl files,
+            e.g. /session/models/lsm.
+
     Returns:
         A tuple of (trainer, static_model_available, dynamic_model_available).
     """
-    trainer = GestureTrainer(TrainingConfig(model_output_directory=MODELS_DIRECTORY))
+    trainer = GestureTrainer(TrainingConfig(model_output_directory=models_directory))
 
-    static_model_available = STATIC_MODEL_PATH.exists()
+    static_model_path = models_directory / STATIC_MODEL_FILENAME
+    static_model_available = static_model_path.exists()
     if static_model_available:
         try:
-            trainer.load_model(STATIC_MODEL_PATH)
+            trainer.load_model(static_model_path)
         except Exception:
             static_model_available = False
 
-    dynamic_model_available = DYNAMIC_MODEL_PATH.exists()
+    dynamic_model_path = models_directory / DYNAMIC_MODEL_FILENAME
+    dynamic_model_available = dynamic_model_path.exists()
     if dynamic_model_available:
         try:
-            trainer.load_dynamic_model(DYNAMIC_MODEL_PATH)
+            trainer.load_dynamic_model(dynamic_model_path)
         except Exception:
             dynamic_model_available = False
 
     return trainer, static_model_available, dynamic_model_available
 
 
-_TRAINER, STATIC_MODEL_AVAILABLE, DYNAMIC_MODEL_AVAILABLE = _load_trainer()
+def set_language_js(language):
+    """Load one language's classifiers and start a fresh session with them.
 
-# One session per page load, exactly like one desktop run or one old WebSocket
-# connection. It carries all the mutable per-frame recognition state.
-_SESSION = RealtimeGestureSession(
-    trainer=_TRAINER,
-    static_model_available=STATIC_MODEL_AVAILABLE,
-    dynamic_model_available=DYNAMIC_MODEL_AVAILABLE,
-)
+    Called by app.js at startup with the default language and again on every
+    LSM/ASL switch. The module-level session is rebound in place rather than by
+    re-running this script, so the PyProxy handles the front-end holds for
+    process_frame_js and toggle_manual_js stay valid across a switch.
+
+    Args:
+        language: Language code naming a subdirectory of MODELS_ROOT that
+            app.js has already populated (e.g. "lsm", "asl").
+
+    Returns:
+        A JSON string with the startup configuration the front-end needs: which
+        of this language's models loaded, and the motion thresholds. The
+        thresholds are language-independent but are reported here so the
+        front-end reads the real Python constants rather than duplicating them.
+    """
+    global _SESSION
+
+    trainer, static_model_available, dynamic_model_available = _load_trainer(
+        MODELS_ROOT / language
+    )
+    _SESSION = RealtimeGestureSession(
+        trainer=trainer,
+        static_model_available=static_model_available,
+        dynamic_model_available=dynamic_model_available,
+    )
+
+    return json.dumps(
+        {
+            "static_model_available": static_model_available,
+            "dynamic_model_available": dynamic_model_available,
+            "motion_start_threshold": MOTION_START_THRESHOLD,
+            "motion_stop_threshold": MOTION_STOP_THRESHOLD,
+        }
+    )
 
 
 def _build_landmark_frame(landmarks, timestamp_ms):
@@ -151,20 +196,3 @@ def process_frame_js(payload_json):
 def toggle_manual_js():
     """Start or stop a manual dynamic recording (mirrors the desktop 'd' key)."""
     _SESSION.toggle_manual()
-
-
-def status_js():
-    """Return startup configuration the front-end needs, as a JSON string.
-
-    Exposes which models are loaded and the motion thresholds, mirroring the
-    old ``/api/status`` endpoint so the browser readout can show the real
-    Python constants.
-    """
-    return json.dumps(
-        {
-            "static_model_available": STATIC_MODEL_AVAILABLE,
-            "dynamic_model_available": DYNAMIC_MODEL_AVAILABLE,
-            "motion_start_threshold": MOTION_START_THRESHOLD,
-            "motion_stop_threshold": MOTION_STOP_THRESHOLD,
-        }
-    )

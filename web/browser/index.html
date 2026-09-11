@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nahual — LSM Gesture Recognition</title>
+  <title>Nahual: Sign Language Recognition</title>
   <link rel="stylesheet" href="./style.css" />
   <!-- Pyodide runtime (classic script; defines the global loadPyodide). -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.js"></script>
@@ -13,9 +13,10 @@
     <h1>Nahual</h1>
     <p class="byline">Created by <span class="byline-name">Jorge Martinez</span></p>
     <p class="subheader">
-      Real-time recognition of the LSM (Lengua de Señas Mexicana) alphabet —
-      static poses and motion gestures detected live from your webcam. Runs
-      entirely in your browser; no video ever leaves your device.
+      Real-time recognition of two sign language alphabets, LSM (Lengua de
+      Señas Mexicana) and ASL (American Sign Language). Static poses and motion
+      gestures detected live from your webcam. Runs entirely in your browser,
+      so no video ever leaves your device.
     </p>
   </header>
 
@@ -54,6 +55,17 @@
     </div>
 
     <div class="controls">
+      <!-- Sign language switch. Radio inputs (not buttons) so keyboard and
+           screen-reader behaviour comes from the native control; the pill look
+           is pure CSS. Disabled until Pyodide has loaded the default language's
+           models, and again while a switch is in flight. -->
+      <fieldset class="language-switch">
+        <legend class="visually-hidden">Sign language</legend>
+        <input type="radio" name="language" id="language-lsm" value="lsm" checked disabled />
+        <label for="language-lsm">LSM</label>
+        <input type="radio" name="language" id="language-asl" value="asl" disabled />
+        <label for="language-asl">ASL</label>
+      </fieldset>
       <button id="record-button" disabled>Start manual recording</button>
       <p id="status-message">Loading…</p>
     </div>
@@ -61,6 +73,7 @@
 
   <footer>
     <h2>Resources / Links</h2>
+    <h3>LSM</h3>
     <ul class="footer-links">
       <li>
         <a href="https://educacionespecial.sep.gob.mx/storage/recursos/2023/05/xzrfl019nV-4Diccionario_lengua_%20Senas.pdf"
@@ -74,6 +87,12 @@
           Alfabeto de Lengua de Señas Mexicana — Video
         </a>
       </li>
+    </ul>
+    <h3>ASL</h3>
+    <!-- TODO(jorge): add ASL references here, same <li><a> shape as the LSM
+         list above. Delete this comment and the placeholder item once filled. -->
+    <ul class="footer-links">
+      <li>References coming soon.</li>
     </ul>
 
     <h2>Motion debug parameters</h2>

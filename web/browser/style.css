@@ -225,6 +225,57 @@ main {
   gap: 0.5rem;
 }
 
+/* Segmented pill: the radio inputs themselves are hidden and their labels are
+   the visible segments, so a click or an arrow key still drives the native
+   control. */
+.language-switch {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #2b2b31;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.language-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.language-switch label {
+  padding: 0.35rem 1.1rem;
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
+  cursor: pointer;
+}
+
+.language-switch input:checked + label {
+  background: #2b2b31;
+  color: #f2f2f5;
+}
+
+/* Keyboard focus lands on the hidden input, so mirror the ring onto its label. */
+.language-switch input:focus-visible + label {
+  outline: 2px solid #2b2b31;
+  outline-offset: -2px;
+}
+
+.language-switch input:disabled + label {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Available to screen readers, invisible on screen (used by the switch legend). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 #record-button {
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -261,6 +312,13 @@ footer {
 footer h2 {
   margin: 1.25rem 0 0.5rem;
   font-size: 1.1rem;
+}
+
+/* Per-language subheadings inside the resource list. */
+footer h3 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.95rem;
+  color: var(--muted-text-color);
 }
 
 footer h2:first-child {

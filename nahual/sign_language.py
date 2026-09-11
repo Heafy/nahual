@@ -9,7 +9,8 @@ stay isolated between languages. The MediaPipe hand_landmarker.task asset is
 language-independent and stays at the models/ top level.
 
 Not imported by any module bundled into the browser demo (see
-web/browser/build.py's NAHUAL_RUNTIME_MODULES).
+web/browser/build.py's NAHUAL_RUNTIME_MODULES), but web/browser/build.py itself
+imports SIGN_LANGUAGES at build time.
 """
 
 import argparse

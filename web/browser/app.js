@@ -40,6 +40,9 @@ const MODEL_PICKLES = [
   "gesture_classifier.pkl",
   "dynamic_gesture_classifier.pkl",
 ];
+// Language selected before the user touches the switch. Mirrors the desktop
+// default (SIGN_LANGUAGES[0] in nahual/sign_language.py).
+const DEFAULT_LANGUAGE = "lsm";
 
 // Standard MediaPipe hand skeleton topology (landmark index pairs).
 const HAND_CONNECTIONS = [
@@ -77,6 +80,7 @@ const recordButton = document.getElementById("record-button");
 const statusMessage = document.getElementById("status-message");
 const motionDebugCheckbox = document.getElementById("motion-debug-checkbox");
 const motionDebugReadout = document.getElementById("motion-debug-readout");
+const languageInputs = document.querySelectorAll("input[name=\"language\"]");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
 
@@ -86,12 +90,19 @@ let pyodide = null;
 let processFrameFn = null;
 let toggleManualFn = null;
 
+let setLanguageFn = null;
+// Language the Python session is actually running.
+let activeLanguage = null;
+
 let lastVideoTimestamp = -1;
 let motionStartThreshold = 0.015;
 let motionStopThreshold = 0.008;
 let dynamicModelAvailable = false;
 let isRunning = false;
 let pyodideReady = false;
+// Languages whose model files are already in the Pyodide filesystem, so each
+// language's pickles are downloaded when the page are loaded and makes the switch instant.
+const loadedLanguages = new Set();
 
 // --- Effective-FPS instrumentation (the browser twin of main.py's readout).
 // EMA-smoothed processed frame rate plus the per-stage split between MediaPipe
@@ -177,12 +188,6 @@ async function initialisePyodide() {
     pyodide.FS.writeFile(`${PYODIDE_SESSION_DIR}/nahual/${fileName}`, source);
   }
 
-  setLoading("Loading trained models…");
-  for (const modelName of MODEL_PICKLES) {
-    const bytes = await fetchBytes(`${MODELS_BASE}/${modelName}`);
-    pyodide.FS.writeFile(`${PYODIDE_SESSION_DIR}/models/${modelName}`, bytes);
-  }
-
   setLoading("Starting recognition session…");
   pyodide.runPython(`import sys; sys.path.insert(0, "${PYODIDE_SESSION_DIR}")`);
   const bootstrapSource = await fetchText("./session_bootstrap.py");
@@ -190,8 +195,92 @@ async function initialisePyodide() {
 
   processFrameFn = pyodide.globals.get("process_frame_js");
   toggleManualFn = pyodide.globals.get("toggle_manual_js");
+  setLanguageFn = pyodide.globals.get("set_language_js");
 
-  const status = JSON.parse(pyodide.globals.get("status_js")());
+  // The models belong to a language, so loading them is the switch's job.
+  // Doing it here too gives the session its initial classifiers.
+  setLoading(`Loading trained models (${DEFAULT_LANGUAGE.toUpperCase()})…`);
+  if (!(await switchLanguage(DEFAULT_LANGUAGE))) {
+    // Fail startup instead and let bootstrap() show the error.
+    throw new Error(`could not load ${DEFAULT_LANGUAGE.toUpperCase()} models`);
+  }
+  pyodideReady = true;
+}
+
+/**
+ * Copy one language's trained classifiers into the Pyodide filesystem.
+ *
+ * A no-op after the first call for that language: the files stay in the
+ * Pyodide filesystem for the life of the page, so switching back and forth
+ * costs one download per language, not one per switch.
+ * @param {string} language Language code (e.g. "lsm", "asl").
+ */
+async function loadLanguageModels(language) {
+  if (loadedLanguages.has(language)) {
+    return;
+  }
+  pyodide.FS.mkdirTree(`${PYODIDE_SESSION_DIR}/models/${language}`);
+  for (const modelName of MODEL_PICKLES) {
+    const bytes = await fetchBytes(`${MODELS_BASE}/${language}/${modelName}`);
+    pyodide.FS.writeFile(
+      `${PYODIDE_SESSION_DIR}/models/${language}/${modelName}`,
+      bytes
+    );
+  }
+  loadedLanguages.add(language);
+}
+
+/**
+ * Switch the recognition session to another sign language.
+ *
+ * Downloads that language's classifiers if this is the first time it is
+ * selected, then asks Python to rebuild the session around them. 
+ * @param {string} language Language code (e.g. "lsm", "asl").
+ * @returns {Promise<boolean>} True if the session now runs that language.
+ */
+async function switchLanguage(language) {
+  setLanguageInputsDisabled(true);
+  try {
+    if (!loadedLanguages.has(language)) {
+      setStatus(`Loading ${language.toUpperCase()} models…`);
+    }
+    await loadLanguageModels(language);
+    applyStatus(JSON.parse(setLanguageFn(language)), language);
+    return true;
+  } catch (error) {
+    // The session keeps running the previous language, so put the radio back
+    // rather than leaving it pointing at a language that never loaded.
+    setStatus(`Could not load ${language.toUpperCase()} models: ${error.message}`);
+    if (activeLanguage) {
+      document.getElementById(`language-${activeLanguage}`).checked = true;
+    }
+    return false;
+  } finally {
+    setLanguageInputsDisabled(false);
+  }
+}
+
+/**
+ * Enable or disable the language radios.
+ * @param {boolean} disabled Whether the switch should be unusable.
+ */
+function setLanguageInputsDisabled(disabled) {
+  for (const input of languageInputs) {
+    input.disabled = disabled;
+  }
+}
+
+/**
+ * Apply the configuration Python reports for the newly loaded language.
+ *
+ * Runs on every switch, not just at startup, because model availability is
+ * per-language: a language with no dynamic classifier must leave the manual
+ * record button disabled.
+ * @param {object} status Parsed payload from set_language_js.
+ * @param {string} language Language code the status describes.
+ */
+function applyStatus(status, language) {
+  activeLanguage = language;
   dynamicModelAvailable = status.dynamic_model_available;
   if (typeof status.motion_start_threshold === "number") {
     motionStartThreshold = status.motion_start_threshold;
@@ -199,10 +288,13 @@ async function initialisePyodide() {
   if (typeof status.motion_stop_threshold === "number") {
     motionStopThreshold = status.motion_stop_threshold;
   }
+  recordButton.disabled = !dynamicModelAvailable;
+
   if (!status.static_model_available && !dynamicModelAvailable) {
-    setStatus("Warning: no trained models were loaded.");
+    setStatus(`Warning: no trained ${language.toUpperCase()} models were loaded.`);
+  } else {
+    setStatus(`Ready. Show a ${language.toUpperCase()} sign to the camera.`);
   }
-  pyodideReady = true;
 }
 
 // Local dev wants fresh files on every reload; production wants the browser and
@@ -524,6 +616,7 @@ async function bootstrap() {
 
   let mediaStream = null;
   try {
+    setLoading("Starting camera…");
     mediaStream = await navigator.mediaDevices.getUserMedia({
       video: { width: { ideal: 640 } },
       audio: false,
@@ -538,14 +631,20 @@ async function bootstrap() {
     videoElement.onloadedmetadata = resolve;
   });
 
-  recordButton.disabled = !dynamicModelAvailable;
-  setStatus("Ready. Show a sign to the camera.");
   if (loadingOverlay) {
     loadingOverlay.hidden = true;
   }
 
   isRunning = true;
   window.requestAnimationFrame(renderLoop);
+}
+
+for (const input of languageInputs) {
+  input.addEventListener("change", () => {
+    if (input.checked) {
+      switchLanguage(input.value);
+    }
+  });
 }
 
 recordButton.addEventListener("click", () => {

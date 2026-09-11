@@ -14,6 +14,10 @@ can be uploaded to any static host (Netlify, Cloudflare Pages, GitHub Pages,
 Render static site, ...) or served locally. The nahual source is *copied*, not
 duplicated by hand, so ``nahual/`` remains the single source of truth.
 
+Every supported sign language is bundled: the classifiers keep their
+``models/<language>/`` layout inside the bundle so the browser can fetch the
+pair it needs when the user switches languages.
+
 Usage (from anywhere)::
 
     python3 web/browser/build.py
@@ -24,6 +28,7 @@ Then deploy the printed ``web/dist`` directory, or serve it locally with::
 """
 
 import shutil
+import sys
 from pathlib import Path
 
 # Repository layout resolved relative to this file so the script works from any
@@ -32,8 +37,15 @@ BROWSER_DIRECTORY = Path(__file__).resolve().parent
 PROJECT_ROOT = BROWSER_DIRECTORY.parent.parent
 NAHUAL_DIRECTORY = PROJECT_ROOT / "nahual"
 MODELS_DIRECTORY = PROJECT_ROOT / "models"
-LSM_MODELS_DIRECTORY = MODELS_DIRECTORY / "lsm"
 DIST_DIRECTORY = PROJECT_ROOT / "web" / "dist"
+
+# The language list is shared with the desktop scripts instead of being repeated
+# here. This runs on CPython (not in the browser), and nahual.sign_language
+# imports nothing outside the standard library, so a bare `python3
+# web/browser/build.py` on a build host works with no dependencies installed.
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from nahual.sign_language import SIGN_LANGUAGES  # noqa: E402
 
 # Page assets served at the bundle root.
 PAGE_ASSETS = [
@@ -54,24 +66,28 @@ NAHUAL_RUNTIME_MODULES = [
     "realtime_session.py",
 ]
 
-# Model artifacts: the two trained LSM classifiers plus the shared MediaPipe
-# hand model. Pairs of (source_path, destination_filename) because the
-# classifiers live under models/lsm/ while hand_landmarker.task is
-# language-independent and stays at the models/ top level. dist/models/
-# stays flat regardless of the source layout, so app.js and
-# session_bootstrap.py need no changes when this list changes.
-MODEL_ASSETS = [
-    (LSM_MODELS_DIRECTORY / "gesture_classifier.pkl", "gesture_classifier.pkl"),
-    (
-        LSM_MODELS_DIRECTORY / "dynamic_gesture_classifier.pkl",
-        "dynamic_gesture_classifier.pkl",
-    ),
-    (MODELS_DIRECTORY / "hand_landmarker.task", "hand_landmarker.task"),
+# The trained classifier filenames every language directory must contain. The
+# browser fetches them from dist/models/<language>/, mirroring the repository's
+# own models/<language>/ layout.
+CLASSIFIER_FILENAMES = [
+    "gesture_classifier.pkl",
+    "dynamic_gesture_classifier.pkl",
 ]
+
+# The MediaPipe hand model is language-independent and stays at the models/ top
+# level, both in the repository and in the bundle.
+HAND_LANDMARKER_FILENAME = "hand_landmarker.task"
 
 
 def build() -> None:
-    """Copy all runtime files into a fresh web/dist/ bundle."""
+    """Copy all runtime files into a fresh web/dist/ bundle.
+
+    Raises:
+        FileNotFoundError: If a language directory or one of its classifiers is
+            missing. Failing the build is deliberate: a bundle that silently
+            ships without one language's models would only surface as a 404 in
+            a visitor's browser.
+    """
     if DIST_DIRECTORY.exists():
         shutil.rmtree(DIST_DIRECTORY)
     (DIST_DIRECTORY / "nahual").mkdir(parents=True)
@@ -85,8 +101,17 @@ def build() -> None:
             NAHUAL_DIRECTORY / module_name, DIST_DIRECTORY / "nahual" / module_name
         )
 
-    for source_path, destination_name in MODEL_ASSETS:
-        shutil.copy2(source_path, DIST_DIRECTORY / "models" / destination_name)
+    shutil.copy2(
+        MODELS_DIRECTORY / HAND_LANDMARKER_FILENAME,
+        DIST_DIRECTORY / "models" / HAND_LANDMARKER_FILENAME,
+    )
+
+    for language in SIGN_LANGUAGES:
+        shutil.copytree(
+            MODELS_DIRECTORY / language, DIST_DIRECTORY / "models" / language
+        )
+
+    verify_models()
 
     total_bytes = sum(
         path.stat().st_size for path in DIST_DIRECTORY.rglob("*") if path.is_file()
@@ -94,6 +119,28 @@ def build() -> None:
     print(f"Built {DIST_DIRECTORY} ({total_bytes / 1_000_000:.1f} MB).")
     print("Serve locally:  python3 -m http.server --directory web/dist 8000")
     print("Then open:      http://localhost:8000")
+
+
+def verify_models() -> None:
+    """Fail loudly if any language is missing a classifier in the bundle.
+
+    shutil.copytree already raises on a missing language directory, so this
+    catches the subtler case: a directory that exists but lacks one of the two
+    .pkl files (for example a language trained for static poses only).
+
+    Raises:
+        FileNotFoundError: If an expected classifier is not in the bundle.
+    """
+    for language in SIGN_LANGUAGES:
+        for filename in CLASSIFIER_FILENAMES:
+            bundled_path = DIST_DIRECTORY / "models" / language / filename
+            if not bundled_path.is_file():
+                raise FileNotFoundError(
+                    f"Missing {language} classifier: expected "
+                    f"{MODELS_DIRECTORY / language / filename}. Train it with "
+                    f"`uv run python train.py -{language}` (and commit it) "
+                    f"before building the bundle."
+                )
 
 
 if __name__ == "__main__":
