@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 from mediapipe.tasks.python.vision import drawing_styles, drawing_utils
 from mediapipe.tasks.python.vision import hand_landmarker as mp_hand_landmarker
+from mediapipe.tasks.python.vision import pose_landmarker as mp_pose_landmarker
 
 # Each entry is (landmark_name, bgr_color).
 # Colors are BGR-converted versions of finger-part color conventions.
@@ -108,6 +109,25 @@ def draw_hand_connections(frame, hand_landmarker_result):
             mp_hand_landmarker.HandLandmarksConnections.HAND_CONNECTIONS,
             drawing_styles.get_default_hand_landmarks_style(),
             drawing_styles.get_default_hand_connections_style(),
+        )
+
+
+def draw_pose_connections(frame, pose_landmarker_result):
+    """Draw MediaPipe pose skeleton connections on the frame.
+
+    Uses MediaPipe's built-in drawing utilities to render the body graph
+    (bones between the 33 pose landmarks) with the default pose style.
+
+    Args:
+        frame: OpenCV BGR frame to draw on.
+        pose_landmarker_result: Result from PoseLandmarker.detect_for_video.
+    """
+    for pose_landmarks in pose_landmarker_result.pose_landmarks:
+        drawing_utils.draw_landmarks(
+            frame,
+            pose_landmarks,
+            mp_pose_landmarker.PoseLandmarksConnections.POSE_LANDMARKS,
+            drawing_styles.get_default_pose_landmarks_style(),
         )
 
 
@@ -335,6 +355,10 @@ def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.
             :meth:`nahual.realtime_session.RealtimeGestureSession.process_frame`.
         low_confidence_threshold: Static confidence below which the red
             "Low confidence" warning line is shown.
+
+    Returns:
+        The total pixel height of the panel (columns + recording row), so a bar
+        can be stacked beneath it.
     """
     frame_width = frame.shape[1]
 
@@ -526,3 +550,5 @@ def draw_prediction_columns(frame, overlay, low_confidence_threshold: float = 0.
             secondary_thickness,
             cv2.LINE_AA,
         )
+
+    return column_height + recording_height

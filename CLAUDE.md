@@ -28,6 +28,11 @@ gestures), usable from a desktop OpenCV demo.
     the browser demo (see `web/browser/build.py`'s `NAHUAL_RUNTIME_MODULES`).
   * `visualization.py` – OpenCV drawing helpers (landmarks, overlays).
   * `data_inspector.py` – Dataset inspection utilities (sample counts per label).
+  * `body/` – The "body" pipeline (MediaPipe Pose), being added in phases per
+    `BODY_PLAN.md`. Currently detection only.
+    * `landmarker.py` – Canonical MediaPipe PoseLandmarker configuration
+      (`PoseLandmarkerConfig`) and helpers (`build_pose_landmarker`,
+      `detect_pose_landmarks`). Never imports hands modules.
 * Root entry scripts (each accepts `-lsm` or `-asl`, default `-lsm`):
   * `main.py` – Real-time desktop demo (webcam + OpenCV window).
   * `collect.py` – Run the interactive data collector.
@@ -36,7 +41,9 @@ gestures), usable from a desktop OpenCV demo.
 * `data/<language>/` – Collected `.npy` samples grouped by label, under a
   per-language directory (`data/lsm/`, `data/asl/`); see gesture types below.
 * `models/` – Trained artifacts. `hand_landmarker.task` (the MediaPipe model
-  asset) is language-independent and lives at this top level.
+  asset) and `pose_landmarker_full.task` (the body pipeline's pose model; the
+  variant is kept in the file name) are language-independent and live at this
+  top level.
   `<language>/gesture_classifier.pkl` (static) and
   `<language>/dynamic_gesture_classifier.pkl` (dynamic) are per-language
   (e.g. `models/lsm/gesture_classifier.pkl`).
@@ -70,6 +77,14 @@ operate on the ASL dataset/models instead.
   change `HandLandmarkerConfig`, update the mirrored options in
   `web/browser/app.js` to match (and vice versa) — the two must stay in sync to
   avoid different detection behavior across the desktop and web front-ends.**
+* Two pipelines share the `main.py` camera loop: "hands" (the letter
+  recognition above) and "body" (MediaPipe Pose, see `BODY_PLAN.md`). The `p`
+  key cycles hands only (startup default) → body only → both, and the mode bar
+  shows the smoothed FPS. Both landmarkers are built at startup and every
+  active detector runs on the clean frame before any overlay is drawn. `d` and
+  `m` act on the hands pipeline only. Pose settings live in
+  `nahual/body/landmarker.py` as `PoseLandmarkerConfig`; the browser demo does
+  not run body yet, so they have no `app.js` mirror.
 
 # Static vs. Dynamic Gestures
 

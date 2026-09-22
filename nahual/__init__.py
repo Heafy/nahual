@@ -12,4 +12,5 @@ Modules:
     gesture_collector  -- Interactive data collection tool.
     visualization      -- OpenCV drawing helpers (landmarks, overlays).
     data_inspector     -- Dataset inspection utilities (sample counts per label).
+    body               -- The "body" pipeline (MediaPipe Pose); detection only.
 """
