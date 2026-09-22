@@ -96,18 +96,12 @@ def compute_frame_motion(
 ) -> float:
     """Compute the mean L2 distance between two normalized landmark frames.
 
-    Used as the raw motion signal driving the motion-gated dynamic capture
-    state machine. Returns 0.0 on the first frame (no previous reference).
-
-    Args:
-        current_normalized: Normalized landmark coordinates for the current
-            frame, shape (21, 3).
-        previous_normalized: Normalized landmark coordinates for the previous
-            frame, or None if no previous frame is available.
+    This is the raw motion signal driving the motion-gated dynamic capture
+    state machine. Both frames are shape (21, 3).
 
     Returns:
-        Mean per-landmark Euclidean distance between the two frames, in the
-        same normalized units as the coordinates. 0.0 if previous is None.
+        Mean per-landmark Euclidean distance in normalized units, or 0.0 on
+        the first frame, where there is no previous reference.
     """
     if previous_normalized is None:
         return 0.0
@@ -124,18 +118,10 @@ def classify_dynamic_buffer(
 ) -> Optional[Tuple[str, float]]:
     """Extract statistical features from a frame buffer and classify.
 
-    Normalizes each buffered frame, stacks into a sequence array, computes
-    statistical features, and runs the dynamic model inference.
-
-    Args:
-        heuristics: GestureHeuristics instance for feature extraction.
-        trainer: GestureTrainer with a loaded dynamic model.
-        dynamic_frame_buffer: List of LandmarkFrame objects captured
-            during the dynamic recording session.
+    Requires a trainer with a loaded dynamic model.
 
     Returns:
-        A tuple of (label, confidence) if classification succeeds,
-        or None if the buffer is empty or inference fails.
+        (label, confidence), or None if the buffer is empty or inference fails.
     """
     if not dynamic_frame_buffer:
         return None
@@ -227,14 +213,9 @@ class RealtimeGestureSession:
     ) -> Dict[str, Any]:
         """Advance the state machine by one video frame and return overlay data.
 
-        Mirrors the body of the original ``main.main()`` loop: it runs the
-        motion signal + capture state machine, the static per-frame prediction,
-        and manages the latched dynamic prediction display window.
-
         Args:
-            landmark_frame: The hand landmarks for this frame, or None if no
-                hand is visible.  Coordinates are metric world landmarks of
-                shape (21, 3); they are mirrored in place for left hands.
+            landmark_frame: Metric world landmarks of shape (21, 3), or None if
+                no hand is visible.  Mirrored in place for left hands.
             handedness: "Left", "Right", or None.  Left-hand coordinates are
                 mirrored across the sagittal plane to match the right-hand
                 training data.
@@ -399,9 +380,7 @@ class RealtimeGestureSession:
         end only via toggle_manual or the buffer cap, which applies to both
         modes.
 
-        Args:
-            landmark_frame: The current frame's landmarks to buffer.
-            current_time: Wall-clock time (seconds) for this frame.
+        ``current_time`` is wall-clock seconds for this frame.
         """
         if self.capture_state == "IDLE":
             if self.smoothed_motion >= MOTION_START_THRESHOLD:
@@ -449,13 +428,9 @@ class RealtimeGestureSession:
     def _classify_buffer_and_latch(self, current_time: float) -> None:
         """Classify the buffered frames, latch a confident result, and reset.
 
-        Runs the dynamic classifier when enough frames are buffered and
-        latches the prediction for the display window if its confidence
-        clears DYNAMIC_CONFIDENCE_THRESHOLD, then returns the state machine
-        to IDLE.
-
-        Args:
-            current_time: Wall-clock time used to start the display window.
+        A buffer shorter than MIN_DYNAMIC_FRAMES, or a result below
+        DYNAMIC_CONFIDENCE_THRESHOLD, is discarded rather than displayed.  The
+        state machine returns to IDLE either way.
         """
         if len(self.dynamic_frame_buffer) >= MIN_DYNAMIC_FRAMES:
             classified_frame_count = len(self.dynamic_frame_buffer)
@@ -481,14 +456,8 @@ class RealtimeGestureSession:
     ) -> Tuple[Optional[str], float]:
         """Run the static per-frame classifier on one landmark frame.
 
-        Builds the flat 81-feature vector via
-        GestureHeuristics.flatten_static_features and runs the static model.
-
-        Args:
-            landmark_frame: The current frame's landmarks.
-
         Returns:
-            A tuple of (label, confidence), or (None, 0.0) if inference fails.
+            (label, confidence), or (None, 0.0) if inference fails.
         """
         features = self.heuristics.extract_features_static(landmark_frame)
         try:

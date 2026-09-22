@@ -62,15 +62,6 @@ def draw_motion_debug(
     Shows the raw motion value, the EMA-smoothed value, the current capture
     state, and the buffered frame count. Used to calibrate
     MOTION_START_THRESHOLD/MOTION_STOP_THRESHOLD.
-
-    Args:
-        frame: OpenCV BGR frame to draw on.
-        raw_motion: The raw per-frame motion value.
-        smoothed_motion: The EMA-smoothed motion value used for thresholds.
-        state: Current state of the motion-gated capture state machine
-            ("IDLE" or "RECORDING").
-        buffer_length: Number of frames currently buffered for dynamic
-            classification.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.5
@@ -131,7 +122,6 @@ def main() -> None:
 
     heuristics = GestureHeuristics()
 
-    # Load the trained classifiers if they exist.
     trainer = GestureTrainer(
         TrainingConfig(model_output_directory=model_output_directory)
     )
@@ -158,7 +148,6 @@ def main() -> None:
         heuristics=heuristics,
     )
 
-    # Motion debug overlay toggle.
     show_motion_debug: bool = False
 
     capture = cv2.VideoCapture(0)
@@ -195,10 +184,6 @@ def main() -> None:
 
             overlay = session.process_frame(landmark_frame, detected_handedness)
 
-            # --- Draw the prediction overlay ------------------------------
-            # Fixed two-column panel (static | dynamic) plus a recording row,
-            # with always-visible translucent backgrounds; only the text
-            # toggles, so nothing shifts on screen as signs come and go.
             draw_prediction_columns(frame, overlay)
 
             if show_motion_debug:

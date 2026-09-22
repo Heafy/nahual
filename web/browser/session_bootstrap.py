@@ -140,18 +140,11 @@ def set_language_js(language):
 def _build_landmark_frame(landmarks, timestamp_ms):
     """Build a LandmarkFrame from a client-supplied landmark list.
 
-    Validates that the payload is a 21x3 numeric array of metric world
-    landmarks before constructing the frame. Returns None for any malformed or
-    missing payload so the caller treats it as "no hand visible". Mirrors
-    build_landmark_frame from the old FastAPI server.
-
-    Args:
-        landmarks: A list of 21 [x, y, z] triples (MediaPipe worldLandmarks),
-            or None.
-        timestamp_ms: Client-supplied frame timestamp in milliseconds.
-
-    Returns:
-        A LandmarkFrame with a (21, 3) float32 coordinates array, or None.
+    ``landmarks`` is a list of 21 [x, y, z] triples (MediaPipe worldLandmarks)
+    or None, and ``timestamp_ms`` is the client-supplied frame timestamp in
+    milliseconds. Any malformed or missing payload yields None so the caller
+    treats it as "no hand visible". Mirrors build_landmark_frame from the old
+    FastAPI server.
     """
     if landmarks is None:
         return None
@@ -170,14 +163,10 @@ def _build_landmark_frame(landmarks, timestamp_ms):
 def process_frame_js(payload_json):
     """Advance the recognition session by one frame and return overlay JSON.
 
-    Args:
-        payload_json: A JSON string with keys ``landmarks`` (21x3 list or null),
-            ``handedness`` ("Left"/"Right"/null), and ``timestamp_ms`` (int).
-
-    Returns:
-        A JSON string of the overlay dict returned by
-        RealtimeGestureSession.process_frame, with the model labels cast to
-        plain ``str`` for JSON safety.
+    ``payload_json`` carries the keys ``landmarks`` (21x3 list or null),
+    ``handedness`` ("Left"/"Right"/null) and ``timestamp_ms`` (int). The reply
+    is RealtimeGestureSession.process_frame's overlay dict, with the model
+    labels cast to plain ``str`` for JSON safety.
     """
     payload = json.loads(payload_json)
     landmark_frame = _build_landmark_frame(

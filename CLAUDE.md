@@ -132,7 +132,11 @@ present.
 ## Coding Conventions
 
 * Use PEP 8 – Style Guide for Python Code for coding conventions
-* Comment every function with its purpose, arguments and a quick explanation of the function
+* Add Google-style docstrings to functions/methods, but only where the signature and name don't already make behavior obvious. Skip docstrings entirely for trivial functions (simple getters/setters, one-line wrappers, `__repr__`, obvious property accessors).
+* Docstring content: one-line summary of what the function does, `Args:` (only for non-obvious params — skip restating an obviously-named, type-hinted param), `Returns:`, `Raises:` (only if it raises something callers should catch).
+* Do not restate the function name in prose ("Fetches a user" for `fetch_user` is redundant unless it adds real information).
+* Do not use docstrings or comments to explain implementation mechanics that are already legible from the code itself.
+* Reserve inline `#` comments for non-obvious rationale: workarounds, business rules, edge cases, or "why not the obvious approach" — never for narrating what the next line does.
 * Do not abbreviate variables, use full name for better readability
 
 ## Commit instructions
